@@ -1,0 +1,104 @@
+[
+  {
+    "id": "heritage-ukhrul",
+    "destinationId": "dest-ukhrul",
+    "title": "Living Heritage: the eastern hills",
+    "subtitle": "Point your camera at the ridge, or use the guided view below",
+    "mode": "LIVING_CULTURE",
+    "scene": "hills",
+    "introduction": "Most visitors photograph the ridge and leave. This layer shows what is actually in front of you: a terraced agricultural system, a weaving tradition that encodes social meaning, and a flower that grows on one hillside on earth.",
+    "layers": [
+      {
+        "id": "layer-ukhrul-terraces",
+        "label": "The slope",
+        "title": "Terraces are infrastructure, not scenery",
+        "narration": "The steps cut into these slopes are a water management system. Each terrace holds the monsoon long enough for it to be useful, and the sequence of terraces decides which household plants when. The agricultural calendar that opens with Luira Phanit is built on this arrangement.",
+        "factIds": ["fact-ukhrul-02", "fact-ukhrul-03"],
+        "overlay": "TERRACES"
+      },
+      {
+        "id": "layer-ukhrul-weave",
+        "label": "The cloth",
+        "title": "A shawl is a statement of who you are",
+        "narration": "Tangkhul weaving uses pattern and colour to carry meaning about family, occasion and standing. A shawl bought as a souvenir is the same object a household would use to mark a life event, which is why buying from the weaver and asking what the pattern means matters.",
+        "factIds": ["fact-ukhrul-01", "fact-ukhrul-04"],
+        "overlay": "WEAVE"
+      },
+      {
+        "id": "layer-ukhrul-lily",
+        "label": "The flower",
+        "title": "One hillside, one species",
+        "narration": "On the Shirui range above the town grows Lilium mackliniae, found in the wild effectively nowhere else. It was described for science in 1946 and named after Jean Macklin. It is the state flower, it is endangered, and the few weeks it flowers are the few weeks the hill is under most pressure.",
+        "factIds": ["fact-shirui-01", "fact-shirui-02", "fact-shirui-03"],
+        "overlay": "LILY"
+      },
+      {
+        "id": "layer-ukhrul-today",
+        "label": "Today",
+        "title": "What your visit changes",
+        "narration": "Visits arranged through a local host put the money in the household that does the work. Visits arranged around it do not. That difference is the whole argument for community based tourism in this district.",
+        "factIds": ["fact-ukhrul-04", "fact-ukhrul-05"],
+        "overlay": "COMMUNITY"
+      }
+    ],
+    "askPrompts": [
+      "Tell me something most first time visitors do not know about this place",
+      "What does the pattern on a Tangkhul shawl mean?",
+      "When can I actually see the Shirui lily?",
+      "How should I behave when visiting a village here?"
+    ],
+    "audioTranscript": "A four part guided narration covering the terraces, the weaving tradition, the Shirui lily and the case for community hosted visits. Full text is shown on screen with each layer.",
+    "sourceNote": "Narration is written from the curated knowledge base. Each layer lists the verified facts it draws on."
+  },
+  {
+    "id": "heritage-kangla",
+    "destinationId": "dest-kangla",
+    "title": "Living Heritage: Kangla in layers",
+    "subtitle": "Four moments on the same ground",
+    "mode": "HISTORICAL_LAYERS",
+    "scene": "citadel",
+    "introduction": "Kangla is not one site. It is the same ground used four different ways across four periods, and each use left something you can still stand next to.",
+    "layers": [
+      {
+        "id": "layer-kangla-seat",
+        "label": "Seat of rule",
+        "title": "The ceremonial and political centre",
+        "narration": "For centuries this was where rule was exercised and legitimised. The layout around moats, ponds and gateways is not decorative. It marks the boundary between ordinary ground and the ground where authority was performed.",
+        "factIds": ["fact-kangla-01", "fact-kangla-02", "fact-kangla-04"],
+        "overlay": "GATEWAY"
+      },
+      {
+        "id": "layer-kangla-guardians",
+        "label": "The guardians",
+        "title": "Kangla Sha",
+        "narration": "The two sculpted figures of a mythical lion like creature are among the most recognised symbols of Manipuri heritage. They stand where the approach becomes ceremonial.",
+        "factIds": ["fact-kangla-03"],
+        "overlay": "GUARDIAN"
+      },
+      {
+        "id": "layer-kangla-garrison",
+        "label": "Garrison",
+        "title": "A century of other use",
+        "narration": "After the colonial period the site served as a military and administrative post rather than a heritage place. That period is part of the history of the ground, not an interruption to it.",
+        "factIds": ["fact-kangla-01"],
+        "overlay": "GARRISON"
+      },
+      {
+        "id": "layer-kangla-return",
+        "label": "2004",
+        "title": "Handed back",
+        "narration": "In November 2004 the site was formally returned to the people of Manipur and reopened as a heritage place. Everything you can walk across today follows from that decision.",
+        "factIds": ["fact-kangla-01", "fact-kangla-05"],
+        "overlay": "OPEN"
+      }
+    ],
+    "askPrompts": [
+      "Tell me something most first time visitors do not know about this place",
+      "What are the Kangla Sha?",
+      "Why is Kangla built around water?",
+      "What happened here in 2004?"
+    ],
+    "audioTranscript": "A four part guided narration covering the ceremonial centre, the guardian figures, the garrison period and the 2004 return. Full text is shown on screen with each layer.",
+    "sourceNote": "Narration is written from the curated knowledge base. Each layer lists the verified facts it draws on."
+  }
+]

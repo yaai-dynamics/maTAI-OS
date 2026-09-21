@@ -1,0 +1,71 @@
+[
+  {
+    "id": "content-001",
+    "campaignId": "camp-000",
+    "creatorId": "creator-003",
+    "title": "Three mornings above Ukhrul",
+    "platform": "Instagram",
+    "contentUrl": "demo://content/ukhrul-autumn-ridge-reel",
+    "caption": "Three mornings on the ridge above Ukhrul, walked with the guides who know it. Cold at dawn, warm by nine, and a village lunch in between. Plan the route before you go, the road from Imphal takes longer than the map suggests.",
+    "disclosure": "Paid partnership with Manipur Tourism (prototype campaign)",
+    "status": "PUBLISHED",
+    "submittedAt": "2026-08-12T05:30:00Z",
+    "reviewNote": "Approved. Responsible visit guidance present.",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "content-002",
+    "campaignId": "camp-000",
+    "creatorId": "creator-001",
+    "title": "Valley to hills in one afternoon",
+    "platform": "YouTube",
+    "contentUrl": "demo://content/valley-to-hills-short",
+    "caption": "You leave the Imphal valley in the afternoon and arrive somewhere fifteen degrees cooler. This is what the eastern hills look like when you stop treating them as a day trip.",
+    "disclosure": "Paid partnership with Manipur Tourism (prototype campaign)",
+    "status": "PUBLISHED",
+    "submittedAt": "2026-08-14T11:10:00Z",
+    "reviewNote": "Approved.",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "content-003",
+    "campaignId": "camp-000",
+    "creatorId": "creator-006",
+    "title": "One night, one household",
+    "platform": "Instagram",
+    "contentUrl": "demo://content/one-night-one-household",
+    "caption": "A village homestay in the eastern hills is not a hotel with a view. It is somebody home. Book through a local host, eat what the family eats, and ask before you photograph.",
+    "disclosure": "Paid partnership with Manipur Tourism (prototype campaign)",
+    "status": "PUBLISHED",
+    "submittedAt": "2026-08-18T09:00:00Z",
+    "reviewNote": "Approved. Good hosting etiquette framing.",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "content-004",
+    "campaignId": "camp-002",
+    "creatorId": "creator-002",
+    "title": "Kangla in four layers",
+    "platform": "YouTube",
+    "contentUrl": "demo://content/kangla-four-layers",
+    "caption": "The same ground was a ceremonial centre, a garrison and then a heritage site again in 2004. Four layers, one walk.",
+    "disclosure": "Paid partnership with Manipur Tourism (prototype campaign)",
+    "status": "PUBLISHED",
+    "submittedAt": "2026-09-11T08:20:00Z",
+    "reviewNote": "Approved.",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "content-005",
+    "campaignId": "camp-002",
+    "creatorId": "creator-002",
+    "title": "What the Kangla Sha are",
+    "platform": "Instagram",
+    "contentUrl": "demo://content/kangla-sha-short",
+    "caption": "Everyone photographs them. Fewer people know what they are or where they stand in the approach.",
+    "disclosure": "Paid partnership with Manipur Tourism (prototype campaign)",
+    "status": "IN_REVIEW",
+    "submittedAt": "2026-09-15T16:40:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  }
+]

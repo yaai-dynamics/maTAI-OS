@@ -1,0 +1,111 @@
+[
+  {
+    "id": "doc-001",
+    "title": "Destination diversification note: reducing concentration in the valley",
+    "documentType": "POLICY",
+    "sourceId": "src-curated-knowledge",
+    "sourceAuthority": "Curated prototype knowledge base (not a government publication)",
+    "text": "Platform interest is heavily concentrated in a small number of valley destinations. Concentration raises pressure at ecologically sensitive sites while leaving participating capacity idle in the hill districts. The diversification approach used in this prototype ranks candidate destinations by three conditions that must hold together: rising interest, spare reported partner capacity, and no open ATTENTION level issue. A destination that satisfies all three is a promotion candidate. A destination with rising interest but no spare capacity is a capacity development candidate instead, not a promotion target.",
+    "verified": true,
+    "publishedAt": "2026-08-30",
+    "destinationIds": ["dest-ukhrul", "dest-andro", "dest-shirui", "dest-loktak"],
+    "tags": ["concentration", "diversification", "capacity", "policy"]
+  },
+  {
+    "id": "doc-002",
+    "title": "Responsible visitor guidance for high sensitivity sites",
+    "documentType": "GUIDE",
+    "sourceId": "src-curated-knowledge",
+    "sourceAuthority": "Curated prototype knowledge base (not a government publication)",
+    "text": "Loktak, Keibul Lamjao, Shirui and Dzukou are treated as high sensitivity in this prototype. Promotion of these sites should carry responsible visit guidance in the creative brief itself rather than as a footnote: stay on marked routes, do not pick or transplant plants, carry waste out, keep to the guide when on water or on the trek, and respect fire restrictions in the dry season. Campaigns for these destinations should target shoulder periods rather than the peak window.",
+    "verified": true,
+    "publishedAt": "2026-08-30",
+    "destinationIds": ["dest-loktak", "dest-keibul", "dest-shirui", "dest-dzukou"],
+    "tags": ["sustainability", "eco-tourism", "campaign-guidance"]
+  },
+  {
+    "id": "doc-003",
+    "title": "Community hosted tourism in the hill districts",
+    "documentType": "GUIDE",
+    "sourceId": "src-curated-knowledge",
+    "sourceAuthority": "Curated prototype knowledge base (not a government publication)",
+    "text": "Village visits in Ukhrul, Senapati and Tamenglong are organised through community authority rather than open access. Visits arranged through a local host route spending to the households that do the work and keep the community in control of what is shown. Campaigns promoting these districts should name the hosting arrangement explicitly so that visitors arrive with the right expectation.",
+    "verified": true,
+    "publishedAt": "2026-08-30",
+    "destinationIds": ["dest-ukhrul", "dest-shirui", "dest-dzukou", "dest-tamenglong"],
+    "tags": ["community", "homestay", "local-economy"]
+  },
+  {
+    "id": "doc-004",
+    "title": "How the demand index is calculated",
+    "documentType": "REPORT",
+    "sourceId": "src-analytics-engine",
+    "sourceAuthority": "Platform analytics documentation",
+    "text": "The destination demand index is a weighted composite of platform observed interactions over a thirty day window: destination views count once, searches count once, navigation starts count twice, itinerary additions count three times and verified check ins count four times. The weighted total is scaled so that the highest scoring destination in the window is 100. The index measures interest expressed on this platform. It is not a visitor count and cannot be converted into one.",
+    "verified": true,
+    "publishedAt": "2026-09-01",
+    "destinationIds": [],
+    "tags": ["method", "analytics", "demand"]
+  },
+  {
+    "id": "doc-005",
+    "title": "How concentration and distribution are measured",
+    "documentType": "REPORT",
+    "sourceId": "src-analytics-engine",
+    "sourceAuthority": "Platform analytics documentation",
+    "text": "Tourism concentration is the share of weighted interaction volume held by the three highest ranked destinations in the window. The distribution score is the normalised entropy of the interaction share across all destinations, expressed from 0 to 100, where a higher score means activity is spread more evenly. Both are computed over the same window as the demand index and share its coverage limits.",
+    "verified": true,
+    "publishedAt": "2026-09-01",
+    "destinationIds": [],
+    "tags": ["method", "analytics", "concentration"]
+  },
+  {
+    "id": "doc-006",
+    "title": "Capacity reporting and its coverage limits",
+    "documentType": "ADVISORY",
+    "sourceId": "src-partner-reports",
+    "sourceAuthority": "Platform partner reporting documentation",
+    "text": "Accommodation and experience capacity in this platform is reported voluntarily by participating businesses. It covers only those partners, and it is not a measure of the total tourism supply of a district. Spare capacity should therefore be read as spare capacity among participating partners. Any statement about whether a destination can absorb more visitors must carry that qualification.",
+    "verified": true,
+    "publishedAt": "2026-09-01",
+    "destinationIds": [],
+    "tags": ["method", "capacity", "coverage"]
+  },
+  {
+    "id": "doc-007",
+    "title": "Campaign evaluation standard",
+    "documentType": "POLICY",
+    "sourceId": "src-curated-knowledge",
+    "sourceAuthority": "Curated prototype knowledge base (not a government publication)",
+    "text": "A campaign is evaluated on a funnel: content views, destination page visits, itinerary additions, verified check ins and enquiries. Movement in these measures during a campaign period is association, not causation. A causal claim requires either a comparison destination that was not promoted or a before and after window long enough to separate the campaign from seasonality and events. Until one of those exists, the platform reports the funnel and states explicitly that attribution has not been established.",
+    "verified": true,
+    "publishedAt": "2026-09-01",
+    "destinationIds": [],
+    "tags": ["method", "campaign", "attribution"]
+  },
+  {
+    "id": "doc-008",
+    "title": "Border area visitor advisory",
+    "documentType": "ADVISORY",
+    "sourceId": "src-curated-knowledge",
+    "sourceAuthority": "Curated prototype knowledge base (not a government publication)",
+    "text": "Permitted visitor activity at and near the international border changes with prevailing regulations and advisories. Moreh should not be included in a promotion campaign without a current check against the position on the day. The platform marks the destination as WATCH by default for this reason.",
+    "verified": true,
+    "publishedAt": "2026-09-02",
+    "destinationIds": ["dest-moreh"],
+    "tags": ["safety", "border", "policy"]
+  },
+  {
+    "id": "doc-009",
+    "title": "Manipur Tourism public portal",
+    "documentType": "DESTINATION_RECORD",
+    "sourceId": "src-tourism-portal",
+    "sourceAuthority": "Department of Tourism, Government of Manipur",
+    "sourceUrl": "https://manipurtourism.gov.in/",
+    "text": "The official state tourism portal publishes destination descriptions, district wise destination listings, culture and heritage material, nature and wildlife pages, accommodation listings and homestay registration information. It was used as reference material when curating the destination records in this prototype. It is not ingested live and this platform has no integration with the department.",
+    "verified": true,
+    "publishedAt": "2026-08-15",
+    "destinationIds": [],
+    "tags": ["source", "reference", "official-portal"]
+  }
+]

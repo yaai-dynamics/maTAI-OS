@@ -1,0 +1,18 @@
+[
+  { "id": "dist-imphal-west", "name": "Imphal West", "latitude": 24.8074, "longitude": 93.9384 },
+  { "id": "dist-imphal-east", "name": "Imphal East", "latitude": 24.8205, "longitude": 93.9805 },
+  { "id": "dist-bishnupur", "name": "Bishnupur", "latitude": 24.6333, "longitude": 93.7667 },
+  { "id": "dist-thoubal", "name": "Thoubal", "latitude": 24.6333, "longitude": 94.0167 },
+  { "id": "dist-kakching", "name": "Kakching", "latitude": 24.4983, "longitude": 93.98 },
+  { "id": "dist-churachandpur", "name": "Churachandpur", "latitude": 24.3333, "longitude": 93.6833 },
+  { "id": "dist-chandel", "name": "Chandel", "latitude": 24.3167, "longitude": 94.0167 },
+  { "id": "dist-ukhrul", "name": "Ukhrul", "latitude": 25.05, "longitude": 94.3667 },
+  { "id": "dist-senapati", "name": "Senapati", "latitude": 25.2667, "longitude": 94.0333 },
+  { "id": "dist-tamenglong", "name": "Tamenglong", "latitude": 24.9833, "longitude": 93.5 },
+  { "id": "dist-jiribam", "name": "Jiribam", "latitude": 24.8, "longitude": 93.1167 },
+  { "id": "dist-kangpokpi", "name": "Kangpokpi", "latitude": 25.15, "longitude": 93.9667 },
+  { "id": "dist-noney", "name": "Noney", "latitude": 24.8333, "longitude": 93.6167 },
+  { "id": "dist-pherzawl", "name": "Pherzawl", "latitude": 24.2333, "longitude": 93.1833 },
+  { "id": "dist-kamjong", "name": "Kamjong", "latitude": 24.95, "longitude": 94.4667 },
+  { "id": "dist-tengnoupal", "name": "Tengnoupal", "latitude": 24.4, "longitude": 94.1333 }
+]

@@ -1,0 +1,83 @@
+[
+  {
+    "id": "app-001",
+    "campaignId": "camp-000",
+    "creatorId": "creator-003",
+    "status": "ACCEPTED",
+    "proposedConcept": "Three days on the ridge above Ukhrul, filmed with the guides who walk it every week.",
+    "submittedAt": "2026-07-30T06:15:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "app-002",
+    "campaignId": "camp-000",
+    "creatorId": "creator-001",
+    "status": "ACCEPTED",
+    "proposedConcept": "A quiet film about arriving in the hills after a day in the valley, built around the temperature change.",
+    "submittedAt": "2026-07-30T09:40:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "app-003",
+    "campaignId": "camp-000",
+    "creatorId": "creator-006",
+    "status": "ACCEPTED",
+    "proposedConcept": "One night, one household: what a village homestay in the eastern hills actually looks like.",
+    "submittedAt": "2026-07-31T05:20:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "app-004",
+    "campaignId": "camp-000",
+    "creatorId": "creator-010",
+    "status": "DECLINED",
+    "proposedConcept": "City to hills road trip vlog.",
+    "submittedAt": "2026-07-31T11:05:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "app-005",
+    "campaignId": "camp-002",
+    "creatorId": "creator-002",
+    "status": "ACCEPTED",
+    "proposedConcept": "Kangla in four layers, told through the people who work at the site today.",
+    "submittedAt": "2026-09-02T07:30:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "app-006",
+    "campaignId": "camp-002",
+    "creatorId": "creator-005",
+    "status": "SHORTLISTED",
+    "proposedConcept": "A long form history explainer connecting Kangla, Khongjom and the 1891 sequence.",
+    "submittedAt": "2026-09-03T10:10:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "app-007",
+    "campaignId": "camp-002",
+    "creatorId": "creator-008",
+    "status": "APPLIED",
+    "proposedConcept": "Textiles as heritage: from the market rows to the loom.",
+    "submittedAt": "2026-09-05T13:45:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "app-008",
+    "campaignId": "camp-004",
+    "creatorId": "creator-005",
+    "status": "SHORTLISTED",
+    "proposedConcept": "The 1944 campaign walked in order, cemetery first.",
+    "submittedAt": "2026-09-08T08:00:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "app-009",
+    "campaignId": "camp-004",
+    "creatorId": "creator-015",
+    "status": "APPLIED",
+    "proposedConcept": "A photographic essay on how the circuit is maintained.",
+    "submittedAt": "2026-09-10T15:25:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  }
+]

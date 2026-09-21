@@ -1,0 +1,120 @@
+[
+  {
+    "_comment": "Only off platform reach metrics are seeded here. In production these would come from the publishing platform APIs; in the prototype they are synthetic. They are at real world social scale, whereas the platform observed steps of the funnel cover only this prototype user base - the two are reported as separate blocks and never divided into a conversion rate. The rest of the funnel (destination page visits, itinerary additions, check ins and enquiries) is NOT seeded: it is computed from platform interactions tagged with the campaign, so signals created during a live demo move it.",
+    "id": "_schema",
+    "campaignContentId": "_schema",
+    "campaignId": "_schema",
+    "metric": "VIEWS",
+    "value": 0,
+    "recordedAt": "2026-01-01T00:00:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "cm-001",
+    "campaignContentId": "content-001",
+    "campaignId": "camp-000",
+    "metric": "VIEWS",
+    "value": 74200,
+    "recordedAt": "2026-08-27T00:00:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "cm-002",
+    "campaignContentId": "content-001",
+    "campaignId": "camp-000",
+    "metric": "WATCH_TIME",
+    "value": 39800,
+    "recordedAt": "2026-08-27T00:00:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "cm-003",
+    "campaignContentId": "content-001",
+    "campaignId": "camp-000",
+    "metric": "CLICKS",
+    "value": 3120,
+    "recordedAt": "2026-08-27T00:00:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "cm-004",
+    "campaignContentId": "content-002",
+    "campaignId": "camp-000",
+    "metric": "VIEWS",
+    "value": 51600,
+    "recordedAt": "2026-08-27T00:00:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "cm-005",
+    "campaignContentId": "content-002",
+    "campaignId": "camp-000",
+    "metric": "WATCH_TIME",
+    "value": 61200,
+    "recordedAt": "2026-08-27T00:00:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "cm-006",
+    "campaignContentId": "content-002",
+    "campaignId": "camp-000",
+    "metric": "CLICKS",
+    "value": 2480,
+    "recordedAt": "2026-08-27T00:00:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "cm-007",
+    "campaignContentId": "content-003",
+    "campaignId": "camp-000",
+    "metric": "VIEWS",
+    "value": 38900,
+    "recordedAt": "2026-08-27T00:00:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "cm-008",
+    "campaignContentId": "content-003",
+    "campaignId": "camp-000",
+    "metric": "WATCH_TIME",
+    "value": 17300,
+    "recordedAt": "2026-08-27T00:00:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "cm-009",
+    "campaignContentId": "content-003",
+    "campaignId": "camp-000",
+    "metric": "CLICKS",
+    "value": 1480,
+    "recordedAt": "2026-08-27T00:00:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "cm-010",
+    "campaignContentId": "content-004",
+    "campaignId": "camp-002",
+    "metric": "VIEWS",
+    "value": 42300,
+    "recordedAt": "2026-09-15T00:00:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "cm-011",
+    "campaignContentId": "content-004",
+    "campaignId": "camp-002",
+    "metric": "WATCH_TIME",
+    "value": 53100,
+    "recordedAt": "2026-09-15T00:00:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "cm-012",
+    "campaignContentId": "content-004",
+    "campaignId": "camp-002",
+    "metric": "CLICKS",
+    "value": 2180,
+    "recordedAt": "2026-09-15T00:00:00Z",
+    "provenance": "DEMO_SYNTHETIC"
+  }
+]

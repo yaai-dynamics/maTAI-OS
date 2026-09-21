@@ -1,0 +1,39 @@
+{
+  "_note": "The OFFICIAL provenance tier exists in the model but is deliberately empty. This prototype has no integration with the Department of Tourism, and no official visitor figure is generated in place of one. The government interface shows this as an explicit not connected state rather than substituting synthetic data. See CLAUDE.md section 9.",
+  "connected": false,
+  "sourceId": "src-dept-statistics",
+  "sourceName": "Manipur Tourism Department statistics",
+  "sourceUrl": "https://manipurtourism.gov.in/",
+  "expectedMetrics": [
+    {
+      "metric": "OFFICIAL_TOURIST_ARRIVALS",
+      "label": "Official tourist arrivals",
+      "unit": "COUNT",
+      "period": "Annual and periodic releases",
+      "description": "Published visitor arrival counts for the state, split by domestic and foreign visitors.",
+      "value": null
+    },
+    {
+      "metric": "REGISTERED_ACCOMMODATION_UNITS",
+      "label": "Registered accommodation units",
+      "unit": "COUNT",
+      "period": "As maintained by the department",
+      "description": "Count of registered hotels, lodges and homestays in the official directory.",
+      "value": null
+    },
+    {
+      "metric": "REGISTERED_HOMESTAYS",
+      "label": "Registered homestays",
+      "unit": "COUNT",
+      "period": "As maintained by the department",
+      "description": "Homestays registered through the official registration process.",
+      "value": null
+    }
+  ],
+  "integrationSteps": [
+    "Agree a data sharing arrangement and refresh cadence with the Department of Tourism.",
+    "Load published arrival series with their period, coverage and revision notes intact.",
+    "Map department destination and accommodation identifiers to platform identifiers.",
+    "Enable the OFFICIAL provenance tier in the Tourism Pulse and in exports."
+  ]
+}

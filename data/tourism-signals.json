@@ -1,0 +1,244 @@
+[
+  {
+    "_comment": "Per-destination generation profile for the deterministic demo signal generator. These are NOT metrics. Every KPI in the product is computed from the interactions and feedback these profiles generate, so signals created during a live demo change the numbers exactly as real ones would. See src/server/data/generate.ts and docs/09-implementation-notes.md.",
+    "destinationId": "_schema",
+    "dailyInteractionBase": "mean platform interactions per day at the start of the 90 day window",
+    "growthPerMonth": "fractional month on month change applied across the window",
+    "eventLiftWindowDays": "days after a seeded event during which interactions are lifted",
+    "sentimentBase": "mean feedback rating before issue effects, on a 1 to 5 scale",
+    "feedbackPerHundredInteractions": "how many feedback items each 100 interactions produce",
+    "issueMix": "relative weights of issue categories in negative feedback",
+    "partnerCapacityBase": "reported partner beds or seats used by the capacity view",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "destinationId": "dest-loktak",
+    "dailyInteractionBase": 8.25,
+    "growthPerMonth": 0.18,
+    "eventLiftWindowDays": 10,
+    "sentimentBase": 4.4,
+    "feedbackPerHundredInteractions": 24,
+    "issueMix": {
+      "CLEANLINESS": 5,
+      "TRANSPORT": 3,
+      "FACILITIES": 3,
+      "CROWDING": 3,
+      "PRICING": 2,
+      "SIGNAGE": 1
+    },
+    "partnerCapacityBase": 52,
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "destinationId": "dest-kangla",
+    "dailyInteractionBase": 7.81,
+    "growthPerMonth": 0.08,
+    "eventLiftWindowDays": 7,
+    "sentimentBase": 4.5,
+    "feedbackPerHundredInteractions": 22,
+    "issueMix": {
+      "SIGNAGE": 4,
+      "FACILITIES": 3,
+      "GUIDE_QUALITY": 3,
+      "CROWDING": 2,
+      "ACCESSIBILITY": 2
+    },
+    "partnerCapacityBase": 64,
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "destinationId": "dest-ima-keithel",
+    "dailyInteractionBase": 6.25,
+    "growthPerMonth": 0.1,
+    "eventLiftWindowDays": 5,
+    "sentimentBase": 4.5,
+    "feedbackPerHundredInteractions": 21,
+    "issueMix": {
+      "CROWDING": 4,
+      "PRICING": 3,
+      "FACILITIES": 3,
+      "ACCESSIBILITY": 3,
+      "SIGNAGE": 1
+    },
+    "partnerCapacityBase": 30,
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "destinationId": "dest-ukhrul",
+    "dailyInteractionBase": 2.1,
+    "growthPerMonth": 0.31,
+    "eventLiftWindowDays": 12,
+    "sentimentBase": 4.3,
+    "feedbackPerHundredInteractions": 26,
+    "issueMix": {
+      "TRANSPORT": 10,
+      "CONNECTIVITY": 3,
+      "SIGNAGE": 2,
+      "FACILITIES": 2,
+      "PRICING": 1
+    },
+    "partnerCapacityBase": 40,
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "destinationId": "dest-keibul",
+    "dailyInteractionBase": 3.12,
+    "growthPerMonth": 0.11,
+    "eventLiftWindowDays": 7,
+    "sentimentBase": 4.2,
+    "feedbackPerHundredInteractions": 23,
+    "issueMix": {
+      "TRANSPORT": 3,
+      "GUIDE_QUALITY": 3,
+      "FACILITIES": 3,
+      "SIGNAGE": 2,
+      "ACCESSIBILITY": 2
+    },
+    "partnerCapacityBase": 15,
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "destinationId": "dest-moirang",
+    "dailyInteractionBase": 2.78,
+    "growthPerMonth": 0.14,
+    "eventLiftWindowDays": 7,
+    "sentimentBase": 4.3,
+    "feedbackPerHundredInteractions": 20,
+    "issueMix": {
+      "SIGNAGE": 4,
+      "FACILITIES": 3,
+      "TRANSPORT": 2,
+      "GUIDE_QUALITY": 2
+    },
+    "partnerCapacityBase": 22,
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "destinationId": "dest-andro",
+    "dailyInteractionBase": 2.17,
+    "growthPerMonth": 0.22,
+    "eventLiftWindowDays": 10,
+    "sentimentBase": 4.6,
+    "feedbackPerHundredInteractions": 25,
+    "issueMix": {
+      "TRANSPORT": 4,
+      "SIGNAGE": 3,
+      "FACILITIES": 2,
+      "PRICING": 1
+    },
+    "partnerCapacityBase": 34,
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "destinationId": "dest-shirui",
+    "dailyInteractionBase": 1.74,
+    "growthPerMonth": 0.26,
+    "eventLiftWindowDays": 14,
+    "sentimentBase": 4.4,
+    "feedbackPerHundredInteractions": 24,
+    "issueMix": {
+      "TRANSPORT": 5,
+      "ACCESSIBILITY": 3,
+      "FACILITIES": 3,
+      "CONNECTIVITY": 2
+    },
+    "partnerCapacityBase": 10,
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "destinationId": "dest-imphal-war-cemetery",
+    "dailyInteractionBase": 1.56,
+    "growthPerMonth": 0.06,
+    "eventLiftWindowDays": 7,
+    "sentimentBase": 4.7,
+    "feedbackPerHundredInteractions": 18,
+    "issueMix": {
+      "SIGNAGE": 2,
+      "FACILITIES": 2,
+      "TRANSPORT": 1
+    },
+    "partnerCapacityBase": 18,
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "destinationId": "dest-dzukou",
+    "dailyInteractionBase": 1.39,
+    "growthPerMonth": 0.19,
+    "eventLiftWindowDays": 7,
+    "sentimentBase": 4.5,
+    "feedbackPerHundredInteractions": 27,
+    "issueMix": {
+      "SAFETY": 4,
+      "FACILITIES": 4,
+      "TRANSPORT": 3,
+      "ACCESSIBILITY": 3,
+      "CONNECTIVITY": 2
+    },
+    "partnerCapacityBase": 12,
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "destinationId": "dest-khongjom",
+    "dailyInteractionBase": 1.04,
+    "growthPerMonth": 0.05,
+    "eventLiftWindowDays": 7,
+    "sentimentBase": 4.2,
+    "feedbackPerHundredInteractions": 19,
+    "issueMix": {
+      "SIGNAGE": 3,
+      "FACILITIES": 3,
+      "ACCESSIBILITY": 3,
+      "TRANSPORT": 2
+    },
+    "partnerCapacityBase": 10,
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "destinationId": "dest-bishnupur-temple",
+    "dailyInteractionBase": 0.87,
+    "growthPerMonth": 0.09,
+    "eventLiftWindowDays": 5,
+    "sentimentBase": 4.3,
+    "feedbackPerHundredInteractions": 17,
+    "issueMix": {
+      "SIGNAGE": 3,
+      "FACILITIES": 2,
+      "ACCESSIBILITY": 2
+    },
+    "partnerCapacityBase": 6,
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "destinationId": "dest-moreh",
+    "dailyInteractionBase": 0.69,
+    "growthPerMonth": -0.07,
+    "eventLiftWindowDays": 5,
+    "sentimentBase": 3.8,
+    "feedbackPerHundredInteractions": 28,
+    "issueMix": {
+      "SAFETY": 5,
+      "TRANSPORT": 4,
+      "CONNECTIVITY": 3,
+      "PRICING": 3,
+      "SIGNAGE": 2
+    },
+    "partnerCapacityBase": 10,
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "destinationId": "dest-tamenglong",
+    "dailyInteractionBase": 0.43,
+    "growthPerMonth": 0.12,
+    "eventLiftWindowDays": 10,
+    "sentimentBase": 4.2,
+    "feedbackPerHundredInteractions": 22,
+    "issueMix": {
+      "TRANSPORT": 5,
+      "CONNECTIVITY": 4,
+      "FACILITIES": 3,
+      "SIGNAGE": 2
+    },
+    "partnerCapacityBase": 9,
+    "provenance": "DEMO_SYNTHETIC"
+  }
+]

@@ -1,0 +1,1021 @@
+// maTAI — relational schema (MySQL).
+//
+// Live schema. prisma/schema.postgres.prisma keeps the Postgres form as the
+// production target; differences are MySQL limitations only:
+//   · scalar String[] -> Json (MySQL has no array type)
+//   · prose columns carry @db.Text (MySQL defaults String to VARCHAR(191))
+//   · url/title columns carry @db.VarChar(512)
+// All 33 enums are preserved natively.
+//
+// This is the live persistence layer. The repository boundary in
+// src/server/data/repository.ts is the only module that talks to the client,
+// so analytics, AI and UI code is unaware of the database.
+//
+// docs/04-data-model.md is the prose form of this file.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// ---------------------------------------------------------------------------
+// Provenance
+// ---------------------------------------------------------------------------
+
+/// Every metric and record carries the category it came from. The weakest input
+/// decides how a combined figure is labelled.
+enum Provenance {
+  OFFICIAL
+  PARTNER_REPORTED
+  PLATFORM_OBSERVED
+  PUBLIC_EXTERNAL
+  DEMO_SYNTHETIC
+  ESTIMATED
+  FORECAST
+}
+
+enum Confidence {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum Sensitivity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// ---------------------------------------------------------------------------
+// Knowledge layer
+// ---------------------------------------------------------------------------
+
+model District {
+  id           String            @id
+  name         String            @unique
+  latitude     Float
+  longitude    Float
+  destinations Destination[]
+  businesses   TourismBusiness[]
+}
+
+enum DestinationStatus {
+  HEALTHY
+  WATCH
+  ATTENTION
+}
+
+model Destination {
+  id                  String            @id
+  name                String
+  districtId          String
+  district            District          @relation(fields: [districtId], references: [id])
+  category            Json
+  latitude            Float
+  longitude           Float
+  summary             String            @db.Text
+  overview            String?           @db.Text
+  ecoSensitivity      Sensitivity
+  capacitySignal      Sensitivity
+  status              DestinationStatus @default(HEALTHY)
+  typicalVisitMinutes Int               @default(120)
+  bestSeason          String?
+  accessibilityNotes  String?           @db.Text
+  palette             String            @default("heritage")
+  provenance          Provenance
+
+  attractions            Attraction[]
+  verifiedFacts          VerifiedFact[]
+  events                 Event[]
+  experiences            Experience[]
+  businesses             TourismBusiness[]
+  campaigns              CreatorCampaign[]
+  interactions           TourismInteraction[]
+  feedback               Feedback[]
+  itineraryItems         ItineraryItem[]
+  accommodationSnapshots AccommodationSnapshot[]
+  bookings               Booking[]
+
+  @@index([districtId])
+  @@index([status])
+}
+
+model Attraction {
+  id            String      @id
+  destinationId String
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  name          String
+  category      String
+  description   String      @db.Text
+  provenance    Provenance
+
+  @@index([destinationId])
+}
+
+/// Keeps documented history separate from oral tradition and interpretation, so
+/// the storyteller and the creator brief can never conflate them.
+enum FactType {
+  DOCUMENTED
+  ORAL_TRADITION
+  INTERPRETATION
+  PRACTICAL
+}
+
+model VerifiedFact {
+  id            String      @id
+  destinationId String
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  title         String      @db.VarChar(512)
+  text          String      @db.Text
+  factType      FactType
+  sourceId      String
+  source        DataSource  @relation(fields: [sourceId], references: [id])
+  verified      Boolean     @default(false)
+  verifiedAt    DateTime
+  tags          Json
+
+  @@index([destinationId])
+  @@index([factType])
+}
+
+enum EventCategory {
+  FESTIVAL
+  CULTURAL
+  SPORT
+  EXHIBITION
+  SEASONAL
+}
+
+model Event {
+  id                 String        @id
+  name               String
+  destinationId      String
+  destination        Destination   @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  startAt            DateTime
+  endAt              DateTime
+  category           EventCategory
+  expectedAttendance Int?
+  description        String        @db.Text
+  sourceId           String
+  source             DataSource    @relation(fields: [sourceId], references: [id])
+  provenance         Provenance
+
+  @@index([destinationId, startAt])
+}
+
+enum DataSourceType {
+  GOVERNMENT
+  PARTNER
+  PLATFORM
+  PUBLIC
+  CURATED
+  MODEL
+}
+
+model DataSource {
+  id                String         @id
+  name              String
+  type              DataSourceType
+  owner             String
+  refreshFrequency  String
+  reliabilityLevel  Confidence
+  description       String         @db.Text
+  url               String?        @db.VarChar(512)
+  defaultProvenance Provenance
+
+  verifiedFacts      VerifiedFact[]
+  events             Event[]
+  knowledgeDocuments KnowledgeDocument[]
+  metrics            TourismMetric[]
+}
+
+enum DocumentType {
+  POLICY
+  REPORT
+  GUIDE
+  DESTINATION_RECORD
+  ADVISORY
+}
+
+model KnowledgeDocument {
+  id              String       @id
+  title           String       @db.VarChar(512)
+  documentType    DocumentType
+  sourceId        String
+  source          DataSource   @relation(fields: [sourceId], references: [id])
+  sourceAuthority String
+  sourceUrl       String?      @db.VarChar(512)
+  text            String       @db.Text
+  verified        Boolean      @default(false)
+  publishedAt     DateTime
+  destinationIds  Json
+  tags            Json
+
+  // pgvector is added here when semantic retrieval is needed. Until the curated
+  // corpus outgrows term matching, it would be complexity without benefit.
+  // embedding Unsupported("vector(1536)")?
+
+  @@index([documentType])
+}
+
+// ---------------------------------------------------------------------------
+// Supply side
+// ---------------------------------------------------------------------------
+
+enum BusinessType {
+  HOTEL
+  HOMESTAY
+  TOUR_OPERATOR
+  GUIDE
+  RESTAURANT
+  EXPERIENCE_PROVIDER
+  ARTISAN
+  TRANSPORT
+}
+
+enum BusinessStatus {
+  PARTICIPATING
+  INVITED
+  PENDING_VERIFICATION
+  INACTIVE
+}
+
+enum ContactVisibility {
+  PUBLIC
+  ON_ENQUIRY
+  PRIVATE
+}
+
+model TourismBusiness {
+  id                String            @id
+  name              String
+  businessType      BusinessType
+  districtId        String
+  district          District          @relation(fields: [districtId], references: [id])
+  destinationId     String
+  destination       Destination       @relation(fields: [destinationId], references: [id])
+  status            BusinessStatus
+  description       String?           @db.Text
+  contactVisibility ContactVisibility @default(ON_ENQUIRY)
+  verified          Boolean           @default(false)
+  reportedCapacity  Int?
+  provenance        Provenance
+
+  experiences            Experience[]
+  accommodationSnapshots AccommodationSnapshot[]
+  enquiries              Enquiry[]
+  bookings               Booking[]
+  account                UserAccount?
+
+  @@index([destinationId])
+  @@index([status])
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  LIMITED
+  UNAVAILABLE
+}
+
+enum EffortLevel {
+  EASY
+  MODERATE
+  DEMANDING
+}
+
+model Experience {
+  id                 String             @id
+  businessId         String
+  business           TourismBusiness    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  destinationId      String
+  destination        Destination        @relation(fields: [destinationId], references: [id])
+  title              String             @db.VarChar(512)
+  category           String
+  description        String             @db.Text
+  durationMinutes    Int
+  price              Int
+  verified           Boolean            @default(false)
+  availabilityStatus AvailabilityStatus
+  tags               Json
+  accessibility      EffortLevel        @default(MODERATE)
+  provenance         Provenance
+
+  interactions   TourismInteraction[]
+  feedback       Feedback[]
+  itineraryItems ItineraryItem[]
+  enquiries      Enquiry[]
+  bookings       Booking[]
+
+  @@index([destinationId])
+  @@index([category])
+}
+
+/// Partner reported availability. Coverage is participating partners only, and
+/// any aggregate built on it has to say so.
+model AccommodationSnapshot {
+  id                String          @id
+  businessId        String
+  business          TourismBusiness @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  destinationId     String
+  destination       Destination     @relation(fields: [destinationId], references: [id])
+  date              DateTime        @db.Date
+  totalCapacity     Int
+  availableCapacity Int
+  occupancyRate     Float
+  provenance        Provenance
+
+  @@unique([businessId, date])
+  @@index([destinationId, date])
+}
+
+enum EnquiryStatus {
+  SUBMITTED
+  ACKNOWLEDGED
+  CONFIRMED
+  DECLINED
+}
+
+model Enquiry {
+  id                 String          @id
+  experienceId       String
+  experience         Experience      @relation(fields: [experienceId], references: [id])
+  businessId         String
+  business           TourismBusiness @relation(fields: [businessId], references: [id])
+  anonymousSessionId String
+  partySize          Int
+  preferredDate      DateTime        @db.Date
+  note               String?         @db.Text
+  status             EnquiryStatus
+  createdAt          DateTime        @default(now())
+  provenance         Provenance
+
+  @@index([businessId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Creator economy
+// ---------------------------------------------------------------------------
+
+enum CreatorStatus {
+  ACTIVE
+  PENDING_VERIFICATION
+  INACTIVE
+}
+
+model Creator {
+  id                  String        @id
+  displayName         String
+  homeDistrict        String
+  bio                 String?       @db.Text
+  categories          Json
+  languages           Json
+  platforms           Json
+  audienceSummary     String        @db.Text
+  audienceAgeBand     String        @default("18-35")
+  audienceRegions     Json
+  creatorScore        Float
+  campaignsCompleted  Int           @default(0)
+  medianItineraryAdds Int           @default(0)
+  status              CreatorStatus @default(ACTIVE)
+  verified            Boolean       @default(false)
+  provenance          Provenance
+
+  applications CreatorApplication[]
+  content      CampaignContent[]
+  payouts      Payout[]
+  account      UserAccount?
+
+  @@index([status])
+}
+
+enum CampaignStatus {
+  DRAFT
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CLOSED
+}
+
+model CreatorCampaign {
+  id                 String         @id
+  name               String
+  objective          String         @db.Text
+  destinationId      String
+  destination        Destination    @relation(fields: [destinationId], references: [id])
+  targetAudience     String         @db.Text
+  audienceAgeBand    String         @default("18-35")
+  platforms          Json
+  rewardPool         Int
+  startDate          DateTime       @db.Date
+  endDate            DateTime       @db.Date
+  contentRequirement String         @db.Text
+  themes             Json
+  preferredLanguages Json
+  status             CampaignStatus
+  createdBy          String
+  createdAt          DateTime       @default(now())
+  provenance         Provenance
+
+  applications CreatorApplication[]
+  content      CampaignContent[]
+  metrics      CampaignMetric[]
+  payouts      Payout[]
+  interactions TourismInteraction[]
+
+  @@index([destinationId])
+  @@index([status, startDate])
+}
+
+enum ApplicationStatus {
+  INVITED
+  APPLIED
+  SHORTLISTED
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
+}
+
+model CreatorApplication {
+  id              String            @id
+  campaignId      String
+  campaign        CreatorCampaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorId       String
+  creator         Creator           @relation(fields: [creatorId], references: [id])
+  status          ApplicationStatus
+  proposedConcept String?           @db.Text
+  submittedAt     DateTime          @default(now())
+  provenance      Provenance
+
+  @@unique([campaignId, creatorId])
+  @@index([creatorId])
+}
+
+enum ContentStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  APPROVED
+  CHANGES_REQUESTED
+  PUBLISHED
+}
+
+model CampaignContent {
+  id          String          @id
+  campaignId  String
+  campaign    CreatorCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorId   String
+  creator     Creator         @relation(fields: [creatorId], references: [id])
+  title       String          @db.VarChar(512)
+  platform    String
+  contentUrl  String          @db.VarChar(512)
+  caption     String          @db.Text
+  /// Paid-partnership disclosure. Review is gated on this being present.
+  disclosure  String          @db.Text
+  status      ContentStatus
+  submittedAt DateTime        @default(now())
+  reviewNote  String?         @db.Text
+  provenance  Provenance
+
+  metrics CampaignMetric[]
+
+  @@index([campaignId, status])
+  @@index([creatorId])
+}
+
+enum CampaignMetricName {
+  VIEWS
+  WATCH_TIME
+  CLICKS
+  DESTINATION_PAGE_VISITS
+  ITINERARY_ADDS
+  CHECKINS
+  BOOKINGS
+  /// Bookings paid for, net of cancellations. BOOKINGS counts requests.
+  PAID_BOOKINGS
+}
+
+/// Off-platform reach only. Platform-side funnel steps are counted from
+/// TourismInteraction rows tagged with the campaign, never stored as aggregates,
+/// so a live signal moves the funnel without a recalculation job.
+model CampaignMetric {
+  id                String             @id
+  campaignContentId String
+  campaignContent   CampaignContent    @relation(fields: [campaignContentId], references: [id], onDelete: Cascade)
+  campaignId        String
+  campaign          CreatorCampaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  metric            CampaignMetricName
+  value             Float
+  recordedAt        DateTime
+  provenance        Provenance
+
+  @@index([campaignId, metric])
+}
+
+enum PayoutStatus {
+  PENDING_REVIEW
+  APPROVED
+  PAID
+}
+
+model Payout {
+  id         String          @id
+  campaignId String
+  campaign   CreatorCampaign @relation(fields: [campaignId], references: [id])
+  creatorId  String
+  creator    Creator         @relation(fields: [creatorId], references: [id])
+  amount     Int
+  basis      String          @db.Text
+  status     PayoutStatus
+  recordedAt DateTime
+  provenance Provenance
+
+  @@index([creatorId])
+}
+
+// ---------------------------------------------------------------------------
+// Tourist side — anonymous by design
+// ---------------------------------------------------------------------------
+
+/// A session is an opaque identifier and nothing else. The platform never needs
+/// to know who a tourist is to produce useful destination intelligence.
+/// One browser, anonymously. anonymousId is derived from a random cookie by
+/// hashing, so the cookie itself is never stored.
+model TouristSession {
+  id                String    @id
+  anonymousId       String    @unique
+  consentLocation   Boolean   @default(false)
+  /// The effective choice: false when the visitor declined, or sent Global
+  /// Privacy Control without choosing. Passive signals are not recorded then.
+  consentAnalytics  Boolean   @default(true)
+  /// When the visitor answered the analytics notice; null if they never did.
+  analyticsChoiceAt DateTime?
+  createdAt         DateTime  @default(now())
+  lastSeenAt        DateTime?
+
+  trips Trip[]
+}
+
+enum TripStatus {
+  DRAFT
+  SAVED
+  ACTIVE
+  COMPLETED
+}
+
+model Trip {
+  id               String         @id
+  touristSessionId String
+  session          TouristSession @relation(fields: [touristSessionId], references: [id], onDelete: Cascade)
+  title            String         @db.VarChar(512)
+  theme            String
+  startDate        DateTime       @db.Date
+  endDate          DateTime       @db.Date
+  preferencesJson  Json
+  alternativesJson Json
+  status           TripStatus
+  adaptedReason    String?        @db.Text
+  createdAt        DateTime       @default(now())
+  /// Planning, re-planning, saving or switching to a trip touches this; the
+  /// visitor's current trip is the one updated most recently.
+  updatedAt        DateTime       @updatedAt
+  provenance       Provenance
+
+  items        ItineraryItem[]
+  interactions TourismInteraction[]
+  feedback     Feedback[]
+
+  @@index([touristSessionId, updatedAt])
+}
+
+enum ItineraryItemKind {
+  DESTINATION
+  EXPERIENCE
+}
+
+model ItineraryItem {
+  id                        String            @id
+  tripId                    String
+  trip                      Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  destinationId             String
+  destination               Destination       @relation(fields: [destinationId], references: [id])
+  experienceId              String?
+  experience                Experience?       @relation(fields: [experienceId], references: [id])
+  day                       Int
+  sequence                  Int
+  startTime                 String
+  durationMinutes           Int
+  travelMinutesFromPrevious Int               @default(0)
+  /// Why this stop is here, phrased against the stated preferences.
+  rationale                 String            @db.Text
+  matchedInterests          Json
+  kind                      ItineraryItemKind @default(DESTINATION)
+
+  @@unique([tripId, day, sequence])
+  @@index([destinationId])
+}
+
+enum InteractionType {
+  SEARCH
+  ITINERARY_ADD
+  DESTINATION_VIEW
+  NAVIGATION_START
+  QR_CHECKIN
+  /// A request to book, or an enquiry. Intent, not a sale.
+  BOOKING
+  REVIEW
+  FEEDBACK
+  /// A booking was paid for.
+  BOOKING_CONFIRMED
+  /// A paid booking was cancelled, by either side.
+  BOOKING_CANCELLED
+}
+
+/// The ground truth of the platform. Every demand, trend, concentration and
+/// campaign figure is computed from these rows rather than from stored
+/// aggregates, which is what makes a live signal move the dashboards.
+model TourismInteraction {
+  id                 String           @id
+  anonymousSessionId String
+  destinationId      String?
+  destination        Destination?     @relation(fields: [destinationId], references: [id])
+  experienceId       String?
+  experience         Experience?      @relation(fields: [experienceId], references: [id])
+  tripId             String?
+  trip               Trip?            @relation(fields: [tripId], references: [id])
+  campaignId         String?
+  campaign           CreatorCampaign? @relation(fields: [campaignId], references: [id])
+  type               InteractionType
+  timestamp          DateTime
+  provenance         Provenance
+  metadata           Json             @default("{}")
+  /// Set by the browser for events sent to /api/telemetry, so a retried
+  /// beacon is recorded once.
+  clientEventId      String?          @unique @db.VarChar(64)
+
+  @@index([destinationId, timestamp])
+  @@index([campaignId, timestamp])
+  @@index([type, timestamp])
+}
+
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
+model Feedback {
+  id            String      @id
+  destinationId String
+  destination   Destination @relation(fields: [destinationId], references: [id])
+  experienceId  String?
+  experience    Experience? @relation(fields: [experienceId], references: [id])
+  tripId        String?
+  trip          Trip?       @relation(fields: [tripId], references: [id])
+  rating        Int
+  /// Chosen at submission, not inferred by a model.
+  category      String
+  text          String      @db.Text
+  language      String      @default("English")
+  sentiment     Sentiment
+  /// Stripped of contact details before it reaches any government view.
+  anonymized    Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  provenance    Provenance
+
+  @@index([destinationId, createdAt])
+  @@index([category, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Derived
+// ---------------------------------------------------------------------------
+
+enum EntityType {
+  STATE
+  DISTRICT
+  DESTINATION
+  CAMPAIGN
+  BUSINESS
+}
+
+/// Materialised metrics, for the point at which computing from raw interactions
+/// on every request stops being cheap. Each row keeps the method that produced
+/// it, so a stale or superseded figure can be identified rather than trusted.
+model TourismMetric {
+  id                String      @id
+  metric            String
+  label             String
+  entityType        EntityType
+  entityId          String
+  value             Float
+  unit              String
+  periodStart       DateTime
+  periodEnd         DateTime
+  provenance        Provenance
+  confidence        Confidence
+  sourceCount       Int         @default(0)
+  calculationMethod String      @db.Text
+  sourceIds         Json
+  source            DataSource? @relation(fields: [dataSourceId], references: [id])
+  dataSourceId      String?
+
+  @@unique([metric, entityType, entityId, periodStart, periodEnd])
+  @@index([entityType, entityId])
+}
+
+enum AlertSeverity {
+  INFO
+  WATCH
+  ACTION
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+model Alert {
+  id          String        @id
+  entityType  EntityType
+  entityId    String
+  entityName  String
+  severity    AlertSeverity
+  title       String        @db.VarChar(512)
+  description String        @db.Text
+  detectedAt  DateTime
+  /// The deterministic rule that fired, so a threshold can be argued with.
+  rule        String        @db.Text
+  provenance  Provenance
+  status      AlertStatus   @default(OPEN)
+
+  @@index([entityType, entityId, status])
+}
+
+/// Audit record for government answers, so an important decision can be traced
+/// back to the tools and data that produced it.
+model AnswerAudit {
+  id                String     @id @default(uuid())
+  question          String     @db.Text
+  intent            String
+  answer            String     @db.Text
+  evidenceJson      Json
+  toolTraceJson     Json
+  confidence        Confidence
+  usesSyntheticData Boolean
+  generatedBy       String
+  generatedAt       DateTime   @default(now())
+
+  @@index([generatedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+enum AccountKind {
+  GOVERNMENT
+  PARTNER
+  CREATOR
+}
+
+enum GovernmentRole {
+  VIEWER
+  OFFICER
+  ADMINISTRATOR
+}
+
+/// A person who signs in. Tourists never have one: their signals stay
+/// anonymous (CLAUDE.md: anonymous/session identifiers for tourist signals).
+///
+/// An account acts for exactly one thing. A partner account is bound to one
+/// business and a creator account to one creator profile, and the binding is
+/// the only source of "who is acting" in every Server Action — never a form
+/// field, which any caller can set.
+model UserAccount {
+  id                 String           @id
+  email              String           @unique
+  /// scrypt, self-describing: scrypt$N$r$p$salt$hash. Never logged.
+  passwordHash       String           @db.VarChar(255)
+  displayName        String
+  kind               AccountKind
+  /// Required for GOVERNMENT accounts, null otherwise.
+  governmentRole     GovernmentRole?
+  businessId         String?          @unique
+  business           TourismBusiness? @relation(fields: [businessId], references: [id])
+  creatorId          String?          @unique
+  creator            Creator?         @relation(fields: [creatorId], references: [id])
+  disabled           Boolean          @default(false)
+  /// Consecutive failures; reset on success. Drives the temporary lockout.
+  failedLoginCount   Int              @default(0)
+  lockedUntil        DateTime?
+  lastLoginAt        DateTime?
+  /// Set on an account issued or reset by an administrator: the holder must
+  /// choose their own password before they can do anything else.
+  mustChangePassword Boolean          @default(false)
+  /// A temporary password stops working at this moment. Null for a password
+  /// the holder chose.
+  passwordExpiresAt  DateTime?
+  passwordChangedAt  DateTime?
+  createdAt          DateTime         @default(now())
+
+  sessions AuthSession[]
+
+  @@index([kind])
+}
+
+/// A signed-in session. The id is the SHA-256 of the token in the cookie, so
+/// a leaked database row cannot be replayed as a cookie.
+model AuthSession {
+  id        String      @id
+  userId    String
+  user      UserAccount @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+  expiresAt DateTime
+  userAgent String?     @db.VarChar(512)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// Bookings and payments
+// ---------------------------------------------------------------------------
+//
+// The ledger. Like identity, it is never served from the in-memory cache:
+// every read and write goes to MySQL, and every state change is a conditional
+// update, so two processes (or a browser and a webhook) racing on the same
+// booking cannot both win.
+
+enum BookingStatus {
+  /// Sent by the traveller; the host has not answered.
+  REQUESTED
+  /// The host accepted; the traveller has until paymentDueAt to pay.
+  AWAITING_PAYMENT
+  /// Paid in full.
+  CONFIRMED
+  /// The experience took place.
+  COMPLETED
+  DECLINED
+  /// Not answered, or not paid, in time.
+  EXPIRED
+  CANCELLED_BY_GUEST
+  CANCELLED_BY_HOST
+}
+
+/// A request to book an experience, and — once paid — the booking itself.
+///
+/// Contact details are the only personal data the platform holds about a
+/// traveller. They are visible to the host of this booking and to the
+/// traveller, and never to a government view, which sees counts only.
+model Booking {
+  id                 String          @id
+  /// Short, human readable, quoted on the phone: MT-7K3Q9D.
+  reference          String          @unique @db.VarChar(16)
+  experienceId       String
+  experience         Experience      @relation(fields: [experienceId], references: [id])
+  businessId         String
+  business           TourismBusiness @relation(fields: [businessId], references: [id])
+  destinationId      String
+  destination        Destination     @relation(fields: [destinationId], references: [id])
+  /// Campaign running for the destination when the request was made.
+  campaignId         String?
+  /// The tourist's anonymous analytics session, as on TourismInteraction.
+  anonymousSessionId String
+  /// SHA-256 of the guest cookie that made the request.
+  ownerHash          String          @db.Char(64)
+  /// SHA-256 of the key in the private booking link.
+  accessKeyHash      String          @db.Char(64)
+  guestName          String          @db.VarChar(120)
+  guestPhone         String          @db.VarChar(20)
+  guestEmail         String?         @db.VarChar(191)
+  partySize          Int
+  date               DateTime        @db.Date
+  note               String?         @db.Text
+  /// Price per person when the request was made, in paise.
+  unitPricePaise     Int
+  amountPaise        Int
+  currency           String          @default("INR") @db.Char(3)
+  status             BookingStatus
+  hostMessage        String?         @db.Text
+  paymentDueAt       DateTime?
+  cancellationReason String?         @db.Text
+  createdAt          DateTime
+  respondedAt        DateTime?
+  confirmedAt        DateTime?
+  closedAt           DateTime?
+  provenance         Provenance
+
+  payments Payment[]
+
+  @@index([businessId, status])
+  @@index([ownerHash])
+  @@index([destinationId, status])
+}
+
+enum PaymentStatus {
+  /// An order exists at the provider; nothing has been paid against it.
+  CREATED
+  AUTHORIZED
+  CAPTURED
+  FAILED
+}
+
+/// One attempt to pay, i.e. one Razorpay order. A booking can have several
+/// attempts (a card declined, then UPI succeeds); at most one confirms it.
+model Payment {
+  id                String        @id
+  bookingId         String
+  booking           Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  provider          String        @db.VarChar(16)
+  providerOrderId   String        @unique @db.VarChar(64)
+  providerPaymentId String?       @unique @db.VarChar(64)
+  amountPaise       Int
+  currency          String        @db.Char(3)
+  status            PaymentStatus
+  method            String?       @db.VarChar(32)
+  failureReason     String?       @db.Text
+  /// Paise refunded so far, summed from Refund rows that did not fail.
+  refundedPaise     Int           @default(0)
+  createdAt         DateTime
+  capturedAt        DateTime?
+
+  refunds Refund[]
+
+  @@index([bookingId])
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+model Refund {
+  id               String       @id
+  paymentId        String
+  payment          Payment      @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  /// Null when the provider refused to start the refund; retried later.
+  providerRefundId String?      @unique @db.VarChar(64)
+  amountPaise      Int
+  status           RefundStatus
+  reason           String       @db.VarChar(255)
+  createdAt        DateTime
+
+  @@index([paymentId])
+}
+
+/// Webhook deliveries already handled. Razorpay retries a delivery until it
+/// gets a 2xx, so the same event can arrive more than once.
+model PaymentWebhookEvent {
+  id         String   @id @db.VarChar(64)
+  event      String   @db.VarChar(64)
+  receivedAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Telemetry intake
+// ---------------------------------------------------------------------------
+
+/// What happened to incoming signals, per day and outcome: ACCEPTED, or the
+/// reason one was dropped. Counts only — the dropped events are not kept.
+/// The day is the server's real date, not the demo clock, because this is
+/// operational data about the intake itself.
+model TelemetryCounter {
+  day     DateTime @db.Date
+  outcome String   @db.VarChar(40)
+  count   Int      @default(0)
+
+  @@id([day, outcome])
+}
+
+/// What an administrator (or the account holder) did to an account.
+enum AccountAuditAction {
+  ISSUED
+  ROLE_CHANGED
+  DISABLED
+  ENABLED
+  UNLOCKED
+  PASSWORD_RESET
+  PASSWORD_CHANGED
+}
+
+/// The account audit trail. Emails are copied in, not joined, so the record
+/// still reads correctly if an account is later renamed or removed. It never
+/// holds a password, temporary or otherwise.
+model AccountAuditEvent {
+  id          String             @id
+  action      AccountAuditAction
+  actorId     String?
+  actorEmail  String             @db.VarChar(191)
+  targetId    String
+  targetEmail String             @db.VarChar(191)
+  detail      String?            @db.Text
+  at          DateTime
+
+  @@index([targetId, at])
+  @@index([at])
+}
