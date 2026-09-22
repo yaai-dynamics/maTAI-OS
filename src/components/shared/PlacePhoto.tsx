@@ -10,7 +10,8 @@ const CREDIT =
 /**
  * A destination's real photograph, faded in over its generated artwork. The
  * artwork stays underneath as the placeholder, and is what shows when the
- * destination has no photograph or the file fails to load.
+ * destination has no photograph or the file fails to load. Used on both the
+ * mobile app and the desktop site.
  */
 export function PlacePhoto({
   src,

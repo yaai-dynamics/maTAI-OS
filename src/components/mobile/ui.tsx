@@ -8,7 +8,7 @@ import { EXPERIENCE_CATEGORY_LABEL, type Destination, type Experience } from '@/
 import { cn } from '@/components/ui/primitives';
 import { DestinationVisual } from '@/components/shared/DestinationVisual';
 import { BackLink } from '@/components/mobile/BackLink';
-import { PlacePhoto } from '@/components/mobile/PlacePhoto';
+import { PlacePhoto } from '@/components/shared/PlacePhoto';
 import { photoFor } from '@/lib/mobile/photos';
 import { TAB_BAR_CLEARANCE } from '@/components/mobile/metrics';
 

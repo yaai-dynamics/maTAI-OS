@@ -47,7 +47,7 @@ export default async function CheckInPage(props: { params: Promise<{ id: string 
     <div className="mx-auto max-w-lg space-y-5">
       <Card className="overflow-hidden">
         <div className="relative">
-          <DestinationVisual destination={destination} height="lg" overlay />
+          <DestinationVisual destination={destination} height="lg" overlay showCredit />
           <div className="absolute inset-x-0 bottom-0 p-5">
             <p className="text-[11px] uppercase tracking-[0.12em] text-white/60">You are at</p>
             <h1 className="mt-1 text-[26px] font-semibold leading-tight tracking-tight text-white">

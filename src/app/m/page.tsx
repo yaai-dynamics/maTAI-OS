@@ -18,7 +18,7 @@ import {
 import { getCurrentTrip, listTrips } from '@/server/data/trips';
 import { readVisitor } from '@/server/telemetry/visitor';
 import { DestinationVisual } from '@/components/shared/DestinationVisual';
-import { PlacePhoto } from '@/components/mobile/PlacePhoto';
+import { PlacePhoto } from '@/components/shared/PlacePhoto';
 import { photoFor } from '@/lib/mobile/photos';
 import { DemoChip, ExperienceRow, PlaceTile, Rail, SeeAll, Section } from '@/components/mobile/ui';
 

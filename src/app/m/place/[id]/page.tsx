@@ -14,7 +14,7 @@ import { DestinationVisual } from '@/components/shared/DestinationVisual';
 import { AskPlacePanel } from '@/components/shared/AskPlacePanel';
 import { NavigationLink, ViewSignal } from '@/components/telemetry/Signals';
 import { BackLink } from '@/components/mobile/BackLink';
-import { PlacePhoto } from '@/components/mobile/PlacePhoto';
+import { PlacePhoto } from '@/components/shared/PlacePhoto';
 import { creditLine, photoFor } from '@/lib/mobile/photos';
 import { ExperienceRow, PlaceTile, Rail, Section } from '@/components/mobile/ui';
 import { cn } from '@/components/ui/primitives';

@@ -1,13 +1,18 @@
 import { cn } from '@/components/ui/primitives';
 import type { Destination } from '@/lib/types';
+import { PlacePhoto } from '@/components/shared/PlacePhoto';
+import { creditLine, photoFor } from '@/lib/mobile/photos';
 
 /**
- * Generated destination artwork.
+ * Destination artwork, with a real photograph faded in on top when one is
+ * curated (see lib/mobile/photos.ts — the name predates the photos being
+ * shared with desktop). The generated scene below always renders first and
+ * stays as the fallback for destinations without a photo, or if the file
+ * fails to load, so nothing here depends on the network being up.
  *
- * The prototype must run with no network (CLAUDE.md section 3), so there is no
- * photography. Each destination gets a deterministic layered scene keyed to its
- * palette, which gives the tourist interface real visual identity without
- * shipping images or pretending a stock photograph is of the place.
+ * Each generated scene is a deterministic layered illustration keyed to the
+ * destination's palette, giving every destination a real visual identity
+ * even without a photograph.
  */
 
 export type Palette = Destination['palette'];
@@ -33,11 +38,14 @@ export function DestinationVisual({
   className,
   height = 'md',
   overlay = false,
+  /** Show the photographer's credit over the image. Reserve for a page's single primary photo. */
+  showCredit = false,
 }: {
   destination: Pick<Destination, 'id' | 'name' | 'palette' | 'category'>;
   className?: string;
   height?: 'sm' | 'md' | 'lg' | 'hero';
   overlay?: boolean;
+  showCredit?: boolean;
 }) {
   const scene = SCENES[destination.palette];
   const jitter = offset(destination.id, 40);
@@ -45,9 +53,10 @@ export function DestinationVisual({
   const gradientId = `sky-${destination.id}`;
 
   const heights = { sm: 'h-24', md: 'h-40', lg: 'h-56', hero: 'h-64 sm:h-80' }[height];
+  const photo = photoFor(destination.id);
 
-  return (
-    <div className={cn('relative overflow-hidden bg-surface-3', heights, className)}>
+  const artwork = (
+    <div className="relative h-full w-full overflow-hidden bg-surface-3">
       <svg
         viewBox="0 0 400 200"
         preserveAspectRatio="xMidYMid slice"
@@ -162,6 +171,18 @@ export function DestinationVisual({
         />
       ) : null}
     </div>
+  );
+
+  return (
+    <PlacePhoto
+      src={photo ? (height === 'sm' ? photo.sm : photo.hd) : undefined}
+      alt={destination.name}
+      overlay={overlay}
+      eager={height === 'hero'}
+      credit={showCredit && photo ? { label: creditLine(photo.credit), href: photo.credit.source || undefined } : undefined}
+      className={cn(heights, className)}
+      fallback={artwork}
+    />
   );
 }
 

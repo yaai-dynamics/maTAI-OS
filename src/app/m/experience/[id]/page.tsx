@@ -13,7 +13,7 @@ import { businessesAcceptingBookings } from '@/server/bookings/ledger';
 import { sendEnquiryForm } from '@/server/actions/forms';
 import { DestinationVisual } from '@/components/shared/DestinationVisual';
 import { BackLink } from '@/components/mobile/BackLink';
-import { PlacePhoto } from '@/components/mobile/PlacePhoto';
+import { PlacePhoto } from '@/components/shared/PlacePhoto';
 import { creditLine, photoFor } from '@/lib/mobile/photos';
 import { MobileField, MobileForm, mobileInput } from '@/components/mobile/form';
 import { AvailabilityPill, Section, StickyActions, StickySpacer } from '@/components/mobile/ui';

@@ -53,7 +53,7 @@ export function DestinationDetails({
     <div className="space-y-6">
       <section>
         <div className="relative overflow-hidden rounded-2xl">
-          <DestinationVisual destination={destination} height="hero" overlay />
+          <DestinationVisual destination={destination} height="hero" overlay showCredit />
           <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
             <div className="flex flex-wrap items-center gap-1.5">
               {destination.category.slice(0, 3).map((category) => (
