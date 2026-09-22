@@ -22,19 +22,30 @@ import {
  *         returns WAV, which is what the ASR takes. It also strips market
  *         noise, which is where this will actually be used.
  *
- *   Translation is not part of it. Until SPEECH_MT_URL points at something,
- *   `translates` is false and a turn returns what was heard, saying plainly
- *   that it cannot be carried across. It never guesses.
+ *   Translate POST /translator/translate  Manipuri ⇄ a hundred languages,
+ *         through Google Translate (an official key when the service has
+ *         one, a free fallback otherwise). It takes and returns Meitei
+ *         Mayek, so no script conversion is needed between the models.
  *
  * Environment (server only):
  *   SPEECH_API_URL    base URL of the service, no trailing slash
  *   SPEECH_API_KEY    bearer token, when the service is behind one
- *   SPEECH_MT_URL     translation endpoint, when there is one
+ *   SPEECH_MT_URL     a different translation endpoint, if it ever moves
  *   SPEECH_ISOLATE    auto (default) | always | never
  *   SPEECH_TIMEOUT_MS per call; default 45s, for a cold GPU worker
  */
 
 const DEFAULT_TIMEOUT_MS = 45_000;
+
+/**
+ * The ASR's own language codes. Manipuri is `mni-mtei` there (Meitei Mayek)
+ * or `mni-latin`; plain `mni` is rejected with a 400, so the mapping is not
+ * optional. `GET /asr/v2/languages` lists all 102.
+ */
+const ASR_CODE: Record<SpeechLanguage, string> = { mni: 'mni-mtei', en: 'en', hi: 'hi' };
+
+/** The ASR code for one of our languages. Exported for the tests. */
+export const asrCode = (language: SpeechLanguage): string => ASR_CODE[language];
 
 /** Formats the ASR takes as they are; anything else goes through the isolator. */
 const ASR_READY = /^audio\/(wav|x-wav|wave|mpeg|mp3)$/i;
@@ -106,7 +117,9 @@ export function meiteiProvider(): InterpreterProvider {
   return {
     name: 'meitei',
     ready: Boolean(url),
-    translates: Boolean(mtUrl),
+    // Translation lives on the same service, so speech and translation
+    // arrive together. SPEECH_MT_URL only overrides where it is.
+    translates: Boolean(url || mtUrl),
     // Meitei from N7Speech; English and Hindi from Whisper, in the same call.
     languages: ['mni', 'en', 'hi'],
 
@@ -115,7 +128,7 @@ export function meiteiProvider(): InterpreterProvider {
       const clean = await isolate(audio, signal);
       const response = await send(
         'asr',
-        `${url}/asr/v2/transcribe?language=${encodeURIComponent(language)}`,
+        `${url}/asr/v2/transcribe?language=${encodeURIComponent(asrCode(language))}`,
         { method: 'POST', body: clean, headers: { 'content-type': clean.type || 'audio/wav' } },
         signal,
       );
@@ -128,23 +141,28 @@ export function meiteiProvider(): InterpreterProvider {
     },
 
     async translate(text: string, from: SpeechLanguage, to: SpeechLanguage, signal: AbortSignal): Promise<Translation> {
-      if (!mtUrl) {
-        throw new InterpreterError('translation', 'No translation service is connected (SPEECH_MT_URL).');
-      }
+      const endpoint = mtUrl ?? (url ? `${url}/translator/translate` : undefined);
+      if (!endpoint) throw new InterpreterError('translation', 'No translation service is connected.');
+
       const response = await send(
         'translation',
-        mtUrl,
+        endpoint,
         {
           method: 'POST',
-          body: JSON.stringify({ text, source_language: from, target_language: to }),
+          body: JSON.stringify({ text, source_lang: from, target_lang: to }),
           headers: { 'content-type': 'application/json' },
         },
         signal,
       );
-      const body = (await response.json().catch(() => undefined)) as { text?: unknown } | undefined;
-      const translated = typeof body?.text === 'string' ? body.text.trim() : '';
+      const body = (await response.json().catch(() => undefined)) as
+        | { translated_text?: unknown; text?: unknown }
+        | undefined;
+      // `translated_text` is what the service documents; `text` is accepted
+      // too, so a plain translation endpoint can stand in via SPEECH_MT_URL.
+      const raw = typeof body?.translated_text === 'string' ? body.translated_text : body?.text;
+      const translated = typeof raw === 'string' ? raw.trim() : '';
       if (!translated) throw new InterpreterError('translation', 'The translation service returned nothing.');
-      return { text: translated, model: 'mt' };
+      return { text: translated, model: 'google-translate' };
     },
 
     async speak(text: string, language: SpeechLanguage, signal: AbortSignal): Promise<Speech> {
@@ -172,7 +190,7 @@ export function meiteiProvider(): InterpreterProvider {
     async warm(signal: AbortSignal): Promise<void> {
       if (!url) return;
       const ping = (path: string) => fetch(`${url}${path}`, { headers: headers(), signal }).catch(() => undefined);
-      await Promise.allSettled([ping('/health'), ping('/asr/health')]);
+      await Promise.allSettled([ping('/health'), ping('/asr/health'), ping('/translator/status')]);
     },
   };
 }

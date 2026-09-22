@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import phrasebook from '@data/phrasebook.json';
 import { FAILURE_MESSAGE, isSpeechLanguage, LANGUAGE_LABEL, SPEECH_LANGUAGES, type PhraseGroup } from '@/lib/types';
 import { interpreterProvider, providerName } from '@/server/interpreter/provider';
+import { asrCode } from '@/server/interpreter/meitei';
 
 describe('interpreter provider', () => {
   beforeEach(() => {
@@ -35,18 +36,16 @@ describe('interpreter provider', () => {
     expect(provider.languages).toEqual(['mni', 'en', 'hi']);
   });
 
-  it('separates hearing from translating, which is a different service', async () => {
+  it('translates through the same service, and keeps hearing separate from it', async () => {
     process.env.INTERPRETER_PROVIDER = 'meitei';
-    process.env.SPEECH_API_URL = 'https://speech.example.test';
     expect((await interpreterProvider()).translates).toBe(false);
 
-    process.env.SPEECH_MT_URL = 'https://speech.example.test/translate';
+    process.env.SPEECH_API_URL = 'https://speech.example.test';
     expect((await interpreterProvider()).translates).toBe(true);
   });
 
   it('says so rather than guessing when nothing can translate', async () => {
     process.env.INTERPRETER_PROVIDER = 'meitei';
-    process.env.SPEECH_API_URL = 'https://speech.example.test';
     const provider = await interpreterProvider();
     await expect(provider.translate('kwai', 'mni', 'en', AbortSignal.timeout(50))).rejects.toThrow(
       /no translation service/i,
@@ -58,6 +57,15 @@ describe('interpreter provider', () => {
     process.env.SPEECH_API_URL = 'https://speech.example.test';
     const provider = await interpreterProvider();
     await expect(provider.speak('नमस्ते', 'hi', AbortSignal.timeout(50))).rejects.toThrow(/no hindi voice/i);
+  });
+});
+
+describe('speech service language codes', () => {
+  it('asks the ASR for Manipuri by the code it accepts', () => {
+    // Plain "mni" is rejected with a 400; the ASR calls it mni-mtei.
+    expect(asrCode('mni')).toBe('mni-mtei');
+    expect(asrCode('en')).toBe('en');
+    expect(asrCode('hi')).toBe('hi');
   });
 });
 

@@ -41,6 +41,10 @@ anyone who unzips the file.
   repeats it to a person standing in front of them.
 - **Text is the result; speech is the best effort.** If TTS fails the turn
   still returns, so a listener who can read is not stranded.
+- **Nothing is stored here, and the screen says where the words go.** Audio
+  lives in memory for the length of the request, but translation runs through
+  Google Translate on the speech service, so the text does leave to a third
+  party. The interpreter says so rather than implying everything is local.
 - **Nothing is stored.** Audio lives in memory for the length of the request.
   The Decision Room needs none of it; what it can learn — which language pairs
   are asked for, and where — is an aggregate counted separately.
@@ -75,9 +79,12 @@ SPEECH_TIMEOUT_MS=45000
 
 ## What the service cannot do, and what happens then
 
-- **No translation.** Until `SPEECH_MT_URL` exists, a turn returns the
-  transcript and the screen says nothing here can carry it across. It never
-  guesses.
+- **Translation is Google Translate**, on the service itself
+  (`POST /translator/translate`, Meitei Mayek in and out, so no script
+  conversion is needed). It runs in an official-key mode or a free fallback;
+  `GET /translator/status` says which. When it is missing entirely, a turn
+  returns the transcript and the screen says nothing here can carry it
+  across. It never guesses.
 - **No Hindi voice.** Piper speaks English, N7Speech Meitei. A Hindi listener
   gets the text, and the browser reads it in a device voice. Manipuri stays
   text when the service is silent: no device voice speaks Meiteilon, and a
@@ -85,9 +92,10 @@ SPEECH_TIMEOUT_MS=45000
 
 ## Still open
 
-1. **Translation.** AI4Bharat's IndicTrans2 is the strongest open option, but
-   works in Manipuri's **Bengali script** while the speech models use **Meitei
-   Mayek**, so a script conversion sits between them.
+1. **How good is the Manipuri translation?** It is Google's Meiteilon, which
+   is serviceable but not a Manipuri speaker. Worth a round of checking with
+   one before the demo, and worth comparing against IndicTrans2 if the
+   quality disappoints.
 2. **Streaming.** The service also offers WebSocket ASR and TTS
    (`/asr/v2/stream-vad`, `/tts/meitei/ws`). Press-to-talk over REST is enough
    for the demo; streaming would remove the pause between turns.

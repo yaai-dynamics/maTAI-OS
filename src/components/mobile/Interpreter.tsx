@@ -237,8 +237,8 @@ export function Interpreter({ groups }: { groups: PhraseGroup[] }) {
       <div ref={end} />
 
       <p className="mt-3 text-center text-[11px] leading-relaxed text-ink-500">
-        Speech is sent to this platform&rsquo;s own models to be interpreted, and is not stored. Machine
-        interpretation: check anything that matters.
+        Speech goes to this platform&rsquo;s own Manipuri models, and the words are translated through Google
+        Translate. Nothing is stored here. Machine interpretation: check anything that matters.
       </p>
     </div>
   );

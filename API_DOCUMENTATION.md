@@ -123,3 +123,35 @@ This document provides a clean overview of all available API endpoints, their ro
 - **`GET /stats`**: Live performance metrics, total request counts, and latency averages.
 - **`GET /asr/health`**: Health status of Whisper & N7Speech ASR engines.
 - **`POST /admin/switch-model`**: Swaps the active TTS model checkpoint at runtime without server restart.
+
+---
+
+## 🌐 7. Manipuri Translation & Script Transliteration Endpoints
+
+### 1. Check Translator Engine Status
+- **Endpoint**: `GET /translator/status`
+- **Role**: Check if Google Translate API key is loaded and engine operating mode (`official_google_api` vs `free_fallback`).
+
+### 2. Supported Languages List
+- **Endpoint**: `GET /translator/languages`
+- **Role**: Returns supported language codes mapping (focusing on Manipuri `mni` / `mni-Mtei` to global languages).
+
+### 3. Translate Text
+- **Endpoint**: `POST /translator/translate`
+- **Role**: Translates text from Manipuri to 100+ languages (e.g. English, Hindi, Bengali, Spanish, French, Japanese) or vice versa.
+- **Request Body (JSON)**:
+  - `text` *(string or list of strings, required)*: Input text string or list of text strings.
+  - `source_lang` *(string, optional, default `"auto"`)*: Source language (`"mni"`, `"en"`, `"auto"`).
+  - `target_lang` *(string, optional, default `"en"`)*: Target language code (`"en"`, `"hi"`, `"bn"`, `"es"`, etc.).
+  - `api_key` *(string, optional)*: Optional Google Cloud Translation API key override.
+- **Response (JSON)**:
+  - `success` *(boolean)*: `true` if translation succeeded.
+  - `original_text` *(string or list)*: Original input text.
+  - `translated_text` *(string or list)*: Translated text (in native Meitei Mayek script if target is Manipuri).
+  - `source_language` *(string)*: Detected or specified source language.
+  - `target_language` *(string)*: Target language code (`mni-Mtei`, `en`, etc.).
+  - `mode` *(string)*: `"official_google_api"` (using `GOOGLE_API_KEY`) or `"free_fallback"` (using free mode with automated fallback protection).
+
+### 4. Transliterate Script
+- **Endpoint**: `POST /translator/transliterate`
+- **Role**: Script converter between Meitei Mayek (`ꯍꯥꯏ ꯃꯦꯇꯩ`) and Meitei Latin (`hai meitei`).
