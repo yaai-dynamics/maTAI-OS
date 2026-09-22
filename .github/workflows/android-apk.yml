@@ -21,8 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Same Node (and so npm 11) as development: npm 10 reads the lock file's
-      # optional @emnapi entries differently and `npm ci` refuses it.
+      # Same Node major as development; Capacitor 8 needs 22 or newer.
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -43,8 +42,12 @@ jobs:
           packages: platform-tools
 
       # Skip Prisma/Next postinstall work that the APK does not need.
+      # `npm install`, not `npm ci`: the lock file is written on Windows, and
+      # npm on Linux lists the optional WebAssembly packages (@emnapi/*)
+      # differently, so `npm ci` rejects it as out of sync. The APK only needs
+      # the Capacitor CLI, so an exact lock-file replay is not required here.
       - name: Install dependencies
-        run: npm ci --ignore-scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
 
       # The native project is generated on each run rather than committed.
       - name: Generate Android project
