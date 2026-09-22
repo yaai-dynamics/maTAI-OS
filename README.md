@@ -9,6 +9,8 @@ layer.
 trip, the host taking a booking, the creator telling the story and the
 department deciding what to do next. (Formerly maTAI.)*
 
+**Live:** <https://onestop-manipur.vercel.app> — phones open the mobile app at `/m`, computers the desktop site.
+
 > **This is a prototype.** Figures are synthetic and labelled as such throughout.
 > There is no integration with the Department of Tourism, and the official data
 > tier is shown as explicitly *not connected* rather than filled with a generated
@@ -293,14 +295,14 @@ project has no data for. See `docs/09-implementation-notes.md` §16 for what the
 architecture already supports and what it actually needs.
 
 33 routes, covered by 175 tests.
-# maTAI-OS
 
 ## Android APK (Capacitor)
 
 The Android app is a Capacitor shell that loads the deployed OneStop Manipur site, since the app needs its Next.js server for API routes, the database and AI calls. It opens the mobile tourist view at `/m` (see below).
 
 - **CI:** `.github/workflows/android-apk.yml` builds a debug APK on every push to `main`, and you can also run it by hand from the Actions tab. Download it from the run's **Artifacts** (`onestop-manipur-debug-apk`).
-- **Server URL:** set the repository variable `CAP_SERVER_URL` (Settings → Secrets and variables → Actions → Variables) to the deployed URL, or pass `server_url` when running it by hand. Without it, the APK shows an offline placeholder.
+- **Server URL:** set the repository variable `CAP_SERVER_URL` (Settings → Secrets and variables → Actions → Variables) to the deployed URL — `https://onestop-manipur.vercel.app` — or pass `server_url` when running it by hand. Without it, the APK shows an offline placeholder.
+- **Installing:** the artifact is a zip; unzip it and open the `.apk` on an Android phone, allowing "install unknown apps". It is a debug build, for sideloading rather than the Play Store, and Android only. The app id is `in.onestopmanipur.app`, so it installs beside (not over) any build from before the rename.
 - **Local:** `CAP_SERVER_URL=https://your-site npm run cap:android`, then open `android/` in Android Studio. `android/` is generated and gitignored.
 
 ## Mobile tourist view (`/m`)
