@@ -2,10 +2,12 @@
 
 ## Product name
 
-**maTAI**
+**OneStop Manipur**
 
-Manipur Tourism Intelligence Platform. Ma(nipur) + T(ourism) + AI — and
-"matai" is also a word for the edge, border or flanking side.
+Manipur Tourism Intelligence Platform. One stop for everyone in Manipur's
+tourism: tourists, local businesses, creators and the Tourism Department, on
+one shared intelligence layer. (Renamed from maTAI; internal identifiers such
+as CSS classes and storage keys keep the old prefix.)
 
 Working interface names:
 - **Explore Manipur** — tourist experience

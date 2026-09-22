@@ -1,12 +1,13 @@
-# maTAI
+# OneStop Manipur
 
 **Manipur Tourism Intelligence Platform** — AI-powered tourism ecosystem for
 Manipur connecting tourists, local tourism businesses, creators and the
 Tourism Department through one shared tourism knowledge and intelligence
 layer.
 
-*The name: **Ma**nipur + **T**ourism + **AI**. "Matai" also means the edge, the
-border, the flanking side — fitting, for a platform built at India's frontier.*
+*The name: one stop for everyone in Manipur's tourism — the visitor planning a
+trip, the host taking a booking, the creator telling the story and the
+department deciding what to do next. (Formerly maTAI.)*
 
 > **This is a prototype.** Figures are synthetic and labelled as such throughout.
 > There is no integration with the Department of Tourism, and the official data
@@ -34,7 +35,7 @@ changes a government dashboard with no export step in between.
 
 `/` opens the tourist home (`/explore`): the journey planner as a chat, with the
 visitor's journeys listed beside it, each opening on its own page. The product overview — the interfaces,
-the closed loop and the provenance rules — is **About maTAI** at `/about`, which
+the closed loop and the provenance rules — is **About OneStop Manipur** at `/about`, which
 is also the page to present from.
 
 Every screen shares one frame: the top bar switches between the interfaces and
@@ -296,9 +297,9 @@ architecture already supports and what it actually needs.
 
 ## Android APK (Capacitor)
 
-The Android app is a Capacitor shell that loads the deployed maTAI site, since the app needs its Next.js server for API routes, the database and AI calls. It opens the mobile tourist view at `/m` (see below).
+The Android app is a Capacitor shell that loads the deployed OneStop Manipur site, since the app needs its Next.js server for API routes, the database and AI calls. It opens the mobile tourist view at `/m` (see below).
 
-- **CI:** `.github/workflows/android-apk.yml` builds a debug APK on every push to `main`, and you can also run it by hand from the Actions tab. Download it from the run's **Artifacts** (`maTAI-debug-apk`).
+- **CI:** `.github/workflows/android-apk.yml` builds a debug APK on every push to `main`, and you can also run it by hand from the Actions tab. Download it from the run's **Artifacts** (`onestop-manipur-debug-apk`).
 - **Server URL:** set the repository variable `CAP_SERVER_URL` (Settings → Secrets and variables → Actions → Variables) to the deployed URL, or pass `server_url` when running it by hand. Without it, the APK shows an offline placeholder.
 - **Local:** `CAP_SERVER_URL=https://your-site npm run cap:android`, then open `android/` in Android Studio. `android/` is generated and gitignored.
 

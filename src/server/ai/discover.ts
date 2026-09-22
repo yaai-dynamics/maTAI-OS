@@ -300,7 +300,7 @@ async function unmatchedReply(message: string): Promise<DiscoverChatAnswer> {
   const narration = await narrate({
     promptId: PROMPTS.discoverGuide.id,
     system: PROMPTS.discoverGuide.system,
-    deterministicText: `Nothing in maTAI's destinations or local experiences matched "${message}". Try the name of a place, or something you like to do, such as crafts, lakes or food.`,
+    deterministicText: `Nothing in OneStop Manipur's destinations or local experiences matched "${message}". Try the name of a place, or something you like to do, such as crafts, lakes or food.`,
     evidence: { message, unmatched: true },
     task: 'Say plainly that nothing matched, in one or two short sentences, and suggest trying a place name or an interest. Do not name a place that was not given to you.',
     maxTokens: 120,
@@ -371,7 +371,7 @@ async function placeExperiences(destination: Destination, question: string): Pro
   if (here.length === 0) {
     return {
       kind: 'experiences',
-      text: `No local host at ${destination.name} has joined maTAI yet, so there is nothing to book here for now. The trip planner can still take you there.`,
+      text: `No local host at ${destination.name} has joined OneStop Manipur yet, so there is nothing to book here for now. The trip planner can still take you there.`,
       provider: 'deterministic',
       destinationIds: [],
       experienceIds: [],
@@ -447,7 +447,7 @@ async function placePractical(destination: Destination, question: string): Promi
 function placeOnline(destination: Destination): DiscoverChatAnswer {
   return {
     kind: 'online',
-    text: `Here is what the web has on ${destination.name}. It comes from Wikipedia, YouTube and other public sites, not from maTAI's verified records.`,
+    text: `Here is what the web has on ${destination.name}. It comes from Wikipedia, YouTube and other public sites, not from OneStop Manipur's verified records.`,
     provider: 'deterministic',
     destinationIds: [],
     experienceIds: [],

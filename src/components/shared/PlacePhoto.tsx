@@ -4,8 +4,9 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { cn } from '@/components/ui/primitives';
 
+/** The credit, in the corner of the image. */
 const CREDIT =
-  'absolute right-2 top-[calc(env(safe-area-inset-top)+0.75rem)] max-w-[60%] truncate rounded-full bg-black/40 px-2 py-0.5 text-[10px] text-white/85 backdrop-blur';
+  'absolute right-2 top-2 max-w-[70%] truncate rounded-full bg-black/45 px-2 py-0.5 text-[10px] text-white/90 backdrop-blur';
 
 /**
  * A destination's real photograph, faded in over its generated artwork. The
@@ -28,7 +29,11 @@ export function PlacePhoto({
   fallback: ReactNode;
   /** A dark gradient at the foot, for text laid over the image. */
   overlay?: boolean;
-  /** Author and licence, linked to the file page, shown over the photo. */
+  /**
+   * Author and licence, shown over the image once it loads. The mobile app
+   * leaves this out and puts the credit in a caption instead: on a page whose
+   * photograph runs under the status bar, a corner label lands on the clock.
+   */
   credit?: { label: string; href?: string };
   /** Load immediately (a hero) rather than when scrolled near. */
   eager?: boolean;

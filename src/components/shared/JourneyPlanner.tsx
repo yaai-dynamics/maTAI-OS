@@ -641,7 +641,7 @@ function Assistant({ children }: { children: React.ReactNode }) {
         AI
       </span>
       <div className="min-w-0 max-w-[94%] flex-1 rounded-2xl rounded-tl-sm border border-white/10 bg-white/[0.07] px-4 py-3 text-[14px] leading-relaxed text-white/85">
-        <span className="sr-only">maTAI: </span>
+        <span className="sr-only">OneStop Manipur: </span>
         {children}
       </div>
     </div>
@@ -844,7 +844,7 @@ function OnlineLine({ online, onSearch }: { online: Exchange['online']; onSearch
       <span>
         {status === undefined || status === 'NOT_RUN' ? (
           <>
-            Places that are not maTAI partners have not been looked for yet.
+            Places that are not OneStop partners have not been looked for yet.
             <button type="button" onClick={onSearch} className="ml-1 underline decoration-white/40 hover:text-white">
               Search online
             </button>

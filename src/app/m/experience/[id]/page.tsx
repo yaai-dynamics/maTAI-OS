@@ -13,10 +13,12 @@ import { businessesAcceptingBookings } from '@/server/bookings/ledger';
 import { sendEnquiryForm } from '@/server/actions/forms';
 import { DestinationVisual } from '@/components/shared/DestinationVisual';
 import { BackLink } from '@/components/mobile/BackLink';
+import { EdgeToEdge } from '@/components/mobile/EdgeToEdge';
 import { PlacePhoto } from '@/components/shared/PlacePhoto';
-import { creditLine, photoFor } from '@/lib/mobile/photos';
+import { IconTile } from '@/components/mobile/IconTile';
+import { photoFor } from '@/lib/mobile/photos';
 import { MobileField, MobileForm, mobileInput } from '@/components/mobile/form';
-import { AvailabilityPill, Section, StickyActions, StickySpacer } from '@/components/mobile/ui';
+import { AvailabilityPill, PhotoCredit, Section, StickyActions, StickySpacer } from '@/components/mobile/ui';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,14 +51,14 @@ export default async function MobileExperiencePage(props: { params: Promise<{ id
             alt={destination.name}
             eager
             overlay
-            credit={photo ? { label: creditLine(photo.credit), href: photo.credit.source || undefined } : undefined}
             className="h-72"
             fallback={<DestinationVisual destination={destination} height="lg" overlay className="h-72!" />}
           />
         ) : (
           <div className="immersive h-56" />
         )}
-        <BackLink fallbackHref="/m/discover?mode=experiences" tone="floating" />
+        <EdgeToEdge />
+        <BackLink fallbackHref="/m/discover?mode=experiences" />
         <div className="absolute inset-x-0 bottom-0 p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-lily-200">
             {EXPERIENCE_CATEGORY_LABEL[experience.category]}
@@ -76,20 +78,23 @@ export default async function MobileExperiencePage(props: { params: Promise<{ id
       </div>
 
       <dl className="mt-4 grid grid-cols-3 gap-2">
-        <Stat icon={<IndianRupee aria-hidden size={16} />} label="Per person" value={formatRupees(experience.price)} />
-        <Stat icon={<Clock aria-hidden size={16} />} label="Duration" value={formatDuration(experience.durationMinutes)} />
-        <Stat icon={<Footprints aria-hidden size={16} />} label="Effort" value={experience.accessibility.charAt(0) + experience.accessibility.slice(1).toLowerCase()} />
+        <Stat icon={<IconTile icon={IndianRupee} tone="green" size="sm" />} label="Per person" value={formatRupees(experience.price)} />
+        <Stat icon={<IconTile icon={Clock} tone="orange" size="sm" />} label="Duration" value={formatDuration(experience.durationMinutes)} />
+        <Stat icon={<IconTile icon={Footprints} tone="teal" size="sm" />} label="Effort" value={experience.accessibility.charAt(0) + experience.accessibility.slice(1).toLowerCase()} />
       </dl>
 
       <p className="mt-5 text-[15px] leading-relaxed text-ink-900">{experience.description}</p>
+      {destination ? (
+        <div className="mt-2">
+          <PhotoCredit photo={photo} />
+        </div>
+      ) : null}
 
       {business ? (
         <Section title="Your host">
           <div className="rounded-2xl bg-surface p-4 shadow-card">
             <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-lily-100 text-lily-600">
-                <Store aria-hidden size={20} />
-              </span>
+              <IconTile icon={Store} tone="pink" />
               <div className="min-w-0">
                 <p className="truncate text-[15px] font-semibold text-ink-900">{business.name}</p>
                 <p className="text-[12px] text-ink-500">
@@ -174,11 +179,11 @@ export default async function MobileExperiencePage(props: { params: Promise<{ id
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="rounded-2xl bg-surface p-3 shadow-card">
-      <dt className="flex items-center gap-1 text-[11px] text-ink-500">
-        <span className="text-ink-400">{icon}</span>
-        {label}
+      <dt className="text-[11px] text-ink-500">
+        {icon}
+        <span className="mt-1.5 block">{label}</span>
       </dt>
-      <dd className="num mt-1 truncate text-[14px] font-semibold text-ink-900">{value}</dd>
+      <dd className="num mt-0.5 truncate text-[14px] font-semibold text-ink-900">{value}</dd>
     </div>
   );
 }

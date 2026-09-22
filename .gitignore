@@ -15,3 +15,6 @@ npm-debug.log*
 
 # Capacitor native project (generated in CI by .github/workflows/android-apk.yml)
 android/
+
+.vercel
+.env*

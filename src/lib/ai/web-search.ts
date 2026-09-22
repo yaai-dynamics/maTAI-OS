@@ -2,7 +2,7 @@ import { resolveProvider } from '@/lib/ai/provider';
 
 /**
  * Places found on the web: stays, guides and transport near the areas a plan
- * goes to, for the ones that are not maTAI partners.
+ * goes to, for the ones that are not OneStop partners.
  *
  * Gemini with Google Search grounding does the searching. The model is not
  * trusted to name places on its own: a place is kept only when a grounded

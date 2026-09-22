@@ -24,7 +24,8 @@ export default async function MobileBookingsPage() {
 
       {bookings.length === 0 ? (
         <MobileEmpty
-          icon={<Ticket aria-hidden size={24} />}
+          icon={Ticket}
+          tone="blue"
           title="No bookings yet"
           description="Request a homestay night, a meal or a workshop with a local host. You pay only once the host accepts."
           action={<PrimaryLink href="/m/discover?mode=experiences">Browse experiences</PrimaryLink>}

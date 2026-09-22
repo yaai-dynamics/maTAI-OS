@@ -1,8 +1,8 @@
 {
-  "name": "matai",
+  "name": "onestop-manipur",
   "version": "0.1.0",
   "private": true,
-  "description": "maTAI — AI tourism intelligence for Manipur (Explore Manipur / Decision Room / Create for Manipur)",
+  "description": "OneStop Manipur — AI tourism intelligence for Manipur (Explore Manipur / Decision Room / Create for Manipur)",
   "scripts": {
     "postinstall": "node scripts/copy-maplibre-worker.mjs",
     "dev": "next dev",
@@ -23,6 +23,7 @@
     "vercel-build": "prisma generate && next build"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
     "@prisma/adapter-mariadb": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "lucide-react": "^1.47.0",

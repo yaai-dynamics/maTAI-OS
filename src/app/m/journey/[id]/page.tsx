@@ -14,11 +14,11 @@ import {
   endJourney,
   findPlacesOnline,
   getDestinationPreview,
-  mapPlaceSnapshot,
   replanJourney,
   startJourney,
   tripRoutes,
 } from '@/server/actions/tourist';
+import { mobilePlaceSnapshot } from '@/server/actions/mobile';
 import { ProvenanceBadge } from '@/components/shared/badges';
 import { JourneyTimeline } from '@/components/shared/JourneyTimeline';
 import { ReplanControls } from '@/components/shared/ReplanControls';
@@ -51,7 +51,8 @@ export default async function MobileJourneyPage(props: {
       <div>
         <MobileHeader title="Trip" backHref="/m/plan" />
         <MobileEmpty
-          icon={<Route aria-hidden size={24} />}
+          icon={Route}
+          tone="purple"
           title="This trip is not available"
           description="It may have been replaced by a newer plan, deleted, or planned in another browser."
           action={<PrimaryLink href="/m/plan">Plan a trip</PrimaryLink>}
@@ -69,7 +70,7 @@ export default async function MobileJourneyPage(props: {
     <div>
       {/* Hero */}
       <section className="immersive -mx-4 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
-        <BackLink fallbackHref="/m/plan" tone="floating" />
+        <BackLink fallbackHref="/m/plan" />
         <div className="mt-14 flex flex-wrap items-center gap-2">
           <span className="text-[11px] uppercase tracking-[0.12em] text-white/60">
             {trip.status === 'DRAFT' ? `Option · ${trip.optionLabel ?? 'Plan'}` : 'Your trip'}
@@ -118,8 +119,8 @@ export default async function MobileJourneyPage(props: {
         </p>
       ) : null}
 
-      {/* Left room for the floating back button, which stays over this bar once it sticks. */}
-      <div className="sticky top-0 z-20 -mx-4 bg-paper/95 pb-3 pl-[4.25rem] pr-4 pt-[calc(env(safe-area-inset-top)+0.625rem)] backdrop-blur">
+      {/* Scrolls with the page: nothing full-width is pinned to the top (see MobileHeader). */}
+      <div className="mb-4 mt-4">
         <Segmented
           label="Trip view"
           active={view}
@@ -149,7 +150,7 @@ export default async function MobileJourneyPage(props: {
           <TripMap
             data={buildTripMap(trip)}
             routes={tripRoutes}
-            snapshot={mapPlaceSnapshot}
+            snapshot={mobilePlaceSnapshot}
             getPreview={getDestinationPreview}
             askPlace={askPlace}
             variant="full"

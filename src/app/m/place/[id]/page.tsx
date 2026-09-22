@@ -14,9 +14,11 @@ import { DestinationVisual } from '@/components/shared/DestinationVisual';
 import { AskPlacePanel } from '@/components/shared/AskPlacePanel';
 import { NavigationLink, ViewSignal } from '@/components/telemetry/Signals';
 import { BackLink } from '@/components/mobile/BackLink';
+import { EdgeToEdge } from '@/components/mobile/EdgeToEdge';
 import { PlacePhoto } from '@/components/shared/PlacePhoto';
-import { creditLine, photoFor } from '@/lib/mobile/photos';
-import { ExperienceRow, PlaceTile, Rail, Section } from '@/components/mobile/ui';
+import { IconTile } from '@/components/mobile/IconTile';
+import { photoFor } from '@/lib/mobile/photos';
+import { ExperienceRow, PhotoCredit, PlaceTile, Rail, Section } from '@/components/mobile/ui';
 import { cn } from '@/components/ui/primitives';
 
 export const dynamic = 'force-dynamic';
@@ -48,11 +50,11 @@ export default async function MobilePlacePage(props: { params: Promise<{ id: str
           alt={`${destination.name}, ${destination.district}`}
           eager
           overlay
-          credit={photo ? { label: creditLine(photo.credit), href: photo.credit.source || undefined } : undefined}
           className="h-[380px]"
           fallback={<DestinationVisual destination={destination} height="hero" overlay className="h-[380px]!" />}
         />
-        <BackLink fallbackHref="/m/discover" tone="floating" />
+        <EdgeToEdge />
+        <BackLink fallbackHref="/m/discover" />
         <div className="absolute inset-x-0 bottom-0 p-4 pb-5">
           <div className="flex flex-wrap gap-1.5">
             {destination.category.slice(0, 3).map((category) => (
@@ -82,14 +84,14 @@ export default async function MobilePlacePage(props: { params: Promise<{ id: str
           signal="mobile-directions"
           className="flex flex-col items-center gap-1 rounded-xl py-2.5 text-[12px] font-medium text-ink-800 active:bg-surface-2"
         >
-          <Navigation aria-hidden size={20} className="text-lake-600" />
+          <IconTile icon={Navigation} tone="blue" />
           Directions
         </NavigationLink>
         <Link
           href={`/m/plan?plan=${encodeURIComponent(`A trip that includes ${destination.name}`)}`}
           className="flex flex-col items-center gap-1 rounded-xl py-2.5 text-[12px] font-medium text-ink-800 active:bg-surface-2"
         >
-          <Sparkles aria-hidden size={20} className="text-brand-600" />
+          <IconTile icon={Sparkles} tone="purple" />
           Plan a trip
         </Link>
         {heritage ? (
@@ -97,7 +99,7 @@ export default async function MobilePlacePage(props: { params: Promise<{ id: str
             href={`/m/place/${destination.id}/heritage`}
             className="flex flex-col items-center gap-1 rounded-xl py-2.5 text-[12px] font-medium text-ink-800 active:bg-surface-2"
           >
-            <Layers aria-hidden size={20} className="text-lily-500" />
+            <IconTile icon={Layers} tone="orange" />
             Heritage
           </Link>
         ) : (
@@ -105,7 +107,7 @@ export default async function MobilePlacePage(props: { params: Promise<{ id: str
             href={`/m/discover?mode=experiences&destination=${destination.id}`}
             className="flex flex-col items-center gap-1 rounded-xl py-2.5 text-[12px] font-medium text-ink-800 active:bg-surface-2"
           >
-            <Leaf aria-hidden size={20} className="text-good-500" />
+            <IconTile icon={Leaf} tone="green" />
             Experiences
           </Link>
         )}
@@ -115,11 +117,11 @@ export default async function MobilePlacePage(props: { params: Promise<{ id: str
 
       {/* Facts at a glance */}
       <dl className="mt-4 grid grid-cols-2 gap-2">
-        <Fact icon={<Clock aria-hidden size={16} />} label="Typical visit" value={formatDuration(destination.typicalVisitMinutes)} />
-        {destination.bestSeason ? <Fact icon={<Sun aria-hidden size={16} />} label="Best season" value={destination.bestSeason} /> : null}
-        <Fact icon={<Leaf aria-hidden size={16} />} label="Eco sensitivity" value={destination.ecoSensitivity.toLowerCase()} />
+        <Fact icon={<IconTile icon={Clock} tone="orange" size="sm" />} label="Typical visit" value={formatDuration(destination.typicalVisitMinutes)} />
+        {destination.bestSeason ? <Fact icon={<IconTile icon={Sun} tone="yellow" size="sm" />} label="Best season" value={destination.bestSeason} /> : null}
+        <Fact icon={<IconTile icon={Leaf} tone="green" size="sm" />} label="Eco sensitivity" value={destination.ecoSensitivity.toLowerCase()} />
         {destination.accessibilityNotes ? (
-          <Fact icon={<Accessibility aria-hidden size={16} />} label="Access" value={destination.accessibilityNotes} wide />
+          <Fact icon={<IconTile icon={Accessibility} tone="blue" size="sm" />} label="Access" value={destination.accessibilityNotes} wide />
         ) : null}
       </dl>
       {destination.ecoSensitivity === 'HIGH' ? (
@@ -239,14 +241,13 @@ export default async function MobilePlacePage(props: { params: Promise<{ id: str
         </Section>
       ) : null}
 
-      <p className="mt-6 text-[11px] leading-relaxed text-ink-500">
-        Destination records are curated from public official material and reviewed before publication. {photo
-          ? photo.credit.source
-            ? `The photograph is from Wikimedia Commons (${creditLine(photo.credit)}); tap the credit for the file page.`
-            : `${creditLine(photo.credit)}.`
-          : 'No suitable photograph yet, so the artwork is generated, not photographed.'}
-        {source ? ` Source: ${source.name}, reliability ${source.reliabilityLevel.toLowerCase()}.` : ''}
-      </p>
+      <div className="mt-6 space-y-1">
+        <PhotoCredit photo={photo} />
+        <p className="text-[11px] leading-relaxed text-ink-500">
+          Destination records are curated from public official material and reviewed before publication.
+          {source ? ` Source: ${source.name}, reliability ${source.reliabilityLevel.toLowerCase()}.` : ''}
+        </p>
+      </div>
     </div>
   );
 }
@@ -254,8 +255,8 @@ export default async function MobilePlacePage(props: { params: Promise<{ id: str
 function Fact({ icon, label, value, wide }: { icon: React.ReactNode; label: string; value: string; wide?: boolean }) {
   return (
     <div className={cn('rounded-2xl bg-surface p-3 shadow-card', wide && 'col-span-2')}>
-      <dt className="flex items-center gap-1.5 text-[11px] text-ink-500">
-        <span className="text-ink-400">{icon}</span>
+      <dt className="flex items-center gap-2 text-[11px] text-ink-500">
+        {icon}
         {label}
       </dt>
       <dd className="mt-1 text-[13px] font-medium leading-snug text-ink-900">{value}</dd>

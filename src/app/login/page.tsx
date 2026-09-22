@@ -44,7 +44,7 @@ export default async function LoginPage(props: {
     <main id="main" className="mx-auto flex min-h-dvh max-w-[980px] flex-col justify-center gap-6 px-4 py-10">
       <div>
         <Link href="/" className="text-[12px] font-medium text-brand-700 hover:underline">
-          ← maTAI
+          ← OneStop Manipur
         </Link>
         <h1 className="mt-2 text-[24px] font-semibold tracking-tight text-ink-900">Sign in</h1>
         <p className="mt-1 max-w-xl text-[13px] text-ink-600">

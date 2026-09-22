@@ -7,7 +7,8 @@ export default function MobileNotFound() {
     <div>
       <MobileHeader title="Not found" backHref="/m" />
       <MobileEmpty
-        icon={<Compass aria-hidden size={24} />}
+        icon={Compass}
+        tone="blue"
         title="We could not find that"
         description="The place or page may have moved. Start again from Discover."
         action={<PrimaryLink href="/m/discover">Discover Manipur</PrimaryLink>}

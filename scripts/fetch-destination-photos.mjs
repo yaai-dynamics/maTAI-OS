@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const OUT_DIR = `${ROOT}public/photos`;
 const CREDITS = `${ROOT}data/destination-photos.json`;
-const UA = 'maTAI/0.1 (Manipur tourism hackathon prototype; photos credited to Wikimedia Commons)';
+const UA = 'OneStopManipur/0.1 (Manipur tourism hackathon prototype; photos credited to Wikimedia Commons)';
 const PAUSE_MS = 1500;
 const FORCE = process.argv.includes('--force');
 const ONLY = process.argv.find((arg) => arg.startsWith('--only='))?.slice(7).split(',');

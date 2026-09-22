@@ -155,7 +155,7 @@ export function PlaceCard({
             rel="noreferrer"
             className="inline-flex items-center gap-1 text-[11px] text-ink-500 hover:text-ink-800 hover:underline"
           >
-            More on Wikipedia (public, not verified by maTAI)
+            More on Wikipedia (public, not verified by OneStop Manipur)
             <ExternalLink aria-hidden size={11} />
           </a>
         ) : null}

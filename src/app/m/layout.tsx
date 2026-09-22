@@ -8,7 +8,7 @@ import { LinkScope } from '@/components/mobile/LinkScope';
 import { TabBar } from '@/components/mobile/TabBar';
 
 export const metadata: Metadata = {
-  title: { default: 'Explore Manipur', template: '%s — maTAI' },
+  title: { default: 'Explore Manipur', template: '%s — OneStop Manipur' },
   robots: { index: false },
 };
 

@@ -22,9 +22,19 @@ const nextConfig: NextConfig = {
   ],
   // The tourist experience is the front door. The product overview lives at
   // /about. Temporary (307), so the choice can change without browsers having
-  // cached a permanent redirect.
+  // cached a permanent redirect. Phones get the mobile app (/m); tablets and
+  // computers the responsive site. Only the root: /explore stays reachable on
+  // a phone for anyone who wants it.
   async redirects() {
-    return [{ source: '/', destination: '/explore', permanent: false }];
+    return [
+      {
+        source: '/',
+        has: [{ type: 'header', key: 'user-agent', value: '.*(iPhone|iPod|Android.+Mobile|Windows Phone).*' }],
+        destination: '/m',
+        permanent: false,
+      },
+      { source: '/', destination: '/explore', permanent: false },
+    ];
   },
 };
 

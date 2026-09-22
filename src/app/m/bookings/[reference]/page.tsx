@@ -45,7 +45,8 @@ export default async function MobileBookingPage(props: {
       <div>
         <MobileHeader title="Booking" backHref="/m/bookings" />
         <MobileEmpty
-          icon={<Ticket aria-hidden size={24} />}
+          icon={Ticket}
+          tone="blue"
           title="Booking not found"
           description="Open the private link you were given when you made the request."
           action={<PrimaryLink href="/m/bookings">Bookings on this device</PrimaryLink>}
