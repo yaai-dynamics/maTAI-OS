@@ -326,6 +326,12 @@ A phone-first version of Explore Manipur lives under `src/app/m` (screens) and `
 
 Shared components that link to `/explore/...` are kept inside `/m` by `src/components/mobile/LinkScope.tsx`, using the mapping in `src/lib/mobile/routes.ts`. Open `http://localhost:3000/m` in a phone-sized browser window during development.
 
+## Interpreter (Manipuri ⇄ English/Hindi)
+
+A floating **Talk** bubble on every mobile screen opens `/m/talk`: two halves of one screen, the local person's upside down, each with a hold-to-speak button. Speech goes to `POST /api/interpreter/turn`, which calls the speech models server-side and returns text and audio.
+
+No models are connected yet, so the screen says so and the offline phrasebook (`data/phrasebook.json`) carries it. `docs/10-interpreter.md` has the environment variables, the provider boundary (`src/server/interpreter/`) and what is still open — translation, and speech-to-text for the visitor's language.
+
 ## Hosting on Vercel
 
 The Next.js server (pages, AI calls, analytics) runs on Vercel; MySQL stays on its own server. `vercel.json` pins the functions to Mumbai (`bom1`), the closest region to the database in Bengaluru, and the `vercel-build` script generates the Prisma client before building.

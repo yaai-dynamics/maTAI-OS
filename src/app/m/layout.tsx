@@ -6,6 +6,7 @@ import { readVisitor } from '@/server/telemetry/visitor';
 import { AnalyticsNotice } from '@/components/telemetry/AnalyticsNotice';
 import { LinkScope } from '@/components/mobile/LinkScope';
 import { TabBar } from '@/components/mobile/TabBar';
+import { TalkBubble } from '@/components/mobile/TalkBubble';
 
 export const metadata: Metadata = {
   title: { default: 'Explore Manipur', template: '%s — OneStop Manipur' },
@@ -41,6 +42,7 @@ export default async function MobileLayout({ children }: { children: React.React
           </div>
         ) : null}
       </main>
+      <TalkBubble />
       <TabBar />
     </div>
   );

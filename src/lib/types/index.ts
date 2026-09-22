@@ -7,3 +7,4 @@ export * from '@/lib/types/supply';
 export * from '@/lib/types/creator';
 export * from '@/lib/types/tourist';
 export * from '@/lib/types/analytics';
+export * from '@/lib/types/interpreter';
