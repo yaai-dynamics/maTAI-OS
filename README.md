@@ -322,3 +322,13 @@ A phone-first version of Explore Manipur lives under `src/app/m` (screens) and `
 **Theme and photos.** The mobile app uses a minimalist monochrome theme (`src/app/m/mobile.css`, scoped so desktop keeps its palette), with real colour photographs of destinations. The photos are downloaded once from Wikimedia Commons by `node scripts/fetch-destination-photos.mjs` into `public/photos/`, with author and licence in `data/destination-photos.json`. They are served locally, so the demo works offline, and each destination page credits its photo. A destination without a suitable photo keeps its generated artwork. Check new photos by eye before committing them.
 
 Shared components that link to `/explore/...` are kept inside `/m` by `src/components/mobile/LinkScope.tsx`, using the mapping in `src/lib/mobile/routes.ts`. Open `http://localhost:3000/m` in a phone-sized browser window during development.
+
+## Hosting on Vercel
+
+The Next.js server (pages, AI calls, analytics) runs on Vercel; MySQL stays on its own server. `vercel.json` pins the functions to Mumbai (`bom1`), the closest region to the database in Bengaluru, and the `vercel-build` script generates the Prisma client before building.
+
+1. Import the repository at vercel.com (framework: Next.js; defaults are fine).
+2. Add every key from `.env` under Project Settings → Environment Variables. Set `NEXT_PUBLIC_BASE_URL` to the Vercel URL. These keys live only on Vercel and in local `.env`, never in GitHub or the APK.
+3. Deploy, then set the GitHub Actions variable `CAP_SERVER_URL` to the Vercel URL and re-run the Android APK workflow.
+
+The server keeps the tourism working set in memory and writes every change to MySQL. On Vercel, a second concurrent instance sees another instance's new feedback only once it loads again, which is fine at demo traffic. A single long-running process (`npm run build && npm start` on a server) avoids this entirely.

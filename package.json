@@ -19,7 +19,8 @@
     "db:seed": "tsx --env-file=.env prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
     "cap:sync": "cap sync android",
-    "cap:android": "cap add android && cap sync android"
+    "cap:android": "cap add android && cap sync android",
+    "vercel-build": "prisma generate && next build"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.10.0",
