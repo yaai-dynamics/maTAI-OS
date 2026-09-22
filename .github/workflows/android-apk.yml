@@ -26,11 +26,12 @@ jobs:
           node-version: 22
           cache: npm
 
+      # No `cache: gradle` here: android/ is generated below, so there are no
+      # Gradle files to key a cache on yet. setup-gradle caches after that.
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
-          cache: gradle
 
       - uses: android-actions/setup-android@v3
 
@@ -43,6 +44,8 @@ jobs:
         run: |
           npx cap add android
           npx cap sync android
+
+      - uses: gradle/actions/setup-gradle@v4
 
       - name: Build debug APK
         working-directory: android
