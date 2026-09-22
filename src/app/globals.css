@@ -183,6 +183,79 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Maps (src/components/map). Pins are buttons inside MapLibre markers.
+   --------------------------------------------------------------------------- */
+.matai-pin {
+  cursor: pointer;
+}
+
+.matai-pin-button {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.matai-pin-button:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 3px;
+  border-radius: 9999px;
+}
+
+/* Names show when a pin is hovered or chosen, or for every pin once zoomed in. */
+.matai-pin-label {
+  display: none;
+}
+
+.matai-pin-button:hover .matai-pin-label,
+.matai-pin-button:focus-visible .matai-pin-label,
+.matai-pin-button[aria-pressed='true'] .matai-pin-label,
+[data-zoomed] .matai-pin-label {
+  display: block;
+}
+
+.matai-pin-pulse {
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border-radius: 9999px;
+  opacity: 0.45;
+  animation: pin-pulse 1.8s var(--ease-out-soft) infinite;
+  pointer-events: none;
+}
+
+.matai-tooltip .maplibregl-popup-content {
+  padding: 0;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: 0 10px 28px rgba(20, 22, 31, 0.22), 0 1px 0 rgba(20, 22, 31, 0.06);
+}
+
+.matai-tooltip.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: var(--color-surface);
+}
+
+.matai-tooltip.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: var(--color-surface);
+}
+
+@keyframes pin-pulse {
+  from {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
 @keyframes rise {
   from {
     opacity: 0;

@@ -9,7 +9,11 @@ import { getBusiness, getDestination, getDestinations, getExperiences } from '@/
 import { businessesAcceptingBookings } from '@/server/bookings/ledger';
 import { CANCELLATION_POLICY, formatRupees, MAX_PARTY_SIZE, PAYMENT_WINDOW_HOURS } from '@/server/bookings/policy';
 import { requestBookingForm, sendEnquiryForm } from '@/server/actions/forms';
-import { askPlace, discoverChat, discoverPlaceOnline, getDestinationPreview } from '@/server/actions/tourist';
+import { askPlace, discoverChat, discoverPlaceOnline, getDestinationPreview, mapPlaceSnapshot } from '@/server/actions/tourist';
+import type { MapPlace } from '@/lib/map';
+import { DiscoverMap, type MapExperience } from '@/components/map/DiscoverMap';
+import { ViewToggle } from '@/components/map/ViewToggle';
+import { TourismMap } from '@/components/shared/TourismMap';
 import { Card, CardBody, CardHeader, EmptyState } from '@/components/ui/primitives';
 import { DestinationCard, ExperienceCard } from '@/components/shared/cards';
 import { DiscoverWorkspace } from '@/components/shared/DiscoverWorkspace';
@@ -50,11 +54,23 @@ export default async function DiscoverPage(props: {
     experience?: string;
     book?: string;
     destination?: string;
+    view?: string;
   }>;
 }) {
-  const { mode: modeParam, category, experience: experienceParam, book: bookParam, destination: destinationParam } =
+  const { mode: modeParam, category, experience: experienceParam, book: bookParam, destination: destinationParam, view: viewParam } =
     await props.searchParams;
   const mode: 'destinations' | 'experiences' = modeParam === 'experiences' ? 'experiences' : 'destinations';
+  const view: 'list' | 'map' = viewParam === 'map' ? 'map' : 'list';
+  // Links keep the view, so the map stays the main view once chosen.
+  const withView = (href: string) => (view === 'map' ? `${href}${href.includes('?') ? '&' : '?'}view=map` : href);
+  const modeHref = mode === 'experiences' ? '/explore/discover?mode=experiences' : '/explore/discover';
+  const filterQuery = [
+    category ? `category=${encodeURIComponent(category)}` : '',
+    mode === 'experiences' && destinationParam ? `destination=${encodeURIComponent(destinationParam)}` : '',
+  ]
+    .filter(Boolean)
+    .join('&');
+  const sameFilters = (href: string) => (filterQuery ? `${href}${href.includes('?') ? '&' : '?'}${filterQuery}` : href);
 
   const allDestinations = getDestinations();
   const allExperiences = getExperiences();
@@ -77,15 +93,21 @@ export default async function DiscoverPage(props: {
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-[22px] font-semibold tracking-tight text-ink-900">Discover</h1>
           <nav aria-label="Search by" className="flex gap-1.5">
-            <ModePill href="/explore/discover" active={mode === 'destinations'}>
+            <ModePill href={withView('/explore/discover')} active={mode === 'destinations'}>
               Destinations
             </ModePill>
-            <ModePill href="/explore/discover?mode=experiences" active={mode === 'experiences'}>
+            <ModePill href={withView('/explore/discover?mode=experiences')} active={mode === 'experiences'}>
               Experiences
             </ModePill>
           </nav>
+          <ViewToggle
+            view={view}
+            listHref={sameFilters(modeHref)}
+            mapHref={sameFilters(`${modeHref}${modeHref.includes('?') ? '&' : '?'}view=map`)}
+            className="ml-auto"
+          />
         </div>
-        <p className="mt-1 max-w-2xl text-[13px] text-ink-600">
+        <p className={view === 'map' ? 'sr-only' : 'mt-1 max-w-2xl text-[13px] text-ink-600'}>
           Every destination carries curated, verified information, and the local experiences run by
           homestays, guides, cooks and artisans who have joined the platform sit right alongside it.
         </p>
@@ -99,7 +121,9 @@ export default async function DiscoverPage(props: {
         getPreview={getDestinationPreview}
         askPlace={askPlace}
       >
-        {mode === 'destinations' ? (
+        {view === 'map' ? (
+          <DiscoverMapView mode={mode} category={category} destinationFilter={destinationParam} bookable={bookable} />
+        ) : mode === 'destinations' ? (
           <DestinationsBrowse category={category} experiencesByDestination={experiencesByDestination} />
         ) : (
           <ExperiencesBrowse
@@ -169,6 +193,113 @@ function CategoryPills({
         </a>
       ))}
     </nav>
+  );
+}
+
+/** Discover with the map as the main view: the same filters, the same places. */
+function DiscoverMapView({
+  mode,
+  category,
+  destinationFilter,
+  bookable,
+}: {
+  mode: 'destinations' | 'experiences';
+  category: string | undefined;
+  destinationFilter: string | undefined;
+  bookable: (experience: Experience) => boolean;
+}) {
+  const active = category ?? 'all';
+  const demand = new Map(computeDemand(currentWindow()).map((row) => [row.destinationId, row]));
+
+  const experiences = getExperiences().filter((experience) =>
+    mode === 'destinations'
+      ? true
+      : (active === 'all' || experience.category === active) &&
+        (!destinationFilter || experience.destinationId === destinationFilter),
+  );
+  const countAt = (id: string) => experiences.filter((experience) => experience.destinationId === id).length;
+
+  const destinations = getDestinations()
+    .filter((destination) =>
+      mode === 'destinations'
+        ? active === 'all' || destination.category.includes(active as never)
+        : countAt(destination.id) > 0,
+    )
+    .sort((a, b) => (demand.get(b.id)?.weightedScore ?? 0) - (demand.get(a.id)?.weightedScore ?? 0));
+
+  const places: MapPlace[] = destinations.map((destination) => ({
+    id: destination.id,
+    name: destination.name,
+    district: destination.district,
+    latitude: destination.latitude,
+    longitude: destination.longitude,
+    palette: destination.palette,
+    category: destination.category,
+    summary: destination.summary,
+    ...(destination.bestSeason ? { bestSeason: destination.bestSeason } : {}),
+    typicalVisitMinutes: destination.typicalVisitMinutes,
+    experienceCount: countAt(destination.id),
+    ...(demand.get(destination.id) ? { demandIndex: demand.get(destination.id)!.demandIndex } : {}),
+  }));
+
+  const mapExperiences: MapExperience[] = experiences
+    .filter((experience) => destinations.some((destination) => destination.id === experience.destinationId))
+    .map((experience) => ({
+      id: experience.id,
+      title: experience.title,
+      destinationId: experience.destinationId,
+      businessName: getBusiness(experience.businessId)?.name ?? 'Local provider',
+      price: experience.price,
+      bookable: bookable(experience),
+      href: `/explore/discover?mode=experiences&${bookable(experience) ? 'book' : 'experience'}=${experience.id}`,
+    }));
+
+  const focusDestination = mode === 'experiences' && destinationFilter ? getDestination(destinationFilter) : undefined;
+  const pills =
+    mode === 'destinations'
+      ? DESTINATION_FILTERS
+      : [{ value: 'all', label: 'All' }, ...EXPERIENCE_CATEGORIES.map((value) => ({ value, label: EXPERIENCE_CATEGORY_LABEL[value] }))];
+
+  return (
+    <div className="space-y-4">
+      <CategoryPills
+        active={active}
+        options={pills}
+        baseHref={mode === 'destinations' ? '/explore/discover?view=map' : '/explore/discover?mode=experiences&view=map'}
+      />
+      {focusDestination ? (
+        <p className="text-[13px] text-ink-700">
+          Showing experiences at <span className="font-medium text-ink-900">{focusDestination.name}</span>.{' '}
+          <a
+            href={`/explore/discover?mode=experiences&view=map${active === 'all' ? '' : `&category=${active}`}`}
+            className="font-medium text-brand-700 hover:underline"
+          >
+            Clear
+          </a>
+        </p>
+      ) : null}
+      {places.length === 0 ? (
+        <EmptyState title="Nothing matches that filter" description="Try a different interest, or clear the filter." />
+      ) : (
+        <DiscoverMap
+          mode={mode}
+          places={places}
+          experiences={mapExperiences}
+          snapshot={mapPlaceSnapshot}
+          getPreview={getDestinationPreview}
+          askPlace={askPlace}
+          fallback={
+            <TourismMap
+              points={destinations.map((destination) => ({
+                destination,
+                demandIndex: demand.get(destination.id)?.demandIndex ?? 20,
+                href: `/explore/destinations/${destination.id}`,
+              }))}
+            />
+          }
+        />
+      )}
+    </div>
   );
 }
 

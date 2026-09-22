@@ -1540,3 +1540,60 @@ Asking for photos, videos or anything "online" about a place, or pressing
 - **Photographs are not moderated** beyond coming from the Wikipedia article;
   a photograph there that is not of the place would show.
 - **A video's title is the only check that it is about the place.**
+
+## 27. Maps on Trip and Discover
+
+A real, tiled map (MapLibre GL, `src/components/map/`) replaces the schematic
+outline on the tourist screens. The outline (`TourismMap`) stays as the
+offline fallback and on the Department screens.
+
+### 27.1 Screens
+
+- **List / Map toggle** on Discover and on a trip (`?view=map`): the map
+  becomes the main view, with the same places listed in text beside it (below
+  it on a phone). Discover's filters and Destinations/Experiences keep the view.
+- **Trip**: stops numbered in timeline order across days (the timeline shows
+  the same numbers), coloured by day; day routes; nights away from a stop;
+  Imphal as start and finish; day filter; "Play the route" flies through the
+  stops in 3D. The timeline view keeps a smaller map card; Live trip shows one
+  opened on today.
+- **Discover**: a pin per place, with its kind of place and number of
+  experiences. Pins that sit on top of each other (Imphal's sights) are fanned
+  out. With the chat open, an answer moves the map to the places it names.
+- **Every pin** has a tooltip on hover or focus. Pressing it opens a card with
+  a photograph, the verified summary, **Explore** (the trip page's popup),
+  **Directions** (Google Maps, in the visitor's own app), and Book/Enquire or
+  "Plan a trip here".
+- Basemaps: streets with hill shading, satellite, and "3D hills" (terrain).
+
+### 27.2 External services
+
+All are public and need no key. Only public coordinates and place names are
+sent; nothing typed by the visitor.
+
+| What | Service | When it is missing |
+| --- | --- | --- |
+| Street map | OpenFreeMap (OpenStreetMap data) | The offline outline is shown |
+| Satellite | Esri World Imagery | Switch back to Map |
+| Relief, 3D | AWS Terrain Tiles (Mapzen) | Flat map |
+| Road routes | OSRM public server (`ROUTING_URL`; `off` disables) | Dashed straight line, labelled |
+| Card photo | Wikipedia/Wikimedia, cached 12 h, no Gemini call | Generated artwork |
+
+Road distance and driving time per day come from OSRM and are labelled as
+such. The plan's own times are still the planner's estimates.
+
+### 27.3 Build note
+
+MapLibre 6 loads its web worker from a file next to its own module, and the
+bundler does not ship that file. `scripts/copy-maplibre-worker.mjs` (run on
+`postinstall`) copies it to `public/maplibre/`, and the map calls
+`setWorkerUrl`. Without it the style loads but no street tile is ever
+fetched. The map counts as ready once its style has loaded, not after every
+first tile, so a slow connection still gets pins at once.
+
+### 27.4 Not done
+
+- The public OSRM and OpenFreeMap servers are fine for a demo, not for
+  production traffic; a real deployment would host or buy both.
+- No clustering: with 14 destinations the fan-out is enough.
+- No "where am I" location on the Live trip map.

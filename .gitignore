@@ -1,4 +1,6 @@
 node_modules/
+# Copied from node_modules on install (scripts/copy-maplibre-worker.mjs).
+public/maplibre/
 .next/
 out/
 build/

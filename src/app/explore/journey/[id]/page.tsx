@@ -17,21 +17,31 @@ import { ReplanControls } from '@/components/shared/ReplanControls';
 import { SearchOnlineButton, TripActions } from '@/components/shared/TripActions';
 import { TripCostCard, TripIncludes } from '@/components/shared/TripIncludes';
 import { TourismMap } from '@/components/shared/TourismMap';
+import { TripMap } from '@/components/map/TripMap';
+import { ViewToggle } from '@/components/map/ViewToggle';
+import { buildTripMap } from '@/server/data/trip-map';
 import {
   askPlace,
   chooseJourney,
   endJourney,
   findPlacesOnline,
+  getDestinationPreview,
+  mapPlaceSnapshot,
   replanJourney,
   startJourney,
+  tripRoutes,
 } from '@/server/actions/tourist';
 
 export const metadata: Metadata = { title: 'Your trip' };
 export const dynamic = 'force-dynamic';
 
 /** E2: one plan or journey, opened from the planner or the list beside it. */
-export default async function JourneyPage(props: { params: Promise<{ id: string }> }) {
+export default async function JourneyPage(props: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ view?: string }>;
+}) {
   const { id } = await props.params;
+  const view: 'list' | 'map' = (await props.searchParams).view === 'map' ? 'map' : 'list';
   const { sessionId } = await readVisitor();
   // Read with the session, so a journey id from another browser finds nothing.
   const trip = await getTripFor(sessionId, id);
@@ -84,6 +94,68 @@ export default async function JourneyPage(props: { params: Promise<{ id: string 
       };
     })
     .filter((point): point is NonNullable<typeof point> => point !== undefined);
+
+  const tripMap = (variant: 'card' | 'full') => (
+    <TripMap
+      data={buildTripMap(trip)}
+      routes={tripRoutes}
+      snapshot={mapPlaceSnapshot}
+      getPreview={getDestinationPreview}
+      askPlace={askPlace}
+      variant={variant}
+      fullHref={`/explore/journey/${trip.id}?view=map`}
+      fallback={<TourismMap points={mapPoints} showLabelsFor={mapPoints.length} />}
+    />
+  );
+
+  const keepCard = (
+    <Card>
+      <CardHeader title={trip.status === 'DRAFT' ? 'Keep this plan?' : 'This trip'} />
+      <CardBody>
+        <TripActions
+          tripId={trip.id}
+          status={trip.status}
+          phase={phase}
+          choose={chooseJourney}
+          start={startJourney}
+          end={endJourney}
+        />
+        {siblings.length > 0 ? (
+          <div className="mt-3 space-y-2 border-t border-line pt-3">
+            <p className="text-[12px] text-ink-500">
+              {siblings.length === 1 ? 'The other option:' : `The other ${siblings.length} options:`}
+            </p>
+            {siblings.map((row) => {
+              const rowCost = costTrip(row);
+              const stops = row.items.filter((item) => item.kind === 'DESTINATION').length;
+              return (
+                <Link
+                  key={row.id}
+                  href={`/explore/journey/${row.id}${view === 'map' ? '?view=map' : ''}`}
+                  className="flex items-center gap-3 rounded-lg border border-line-strong bg-surface px-3.5 py-3 transition-colors hover:border-lake-300 hover:bg-lake-50/40"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="rounded-full bg-lake-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-lake-700">
+                        {row.optionLabel ?? 'Option'}
+                      </span>
+                      <span className="truncate text-[13px] font-semibold text-ink-900">{row.theme}</span>
+                    </div>
+                    <p className="mt-1 text-[12px] text-ink-600">
+                      {row.preferences.durationDays} {row.preferences.durationDays === 1 ? 'day' : 'days'} ·{' '}
+                      {stops} {stops === 1 ? 'place' : 'places'} · {formatRupees(rowCost.total)} estimated
+                      {rowCost.budget ? (rowCost.budget.fits ? ' · within budget' : ' · over budget') : ''}
+                    </p>
+                  </div>
+                  <ArrowRight aria-hidden size={16} className="shrink-0 text-ink-400" />
+                </Link>
+              );
+            })}
+          </div>
+        ) : null}
+      </CardBody>
+    </Card>
+  );
 
   return (
     <div className="space-y-5">
@@ -155,6 +227,29 @@ export default async function JourneyPage(props: { params: Promise<{ id: string 
         </Card>
       ) : null}
 
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[13px] text-ink-600">
+          {view === 'map'
+            ? 'Every stop, numbered in order, with each day’s route. Press a stop for photos and details.'
+            : 'Day by day, with why each stop is here.'}
+        </p>
+        <ViewToggle
+          view={view}
+          listHref={`/explore/journey/${trip.id}`}
+          mapHref={`/explore/journey/${trip.id}?view=map`}
+          listLabel="Timeline"
+        />
+      </div>
+
+      {view === 'map' ? (
+        <>
+          {tripMap('full')}
+          <div className="grid gap-5 lg:grid-cols-2">
+            {keepCard}
+            <TripCostCard trip={trip} />
+          </div>
+        </>
+      ) : (
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <div className="space-y-5">
           <Card>
@@ -190,61 +285,16 @@ export default async function JourneyPage(props: { params: Promise<{ id: string 
         </div>
 
         <div className="space-y-5">
+          {keepCard}
+
           <Card>
-            <CardHeader title={trip.status === 'DRAFT' ? 'Keep this plan?' : 'This trip'} />
+            <CardHeader title="The route" subtitle="Numbers match the timeline. Hover a stop, or press it for photos." />
             <CardBody>
-              <TripActions
-                tripId={trip.id}
-                status={trip.status}
-                phase={phase}
-                choose={chooseJourney}
-                start={startJourney}
-                end={endJourney}
-              />
-              {siblings.length > 0 ? (
-                <div className="mt-3 space-y-2 border-t border-line pt-3">
-                  <p className="text-[12px] text-ink-500">
-                    {siblings.length === 1 ? 'The other option:' : `The other ${siblings.length} options:`}
-                  </p>
-                  {siblings.map((row) => {
-                    const rowCost = costTrip(row);
-                    const stops = row.items.filter((item) => item.kind === 'DESTINATION').length;
-                    return (
-                      <Link
-                        key={row.id}
-                        href={`/explore/journey/${row.id}`}
-                        className="flex items-center gap-3 rounded-lg border border-line-strong bg-surface px-3.5 py-3 transition-colors hover:border-lake-300 hover:bg-lake-50/40"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="rounded-full bg-lake-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-lake-700">
-                              {row.optionLabel ?? 'Option'}
-                            </span>
-                            <span className="truncate text-[13px] font-semibold text-ink-900">{row.theme}</span>
-                          </div>
-                          <p className="mt-1 text-[12px] text-ink-600">
-                            {row.preferences.durationDays} {row.preferences.durationDays === 1 ? 'day' : 'days'} ·{' '}
-                            {stops} {stops === 1 ? 'place' : 'places'} · {formatRupees(rowCost.total)} estimated
-                            {rowCost.budget ? (rowCost.budget.fits ? ' · within budget' : ' · over budget') : ''}
-                          </p>
-                        </div>
-                        <ArrowRight aria-hidden size={16} className="shrink-0 text-ink-400" />
-                      </Link>
-                    );
-                  })}
-                </div>
-              ) : null}
+              {tripMap('card')}
             </CardBody>
           </Card>
 
           <TripCostCard trip={trip} />
-
-          <Card>
-            <CardHeader title="The route" />
-            <CardBody>
-              <TourismMap points={mapPoints} showLabelsFor={mapPoints.length} />
-            </CardBody>
-          </Card>
 
           <Card>
             <CardHeader title="How this was built" />
@@ -297,6 +347,7 @@ export default async function JourneyPage(props: { params: Promise<{ id: string 
           </Card>
         </div>
       </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { searchPlacesOnline, webSearchAvailable, type SearchArea } from '@/lib/ai/web-search';
-import { lookUpPlaceOnline, type PlaceMedia } from '@/lib/ai/web-media';
+import { lookUpPlaceOnline, placeSnapshot, type PlaceMedia, type PlaceSnapshot } from '@/lib/ai/web-media';
 import type { OnlinePlace, OnlineSearchStatus, Trip } from '@/lib/types';
 import { getBusinesses, getDestination } from '@/server/data/repository';
 
@@ -99,9 +99,23 @@ export async function findPlaceMediaOnline(sessionId: string, name: string, dist
   return media;
 }
 
+const snapshotCache = new Map<string, { at: number; snapshot: PlaceSnapshot }>();
+
+/** A place's photograph and summary for the map. Kept only when Wikipedia answered. */
+export async function findPlaceSnapshot(name: string, district?: string): Promise<PlaceSnapshot> {
+  const key = `${name}|${district ?? ''}`.toLowerCase();
+  const nowMs = Date.now();
+  const cached = snapshotCache.get(key);
+  if (cached && nowMs - cached.at < CACHE_MS) return cached.snapshot;
+  const snapshot = await placeSnapshot(name, district);
+  if (snapshot.wiki) snapshotCache.set(key, { at: nowMs, snapshot });
+  return snapshot;
+}
+
 /** For the tests. */
 export function resetOnlineSearch(): void {
   cache.clear();
   recent.clear();
   mediaCache.clear();
+  snapshotCache.clear();
 }

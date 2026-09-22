@@ -143,6 +143,20 @@ async function wikipedia(name: string, district?: string): Promise<Pick<PlaceMed
   };
 }
 
+export interface PlaceSnapshot {
+  image?: WebImage;
+  wiki?: { title: string; extract: string; url: string };
+}
+
+/**
+ * One photograph and the Wikipedia summary, for a map's place card. Free and
+ * quick: no model call, so it is not rationed like the web search.
+ */
+export async function placeSnapshot(name: string, district?: string): Promise<PlaceSnapshot> {
+  const { wiki, images } = await wikipedia(name, district);
+  return { ...(images[0] ? { image: images[0] } : {}), ...(wiki ? { wiki } : {}) };
+}
+
 /* ---------------------------- Grounded web search -------------------------- */
 
 interface GroundedPayload {

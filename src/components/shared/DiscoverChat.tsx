@@ -109,6 +109,16 @@ function untaken(actions: DiscoverAction[], thread: Turn[]): DiscoverAction[] {
   return [...explore, ...commit];
 }
 
+/** Every place an answer names: its places, its focus, and where its experiences are. */
+function placesOf(answer: DiscoverChatAnswer, experienceById: Map<string, Experience>): string[] {
+  const ids = [
+    ...answer.destinationIds,
+    ...(answer.focus?.destinationId ? [answer.focus.destinationId] : []),
+    ...answer.experienceIds.map((id) => experienceById.get(id)?.destinationId).filter((id): id is string => Boolean(id)),
+  ];
+  return [...new Set(ids)];
+}
+
 type PreviewState =
   | { status: 'closed' }
   | { status: 'loading' }
@@ -123,6 +133,7 @@ export function DiscoverChat({
   destinationById,
   experienceById,
   onClose,
+  onPlaces,
 }: {
   ask: (input: unknown) => Promise<{ ok: boolean; error?: string; answer?: DiscoverChatAnswer }>;
   lookUpOnline: (destinationId: unknown) => Promise<{ ok: boolean; error?: string; media?: PlaceMedia; actions?: DiscoverAction[] }>;
@@ -131,6 +142,8 @@ export function DiscoverChat({
   destinationById: Map<string, Destination>;
   experienceById: Map<string, Experience>;
   onClose?: () => void;
+  /** The places an answer is about, for a map beside the chat to show. */
+  onPlaces?: (destinationIds: string[]) => void;
 }) {
   const thread = useSyncExternalStore(subscribe, readThread, () => NO_TURNS);
   const [question, setQuestion] = useState('');
@@ -191,6 +204,7 @@ export function DiscoverChat({
       }
       const turn: Turn = { id: `${Date.now()}`, question: trimmed, answer: result.answer };
       writeThread([...readThread(), turn]);
+      onPlaces?.(placesOf(result.answer, experienceById));
       toScroll();
       // Outside the transition, so the reply shows before the web answers.
       const target = result.answer.lookUpOnline?.destinationId;

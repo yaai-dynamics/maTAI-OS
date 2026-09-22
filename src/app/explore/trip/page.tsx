@@ -18,7 +18,18 @@ import { DestinationSwatch } from '@/components/shared/DestinationVisual';
 import { ReplanControls } from '@/components/shared/ReplanControls';
 import { ActionForm, Field, Select, TextArea } from '@/components/shared/ActionForm';
 import { checkInForm, submitFeedbackForm } from '@/server/actions/forms';
-import { endJourney, replanCurrentTrip, startJourney } from '@/server/actions/tourist';
+import {
+  askPlace,
+  endJourney,
+  getDestinationPreview,
+  mapPlaceSnapshot,
+  replanCurrentTrip,
+  startJourney,
+  tripRoutes,
+} from '@/server/actions/tourist';
+import { buildTripMap } from '@/server/data/trip-map';
+import { TripMap } from '@/components/map/TripMap';
+import { TourismMap } from '@/components/shared/TourismMap';
 import { TripButton } from '@/components/shared/TripActions';
 import type { Trip } from '@/lib/types';
 
@@ -199,6 +210,31 @@ export default async function LiveTripPage(props: {
                   </ul>
                 </div>
               ) : null}
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader title="On the map" subtitle="Today's stops, numbered as in the plan. Press one for directions." />
+            <CardBody>
+              <TripMap
+                data={buildTripMap(trip)}
+                routes={tripRoutes}
+                snapshot={mapPlaceSnapshot}
+                getPreview={getDestinationPreview}
+                askPlace={askPlace}
+                variant="card"
+                initialDay={today}
+                fullHref={`/explore/journey/${trip.id}?view=map`}
+                fallback={
+                  <TourismMap
+                    points={stops.flatMap((item, index) => {
+                      const destination = getDestination(item.destinationId);
+                      return destination ? [{ destination, demandIndex: 100 - index * 12 }] : [];
+                    })}
+                    showLabelsFor={stops.length}
+                  />
+                }
+              />
             </CardBody>
           </Card>
 

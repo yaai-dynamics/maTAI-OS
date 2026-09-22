@@ -13,8 +13,11 @@ import {
   type TripProfile,
 } from '@/lib/types';
 import { webSearchAvailable } from '@/lib/ai/web-search';
-import { findOnlineFor, findPlaceMediaOnline } from '@/server/ai/online-places';
-import type { PlaceMedia } from '@/lib/ai/web-media';
+import { findOnlineFor, findPlaceMediaOnline, findPlaceSnapshot } from '@/server/ai/online-places';
+import type { PlaceMedia, PlaceSnapshot } from '@/lib/ai/web-media';
+import type { RouteShape } from '@/lib/map';
+import { buildTripMap, dayWaypoints } from '@/server/data/trip-map';
+import { roadRoute } from '@/server/geo/road-route';
 import { buildLogistics, nightsFromItems, stopNamesOf, summariseTrip } from '@/server/ai/trip-logistics';
 import { askAboutDestination, type GroundedAnswer } from '@/server/ai/storyteller';
 import {
@@ -54,7 +57,7 @@ import {
   startTrip,
 } from '@/server/data/trips';
 import { activeCampaignFor } from '@/server/data/attribution';
-import { ensureVisitor, setAnalyticsChoice } from '@/server/telemetry/visitor';
+import { ensureVisitor, readVisitor, setAnalyticsChoice } from '@/server/telemetry/visitor';
 import { ingest, PASSIVE_TYPES } from '@/server/telemetry/ingest';
 
 /**
@@ -411,6 +414,32 @@ export async function discoverPlaceOnline(destinationId: unknown): Promise<{
     attribution: 'none',
   });
   return { ok: true, media, actions: stepsAfterOnline(destination) };
+}
+
+/**
+ * The Trip map's roads, one route per day, fetched after the map has drawn so
+ * the page never waits on the router. Reads the trip with the session, so an
+ * id from another browser gets nothing.
+ */
+export async function tripRoutes(tripId: unknown): Promise<{ ok: boolean; routes?: RouteShape[] }> {
+  const parsed = z.string().min(1).max(64).safeParse(tripId);
+  if (!parsed.success) return { ok: false };
+  const { sessionId } = await readVisitor();
+  const trip = await getTripFor(sessionId, parsed.data);
+  if (!trip) return { ok: false };
+  const days = dayWaypoints(buildTripMap(trip));
+  const routes = await Promise.all(
+    days.map(async ({ day, points }) => ({ day, ...(await roadRoute(points)) })),
+  );
+  return { ok: true, routes };
+}
+
+/** A photograph and short summary of a place for the map's card, from Wikipedia. */
+export async function mapPlaceSnapshot(destinationId: unknown): Promise<{ ok: boolean; snapshot?: PlaceSnapshot }> {
+  const parsed = z.string().min(1).max(64).safeParse(destinationId);
+  const destination = parsed.success ? getDestination(parsed.data) : undefined;
+  if (!destination) return { ok: false };
+  return { ok: true, snapshot: await findPlaceSnapshot(destination.name, destination.district) };
 }
 
 const enquiryInput = z.object({

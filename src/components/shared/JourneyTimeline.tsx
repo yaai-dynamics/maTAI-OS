@@ -1,5 +1,7 @@
 import { formatTripDay } from '@/lib/journey';
 import { formatDuration } from '@/lib/geo';
+import { dayColor } from '@/lib/map';
+import { buildTripMap } from '@/server/data/trip-map';
 import type { Trip } from '@/lib/types';
 import type { GroundedAnswer } from '@/server/ai/storyteller';
 import { getBusiness, getDestination, getExperience } from '@/server/data/repository';
@@ -23,6 +25,8 @@ export function JourneyTimeline({ trip, ask }: { trip: Trip; ask: AskFn }) {
   // Every day of the trip, including one with no stops (a late arrival, say).
   const last = Math.max(trip.preferences.durationDays, ...trip.items.map((item) => item.day));
   const days = Array.from({ length: last }, (_, index) => index + 1);
+  // The same numbers as the pins on the trip's map.
+  const numberOf = new Map(buildTripMap(trip).stops.map((stop) => [stop.itemId, stop.number]));
 
   return (
     <ol className="space-y-6">
@@ -38,7 +42,8 @@ export function JourneyTimeline({ trip, ask }: { trip: Trip; ask: AskFn }) {
         return (
           <li key={day}>
             <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-2">
-              <h3 className="text-[15px] font-semibold text-ink-900">
+              <h3 className="flex items-center gap-2 text-[15px] font-semibold text-ink-900">
+                <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: dayColor(day) }} />
                 Day {day}
                 {trip.startDate ? (
                   <span className="ml-2 text-[13px] font-normal text-ink-500">{formatTripDay(trip.startDate, day)}</span>
@@ -92,7 +97,19 @@ export function JourneyTimeline({ trip, ask }: { trip: Trip; ask: AskFn }) {
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-baseline justify-between gap-2">
                             <div className="min-w-0">
-                              <p className="text-[14px] font-semibold text-ink-900">
+                              <p className="flex items-center gap-2 text-[14px] font-semibold text-ink-900">
+                                {numberOf.has(item.id) ? (
+                                  <span
+                                    aria-label={`Stop ${numberOf.get(item.id)}`}
+                                    className={cn(
+                                      'num flex h-5 min-w-5 shrink-0 items-center justify-center px-1 text-[11px] font-bold text-white',
+                                      item.kind === 'EXPERIENCE' ? 'rounded-md' : 'rounded-full',
+                                    )}
+                                    style={{ background: dayColor(item.day) }}
+                                  >
+                                    {numberOf.get(item.id)}
+                                  </span>
+                                ) : null}
                                 {experience ? experience.title : destination.name}
                               </p>
                               <p className="text-[11px] text-ink-500">
