@@ -56,9 +56,7 @@ export default async function MobileExperiencePage(props: { params: Promise<{ id
         ) : (
           <div className="immersive h-56" />
         )}
-        <div className="absolute left-3 top-0 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
-          <BackLink fallbackHref="/m/discover?mode=experiences" tone="glass" />
-        </div>
+        <BackLink fallbackHref="/m/discover?mode=experiences" tone="floating" />
         <div className="absolute inset-x-0 bottom-0 p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-lily-200">
             {EXPERIENCE_CATEGORY_LABEL[experience.category]}

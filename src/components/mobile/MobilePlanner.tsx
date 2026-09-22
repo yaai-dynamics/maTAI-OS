@@ -8,6 +8,7 @@ import { ArrowUp, Check, ChevronRight, Globe, SlidersHorizontal, Sparkles, X } f
 import { formatRupees } from '@/lib/money';
 import type { OnlineSearchResult, PlanOptionView, PlanResult } from '@/server/actions/tourist';
 import { cn } from '@/components/ui/primitives';
+import { TAB_BAR_CLEARANCE } from '@/components/mobile/metrics';
 
 /**
  * E1 on a phone: a chat thread with the composer pinned above the tab bar.
@@ -255,7 +256,7 @@ export function MobilePlanner({
       <div ref={end} className="h-36" />
 
       {/* Composer, pinned above the tab bar */}
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-[480px] px-3 pb-2">
+      <div className="fixed inset-x-0 z-30 mx-auto max-w-[480px] px-3" style={{ bottom: TAB_BAR_CLEARANCE }}>
         {sheet ? (
           <RefineSheet
             days={days}
@@ -278,7 +279,7 @@ export function MobilePlanner({
             event.preventDefault();
             submit(request);
           }}
-          className="flex items-end gap-2 rounded-3xl border border-line-strong bg-surface p-1.5 shadow-overlay"
+          className="glass-bar flex items-end gap-2 rounded-[1.75rem] p-1.5"
         >
           <button
             type="button"

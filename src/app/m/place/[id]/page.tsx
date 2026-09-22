@@ -52,9 +52,7 @@ export default async function MobilePlacePage(props: { params: Promise<{ id: str
           className="h-[380px]"
           fallback={<DestinationVisual destination={destination} height="hero" overlay className="h-[380px]!" />}
         />
-        <div className="absolute inset-x-0 top-0 flex items-center justify-between px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
-          <BackLink fallbackHref="/m/discover" tone="glass" />
-        </div>
+        <BackLink fallbackHref="/m/discover" tone="floating" />
         <div className="absolute inset-x-0 bottom-0 p-4 pb-5">
           <div className="flex flex-wrap gap-1.5">
             {destination.category.slice(0, 3).map((category) => (

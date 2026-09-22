@@ -92,3 +92,33 @@ body:has(.m-mono) {
 .m-mono :focus-visible {
   outline-color: #0a0a0a;
 }
+
+/* ---------------------------------------------------------------------------
+   Liquid-glass surfaces: the floating tab bar and the bars that float above
+   it. Frosted white over the content, a bright top edge, a soft shadow.
+   --------------------------------------------------------------------------- */
+.m-mono .glass-bar {
+  background: rgb(255 255 255 / 0.66);
+  -webkit-backdrop-filter: blur(22px) saturate(1.8);
+  backdrop-filter: blur(22px) saturate(1.8);
+  border: 1px solid rgb(255 255 255 / 0.75);
+  box-shadow:
+    0 0 0 0.5px rgb(0 0 0 / 0.08),
+    0 10px 30px rgb(0 0 0 / 0.12),
+    inset 0 1px 0 rgb(255 255 255 / 0.9);
+}
+
+/* The active tab's highlight: a slightly darker lens inside the glass. */
+.m-mono .glass-pill {
+  background: rgb(0 0 0 / 0.07);
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.7),
+    inset 0 -1px 1px rgb(0 0 0 / 0.04);
+}
+
+/* Browsers without backdrop blur get a solid bar, so text stays readable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .m-mono .glass-bar {
+    background: rgb(255 255 255 / 0.96);
+  }
+}

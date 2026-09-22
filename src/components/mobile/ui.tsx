@@ -10,6 +10,7 @@ import { DestinationVisual } from '@/components/shared/DestinationVisual';
 import { BackLink } from '@/components/mobile/BackLink';
 import { PlacePhoto } from '@/components/mobile/PlacePhoto';
 import { photoFor } from '@/lib/mobile/photos';
+import { TAB_BAR_CLEARANCE } from '@/components/mobile/metrics';
 
 /**
  * Building blocks for the mobile tourist app (/m). Phone-first: large touch
@@ -272,17 +273,20 @@ export function Segmented({
   );
 }
 
-/** A bar pinned above the tab bar, for a page's main action. */
+/** A floating glass bar above the tab bar, for a page's main action. */
 export function StickyActions({ children }: { children: ReactNode }) {
   return (
-    <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-[480px] border-t border-line bg-surface/95 px-4 py-3 backdrop-blur">
-      {children}
+    <div
+      className="fixed inset-x-0 z-30 mx-auto max-w-[480px] px-3"
+      style={{ bottom: TAB_BAR_CLEARANCE }}
+    >
+      <div className="glass-bar rounded-[1.75rem] px-3 py-2.5">{children}</div>
     </div>
   );
 }
 
 /** Space so the last content clears a StickyActions bar. */
-export const StickySpacer = () => <div aria-hidden className="h-20" />;
+export const StickySpacer = () => <div aria-hidden className="h-24" />;
 
 export function MobileEmpty({
   icon,

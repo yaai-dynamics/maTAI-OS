@@ -69,8 +69,8 @@ export default async function MobileJourneyPage(props: {
     <div>
       {/* Hero */}
       <section className="immersive -mx-4 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
-        <BackLink fallbackHref="/m/plan" tone="glass" className="-ml-1" />
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <BackLink fallbackHref="/m/plan" tone="floating" />
+        <div className="mt-14 flex flex-wrap items-center gap-2">
           <span className="text-[11px] uppercase tracking-[0.12em] text-white/60">
             {trip.status === 'DRAFT' ? `Option · ${trip.optionLabel ?? 'Plan'}` : 'Your trip'}
           </span>
@@ -118,7 +118,8 @@ export default async function MobileJourneyPage(props: {
         </p>
       ) : null}
 
-      <div className="sticky top-0 z-20 -mx-4 bg-paper/95 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur">
+      {/* Left room for the floating back button, which stays over this bar once it sticks. */}
+      <div className="sticky top-0 z-20 -mx-4 bg-paper/95 pb-3 pl-[4.25rem] pr-4 pt-[calc(env(safe-area-inset-top)+0.625rem)] backdrop-blur">
         <Segmented
           label="Trip view"
           active={view}

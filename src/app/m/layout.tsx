@@ -12,11 +12,13 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
+// No themeColor: Safari paints the status-bar strip with it, which put a
+// solid band above full-bleed photos. Without it, Safari takes the colour
+// from the page itself.
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#ffffff',
 };
 
 /**
@@ -31,7 +33,7 @@ export default async function MobileLayout({ children }: { children: React.React
   return (
     <div className="m-mono mx-auto min-h-dvh max-w-[480px] bg-paper">
       <LinkScope />
-      <main id="main" className="px-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+      <main id="main" className="px-4 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+6rem)]">
         {children}
         {ask ? (
           <div className="mt-6">
