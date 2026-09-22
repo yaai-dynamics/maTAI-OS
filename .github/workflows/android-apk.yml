@@ -21,9 +21,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Same Node (and so npm 11) as development: npm 10 reads the lock file's
+      # optional @emnapi entries differently and `npm ci` refuses it.
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       # No `cache: gradle` here: android/ is generated below, so there are no
