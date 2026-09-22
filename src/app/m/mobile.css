@@ -1,0 +1,94 @@
+/* ---------------------------------------------------------------------------
+   Mobile app theme: minimalist monochrome.
+
+   Scoped to .m-mono (the /m layout), so the desktop pages keep their
+   palette. Tailwind v4 utilities read the theme through CSS variables, so
+   redefining them here re-colours every component inside the mobile app,
+   shared ones included, without touching their code.
+
+   Black, white and greys only. Red stays for errors and required fields,
+   because an error has to read as an error.
+   --------------------------------------------------------------------------- */
+
+.m-mono {
+  --color-paper: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-2: #f5f5f5;
+  --color-surface-3: #ebebeb;
+  --color-line: #ececec;
+  --color-line-strong: #d6d6d6;
+
+  --color-ink-900: #0a0a0a;
+  --color-ink-800: #1f1f1f;
+  --color-ink-700: #363636;
+  --color-ink-600: #525252;
+  --color-ink-500: #6e6e6e;
+  --color-ink-400: #9a9a9a;
+
+  /* Every accent collapses onto one neutral ramp. */
+  --color-brand-50: #f5f5f5;
+  --color-brand-100: #ebebeb;
+  --color-brand-200: #d6d6d6;
+  --color-brand-300: #a8a8a8;
+  --color-brand-400: #7a7a7a;
+  --color-brand-500: #525252;
+  --color-brand-600: #262626;
+  --color-brand-700: #0a0a0a;
+  --color-brand-800: #000000;
+  --color-brand-900: #000000;
+
+  --color-lake-50: #f5f5f5;
+  --color-lake-100: #ebebeb;
+  --color-lake-200: #d6d6d6;
+  --color-lake-300: #a8a8a8;
+  --color-lake-400: #7a7a7a;
+  --color-lake-500: #525252;
+  --color-lake-600: #262626;
+  --color-lake-700: #0a0a0a;
+  --color-lake-800: #000000;
+
+  --color-lily-100: #f0f0f0;
+  --color-lily-200: #d6d6d6;
+  --color-lily-300: #a8a8a8;
+  --color-lily-400: #7a7a7a;
+  --color-lily-500: #525252;
+  --color-lily-600: #262626;
+
+  --color-good-100: #f0f0f0;
+  --color-good-500: #404040;
+  --color-good-700: #171717;
+  --color-warn-100: #f0f0f0;
+  --color-warn-500: #404040;
+  --color-warn-700: #171717;
+  --color-info-100: #f0f0f0;
+  --color-info-500: #404040;
+  --color-info-700: #171717;
+
+  /* Hairlines instead of soft shadows. */
+  --shadow-card: 0 0 0 1px #ececec;
+  --shadow-raised: 0 0 0 1px #e0e0e0, 0 6px 20px rgb(0 0 0 / 0.06);
+  --shadow-overlay: 0 0 0 1px #e0e0e0, 0 12px 40px rgb(0 0 0 / 0.1);
+
+  background-color: #ffffff;
+  color: #0a0a0a;
+}
+
+/* The page behind the phone-width column, and overscroll on iOS. */
+body:has(.m-mono) {
+  background-color: #ffffff;
+}
+
+/* Dark surfaces are plain black rather than a coloured gradient. */
+.m-mono .immersive {
+  background: #0a0a0a;
+  color: #fafafa;
+}
+
+/* Generated artwork and heritage scenes in greyscale. */
+.m-mono svg[role='img'] {
+  filter: grayscale(1) contrast(1.04);
+}
+
+.m-mono :focus-visible {
+  outline-color: #0a0a0a;
+}

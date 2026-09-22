@@ -293,3 +293,32 @@ architecture already supports and what it actually needs.
 
 33 routes, covered by 175 tests.
 # maTAI-OS
+
+## Android APK (Capacitor)
+
+The Android app is a Capacitor shell that loads the deployed maTAI site, since the app needs its Next.js server for API routes, the database and AI calls. It opens the mobile tourist view at `/m` (see below).
+
+- **CI:** `.github/workflows/android-apk.yml` builds a debug APK on every push to `main`, and you can also run it by hand from the Actions tab. Download it from the run's **Artifacts** (`maTAI-debug-apk`).
+- **Server URL:** set the repository variable `CAP_SERVER_URL` (Settings → Secrets and variables → Actions → Variables) to the deployed URL, or pass `server_url` when running it by hand. Without it, the APK shows an offline placeholder.
+- **Local:** `CAP_SERVER_URL=https://your-site npm run cap:android`, then open `android/` in Android Studio. `android/` is generated and gitignored.
+
+## Mobile tourist view (`/m`)
+
+A phone-first version of Explore Manipur lives under `src/app/m` (screens) and `src/components/mobile` (UI). It has its own shell, with a bottom tab bar and safe-area padding, and reuses the same server actions, data layer and AI as the desktop `/explore` pages. The desktop pages are unchanged.
+
+| Route | Screen |
+| --- | --- |
+| `/m` | Home: planner entry, popular places, living heritage, quieter gems, local hosts |
+| `/m/plan` | E1 chat planner and saved trips |
+| `/m/journey/[id]` | E2 trip: day by day, map, costs; keep / start / end |
+| `/m/discover` | Search and browse places and experiences, list or map |
+| `/m/place/[id]` | E3 destination |
+| `/m/place/[id]/heritage` | E4 living heritage |
+| `/m/experience/[id]`, `/book` | E5 experience, enquiry and booking request |
+| `/m/trip` | E6 live trip: check-in and feedback |
+| `/m/bookings`, `/m/bookings/[reference]` | Bookings, payment, cancellation |
+| `/m/privacy` | Visit counting and stored trips |
+
+**Theme and photos.** The mobile app uses a minimalist monochrome theme (`src/app/m/mobile.css`, scoped so desktop keeps its palette), with real colour photographs of destinations. The photos are downloaded once from Wikimedia Commons by `node scripts/fetch-destination-photos.mjs` into `public/photos/`, with author and licence in `data/destination-photos.json`. They are served locally, so the demo works offline, and each destination page credits its photo. A destination without a suitable photo keeps its generated artwork. Check new photos by eye before committing them.
+
+Shared components that link to `/explore/...` are kept inside `/m` by `src/components/mobile/LinkScope.tsx`, using the mapping in `src/lib/mobile/routes.ts`. Open `http://localhost:3000/m` in a phone-sized browser window during development.
