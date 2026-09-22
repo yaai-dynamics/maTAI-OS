@@ -1,4 +1,5 @@
 import { searchPlacesOnline, webSearchAvailable, type SearchArea } from '@/lib/ai/web-search';
+import { lookUpPlaceOnline, type PlaceMedia } from '@/lib/ai/web-media';
 import type { OnlinePlace, OnlineSearchStatus, Trip } from '@/lib/types';
 import { getBusinesses, getDestination } from '@/server/data/repository';
 
@@ -75,8 +76,32 @@ export async function findOnlineFor(sessionId: string, trips: Pick<Trip, 'items'
   return { status: places.length > 0 ? 'FOUND' : 'NONE_FOUND', places, checkedAt: new Date(nowMs).toISOString() };
 }
 
+const mediaCache = new Map<string, { at: number; media: PlaceMedia }>();
+
+/**
+ * What the web has about one place, for the Discover chat. The web search in
+ * it counts against the same hourly allowance as trip planning searches, since
+ * both are billed Gemini calls; Wikipedia is free and always asked.
+ */
+export async function findPlaceMediaOnline(sessionId: string, name: string, district?: string): Promise<PlaceMedia> {
+  const key = `${name}|${district ?? ''}`.toLowerCase();
+  const nowMs = Date.now();
+  const cached = mediaCache.get(key);
+  if (cached && nowMs - cached.at < CACHE_MS) return cached.media;
+
+  const mine = (recent.get(sessionId) ?? []).filter((at) => nowMs - at < 60 * 60 * 1000);
+  const allowSearch = mine.length < SEARCHES_PER_HOUR;
+  if (allowSearch && webSearchAvailable()) recent.set(sessionId, [...mine, nowMs]);
+
+  const media = await lookUpPlaceOnline(name, district, allowSearch);
+  // A partial answer is not kept, so the next visitor gets the full one.
+  if (!media.searchNote) mediaCache.set(key, { at: nowMs, media });
+  return media;
+}
+
 /** For the tests. */
 export function resetOnlineSearch(): void {
   cache.clear();
   recent.clear();
+  mediaCache.clear();
 }

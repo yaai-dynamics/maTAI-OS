@@ -13,9 +13,17 @@ import {
   type TripProfile,
 } from '@/lib/types';
 import { webSearchAvailable } from '@/lib/ai/web-search';
-import { findOnlineFor } from '@/server/ai/online-places';
+import { findOnlineFor, findPlaceMediaOnline } from '@/server/ai/online-places';
+import type { PlaceMedia } from '@/lib/ai/web-media';
 import { buildLogistics, nightsFromItems, stopNamesOf, summariseTrip } from '@/server/ai/trip-logistics';
 import { askAboutDestination, type GroundedAnswer } from '@/server/ai/storyteller';
+import {
+  runDiscoverChat,
+  stepsAfterOnline,
+  type DiscoverAction,
+  type DiscoverChatAnswer,
+  type DiscoverFocus,
+} from '@/server/ai/discover';
 import {
   describeTrip,
   extractTripProfile,
@@ -27,7 +35,9 @@ import {
   type TravelWindow,
   type TripCondition,
 } from '@/server/ai/trip-planner';
-import { getExperience } from '@/server/data/repository';
+import { getDestination, getExperience } from '@/server/data/repository';
+import { buildDestinationPreview } from '@/server/data/destination-preview';
+import type { DestinationDetailsData } from '@/components/shared/DestinationDetails';
 import { createEnquiry, forgetSessionSignals, nextId, submitFeedback } from '@/server/data/store';
 import {
   chooseOption,
@@ -342,6 +352,65 @@ export async function askPlace(
   });
   revalidatePath('/gov', 'layout');
   return { ok: true, answer };
+}
+
+const discoverChatInput = z.object({
+  message: z.string().min(1).max(300),
+  focus: z
+    .object({
+      destinationId: z.string().optional(),
+      experienceId: z.string().optional(),
+    })
+    .optional(),
+});
+
+/** The Discover chat: one message, plus whatever the previous turn's reply set as `focus`. See server/ai/discover.ts. */
+export async function discoverChat(input: unknown): Promise<{ ok: boolean; error?: string; answer?: DiscoverChatAnswer }> {
+  const parsed = discoverChatInput.safeParse(input);
+  if (!parsed.success) return { ok: false, error: 'Type a message.' };
+
+  const answer = await runDiscoverChat(parsed.data.message.trim(), parsed.data.focus as DiscoverFocus | undefined);
+  await ingest(await ensureVisitor(), {
+    type: 'SEARCH',
+    metadata: { discover: parsed.data.message.slice(0, 160), kind: answer.kind },
+  });
+  revalidatePath('/gov', 'layout');
+  return { ok: true, answer };
+}
+
+/** The same "Explore" popup used on a trip's stops, fetched for a place clicked in the Discover chat. */
+export async function getDestinationPreview(destinationId: unknown): Promise<{ ok: boolean; error?: string; data?: DestinationDetailsData }> {
+  const parsed = z.string().min(1).max(64).safeParse(destinationId);
+  if (!parsed.success) return { ok: false, error: 'That place could not be found.' };
+  const destination = getDestination(parsed.data);
+  if (!destination) return { ok: false, error: 'That place could not be found.' };
+  return { ok: true, data: buildDestinationPreview(destination) };
+}
+
+/**
+ * What the web has about a place in the Discover chat: Wikipedia, photos,
+ * verified YouTube videos and grounded facts. Takes a destination id, never
+ * free text, so only the place's own name leaves the platform.
+ */
+export async function discoverPlaceOnline(destinationId: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  media?: PlaceMedia;
+  actions?: DiscoverAction[];
+}> {
+  const parsed = z.string().min(1).max(64).safeParse(destinationId);
+  const destination = parsed.success ? getDestination(parsed.data) : undefined;
+  if (!destination) return { ok: false, error: 'That place could not be found.' };
+
+  const visitor = await ensureVisitor();
+  const media = await findPlaceMediaOnline(visitor.sessionId, destination.name, destination.district);
+  await ingest(visitor, {
+    type: 'SEARCH',
+    destinationId: destination.id,
+    metadata: { discoverOnline: true },
+    attribution: 'none',
+  });
+  return { ok: true, media, actions: stepsAfterOnline(destination) };
 }
 
 const enquiryInput = z.object({

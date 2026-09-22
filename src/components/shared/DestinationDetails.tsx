@@ -167,7 +167,7 @@ export function DestinationDetails({
                         businessName={businessName}
                         action={
                           <Link
-                            href={`/explore/experiences?experience=${experience.id}`}
+                            href={`/explore/discover?mode=experiences&experience=${experience.id}`}
                             className="text-[12px] font-medium text-brand-700 underline"
                           >
                             Enquire

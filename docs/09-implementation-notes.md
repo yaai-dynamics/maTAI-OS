@@ -1466,3 +1466,77 @@ covers every place of every option (`src/lib/ai/web-search.ts`).
   replaced stop's start time.
 - **Search results are unverified by design**, and the grounding links are
   Google redirect URLs, which may expire.
+
+## 26. Discover
+
+Destinations and Experiences were two sections with two lists. They are one
+screen now, `/explore/discover`, with one entry in the sidebar and the tab bar.
+`/explore/destinations` and `/explore/experiences` redirect there, keeping a
+category, an enquiry (`?experience=`) or a booking request (`?book=`). A
+destination's own page, `/explore/destinations/[id]`, is unchanged.
+
+### 26.1 The screen
+
+- **Destinations or Experiences**, beside the title, switch the list. Both
+  lists are two cards to a row.
+- **A destination card carries its experiences**, up to four small cards below
+  its tags, with "+N more here" leading to that place's experiences.
+- **An experience card names its place**, with the place's artwork, linked.
+- The booking and enquiry forms moved here from the old Experiences page.
+
+### 26.2 The chat
+
+There is no search box. "Chat with AI" opens the chat in the left third of the
+screen, beside the list, or over the whole screen on a phone.
+
+- **Nothing is indexed.** The data is a few dozen curated records, so a message
+  is matched against place names and experience titles directly, and an open
+  question ("quiet nature spots") gets the same term match the old search had.
+- **The chat's memory is one pointer.** Each reply names the place or
+  experience it was about (`focus`), and the next message is sent with it. A
+  short follow-up with no name in it ("when should I go?") is read against it.
+  The transcript itself stays in the browser tab (sessionStorage).
+- **What is asked picks the reply**: an overview on first mention, what to do
+  there, when to go and how long to stay, photos and videos, or a plan. A
+  further question about the same place is answered from its verified facts,
+  as "Ask the place" on its page (E3) would, and its cards are not shown again.
+- **Every reply ends with next steps**, from seeing the place, to what to do
+  there, to booking a local experience and planning a trip with it. A step
+  already taken in the conversation is not offered again, and booking and
+  planning are never the ones trimmed.
+- **"Plan a trip with X"** opens the planner with "A trip that includes X"
+  filled in, not sent. The planner now honours a place named in a request: it
+  scores well above interest matches ("Included because you asked for X"),
+  though access and safety rules still apply (Moreh is still never planned).
+- **Clicking a place** opens the same popup as a trip's "Explore" button
+  (`buildDestinationPreview`, now shared by the page, the trip and the chat).
+
+### 26.3 Photos, videos and the web
+
+Asking for photos, videos or anything "online" about a place, or pressing
+"Photos and videos of X", looks the place up (`lib/ai/web-media.ts`):
+
+- **Wikipedia**: the article's summary, and up to six photographs from it.
+  Each photograph links to its file page for author and licence. An article is
+  used only if it is plainly about the place.
+- **YouTube**: Gemini's grounded search proposes video links; each is kept
+  only if YouTube's oEmbed confirms it exists and its title names the place.
+  A video loads from `youtube-nocookie.com`, and only when pressed.
+- **Facts**: up to five sentences from the same search, each kept only if
+  Google's grounding ties it to results, shown with those sources. A sentence
+  that mentions a price is dropped.
+- It is all labelled Public / external, "not verified by maTAI".
+- **Only the place's name and district are sent**, never the visitor's words:
+  the lookup takes a destination id. A name the chat does not recognise is not
+  looked up.
+- The Gemini part counts against the same six searches an hour as §25.6, and a
+  complete result is cached for 12 hours. Wikipedia is asked regardless, so
+  with the search off or used up the chat still shows the article and photos,
+  and says why the rest is missing.
+
+### 26.4 Not done
+
+- **Only destinations are looked up online**, not experiences or businesses.
+- **Photographs are not moderated** beyond coming from the Wikipedia article;
+  a photograph there that is not of the place would show.
+- **A video's title is the only check that it is about the place.**

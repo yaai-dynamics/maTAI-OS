@@ -1,22 +1,11 @@
 import { formatTripDay } from '@/lib/journey';
 import { formatDuration } from '@/lib/geo';
-import type { Destination, Trip } from '@/lib/types';
+import type { Trip } from '@/lib/types';
 import type { GroundedAnswer } from '@/server/ai/storyteller';
-import { DEFAULT_ASK_PROMPTS } from '@/server/ai/storyteller';
-import {
-  getBusiness,
-  getDataSource,
-  getDestination,
-  getDestinations,
-  getEventsFor,
-  getExperience,
-  getExperiencesFor,
-  getFactsFor,
-  getHeritageExperience,
-} from '@/server/data/repository';
+import { getBusiness, getDestination, getExperience } from '@/server/data/repository';
+import { buildDestinationPreview } from '@/server/data/destination-preview';
 import { Badge, Card, cn } from '@/components/ui/primitives';
 import { DestinationPreviewLink } from '@/components/shared/DestinationPreview';
-import type { DestinationDetailsData } from '@/components/shared/DestinationDetails';
 import { DestinationSwatch } from '@/components/shared/DestinationVisual';
 
 type AskFn = (
@@ -131,7 +120,7 @@ export function JourneyTimeline({ trip, ask }: { trip: Trip; ask: AskFn }) {
                               <Badge tone="neutral">₹{experience.price.toLocaleString('en-IN')}</Badge>
                             ) : null}
                             <DestinationPreviewLink
-                              destination={previewOf(destination)}
+                              destination={buildDestinationPreview(destination)}
                               ask={ask}
                               className="ml-auto"
                             >
@@ -160,28 +149,6 @@ export function JourneyTimeline({ trip, ask }: { trip: Trip; ask: AskFn }) {
       })}
     </ol>
   );
-}
-
-/** Everything the destination's own page shows, gathered for the "Explore" popup. */
-function previewOf(destination: Destination): DestinationDetailsData {
-  const facts = getFactsFor(destination.id);
-  const heritage = getHeritageExperience(destination.id);
-  return {
-    destination,
-    narrative: facts.filter((fact) => fact.factType !== 'PRACTICAL'),
-    practical: facts.filter((fact) => fact.factType === 'PRACTICAL'),
-    source: getDataSource(facts[0]?.sourceId ?? 'src-curated-knowledge'),
-    heritage,
-    experiences: getExperiencesFor(destination.id).map((experience) => ({
-      experience,
-      businessName: getBusiness(experience.businessId)?.name ?? 'Local provider',
-    })),
-    events: getEventsFor(destination.id),
-    nearby: getDestinations()
-      .filter((entry) => entry.id !== destination.id && entry.district === destination.district)
-      .slice(0, 3),
-    prompts: heritage ? heritage.askPrompts : DEFAULT_ASK_PROMPTS,
-  };
 }
 
 /** Where the day ends: the night's stay, or the flight out. */

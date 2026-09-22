@@ -29,7 +29,7 @@ export default async function BookingsPage() {
         <EmptyState
           title="No bookings from this browser"
           description="Request a homestay night, a meal or a workshop with a local host. You pay only once the host accepts."
-          action={<ButtonLink href="/explore/experiences">Browse local experiences</ButtonLink>}
+          action={<ButtonLink href="/explore/discover?mode=experiences">Browse local experiences</ButtonLink>}
         />
       ) : (
         <ul className="space-y-3">

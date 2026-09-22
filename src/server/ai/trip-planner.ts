@@ -226,6 +226,16 @@ interface ScoredDestination {
   matchedInterests: DestinationCategory[];
   reasons: string[];
   sharePercent: number;
+  /** The request names this destination outright. */
+  requested: boolean;
+}
+
+const normalizeName = (text: string) => text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+
+/** Whether the request names this place, as a whole phrase ("Loktak Lake", not "lake"). */
+function namesDestination(request: string, name: string): boolean {
+  const needle = normalizeName(name);
+  return needle.length > 3 && ` ${normalizeName(request)} `.includes(` ${needle} `);
 }
 
 function scoreDestinations(profile: TripProfile): ScoredDestination[] {
@@ -243,6 +253,14 @@ function scoreDestinations(profile: TripProfile): ScoredDestination[] {
 
       if (matchedInterests.length > 0) {
         reasons.push(`matches your interest in ${matchedInterests.join(' and ')}`);
+      }
+
+      // A place asked for by name outranks interest matches; the safety and
+      // access penalties below still apply to it.
+      const requested = namesDestination(profile.rawRequest, destination.name);
+      if (requested) {
+        score += 80;
+        reasons.push('was asked for by name');
       }
 
       const share =
@@ -289,7 +307,7 @@ function scoreDestinations(profile: TripProfile): ScoredDestination[] {
         reasons.push('needs a full day, which is a lot to give up on a short trip');
       }
 
-      return { destination, score, matchedInterests, reasons, sharePercent: Number(share.toFixed(1)) };
+      return { destination, score, matchedInterests, reasons, sharePercent: Number(share.toFixed(1)), requested };
     })
     .filter((row) => row.score > 0)
     .sort((a, b) => b.score - a.score);
@@ -726,7 +744,9 @@ export function planOptions(profile: TripProfile, sessionId: string, window?: Tr
 
 function buildRationale(candidate: ScoredDestination, profile: TripProfile): string {
   const parts: string[] = [];
-  if (candidate.matchedInterests.length > 0) {
+  if (candidate.requested) {
+    parts.push(`Included because you asked for ${candidate.destination.name}`);
+  } else if (candidate.matchedInterests.length > 0) {
     parts.push(`Recommended because you asked for ${candidate.matchedInterests.join(' and ')}`);
   } else {
     parts.push('Included to connect the day geographically');

@@ -26,24 +26,33 @@ import { DestinationVisual } from '@/components/shared/DestinationVisual';
 export function DestinationCard({
   destination,
   href,
+  onSelect,
   meta,
   matchedInterests,
   reason,
   compact = false,
+  experiences,
+  moreExperiencesHref,
 }: {
   destination: Destination;
   href?: string;
+  /** Opens a preview instead of navigating; takes precedence over `href` when both are given. */
+  onSelect?: () => void;
   /** Right-aligned figure, such as a demand index. */
   meta?: React.ReactNode;
   matchedInterests?: readonly string[];
   reason?: string;
   compact?: boolean;
+  /** Local experiences at this destination, shown as a small grid below the tags. */
+  experiences?: { experience: Experience; href?: string }[];
+  /** Where "+N more" leads, when there are more experiences than shown. */
+  moreExperiencesHref?: string;
 }) {
-  const content = (
-    <Card
-      as="article"
-      className={cn('group h-full overflow-hidden', href && 'transition-shadow hover:shadow-raised')}
-    >
+  // The experience grid links to experiences of its own, so it sits outside
+  // the destination's link rather than nested inside it: an anchor cannot
+  // contain another anchor.
+  const linkedContent = (
+    <>
       {!compact ? <DestinationVisual destination={destination} height="md" /> : null}
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
@@ -78,15 +87,66 @@ export function DestinationCard({
           ) : null}
         </div>
       </div>
-    </Card>
+    </>
   );
 
+  return (
+    <Card
+      as="article"
+      className={cn('group h-full overflow-hidden', (href || onSelect) && 'transition-shadow hover:shadow-raised')}
+    >
+      {onSelect ? (
+        <button type="button" onClick={onSelect} className="block w-full text-left">
+          {linkedContent}
+        </button>
+      ) : href ? (
+        <Link href={href} className="block">
+          {linkedContent}
+        </Link>
+      ) : (
+        linkedContent
+      )}
+
+      {experiences && experiences.length > 0 ? (
+        <div className="border-t border-line p-4 pt-3">
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-500">
+            Experiences here
+          </p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {experiences.slice(0, 4).map(({ experience, href: experienceHref }) => (
+              <ExperienceMiniCard key={experience.id} experience={experience} href={experienceHref} />
+            ))}
+          </div>
+          {experiences.length > 4 && moreExperiencesHref ? (
+            <Link
+              href={moreExperiencesHref}
+              className="mt-1.5 inline-block text-[11px] font-medium text-brand-700 hover:underline"
+            >
+              +{experiences.length - 4} more here
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
+    </Card>
+  );
+}
+
+/** Small, non-card entry for an experience grid nested under a DestinationCard. */
+export function ExperienceMiniCard({ experience, href }: { experience: Experience; href?: string }) {
+  const inner = (
+    <div className="h-full rounded-md border border-line bg-surface-2/60 p-2 transition-colors hover:border-line-strong hover:bg-surface-2">
+      <p className="truncate text-[12px] font-medium text-ink-900">{experience.title}</p>
+      <p className="mt-0.5 text-[11px] text-ink-500">
+        {formatDuration(experience.durationMinutes)} · ₹{experience.price.toLocaleString('en-IN')}
+      </p>
+    </div>
+  );
   return href ? (
-    <Link href={href} className="block h-full rounded-lg">
-      {content}
+    <Link href={href} className="block">
+      {inner}
     </Link>
   ) : (
-    content
+    inner
   );
 }
 
@@ -95,11 +155,17 @@ export function ExperienceCard({
   destinationName,
   businessName,
   action,
+  destination,
+  destinationHref,
 }: {
   experience: Experience;
   destinationName: string;
   businessName: string;
   action?: React.ReactNode;
+  /** Shown as a small swatch next to the destination name, when given. */
+  destination?: Pick<Destination, 'id' | 'name' | 'palette' | 'category'>;
+  /** Makes the destination name a link, for the unified Discover screen. */
+  destinationHref?: string;
 }) {
   const availability = {
     AVAILABLE: { tone: 'good' as const, label: 'Available' },
@@ -112,9 +178,21 @@ export function ExperienceCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-[15px] font-semibold text-ink-900">{experience.title}</h3>
-          <p className="mt-0.5 text-[12px] text-ink-500">
-            {businessName} · {destinationName}
-          </p>
+          <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-ink-500">
+            {destination ? (
+              <DestinationVisual destination={destination} height="sm" className="h-5 w-5 shrink-0 rounded" />
+            ) : null}
+            <span className="min-w-0 truncate">
+              {businessName} ·{' '}
+              {destinationHref ? (
+                <Link href={destinationHref} className="font-medium text-ink-700 hover:text-brand-700 hover:underline">
+                  {destinationName}
+                </Link>
+              ) : (
+                destinationName
+              )}
+            </span>
+          </div>
         </div>
         <Badge tone="neutral">{EXPERIENCE_CATEGORY_LABEL[experience.category]}</Badge>
       </div>

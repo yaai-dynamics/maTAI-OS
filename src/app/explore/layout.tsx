@@ -12,18 +12,18 @@ export const metadata: Metadata = {
 
 // No separate home: the planner and the visitor's journeys are one screen at
 // /explore, and a journey's details open beneath it at /explore/journey/[id].
+// Destinations and Experiences used to be separate sections; they are one
+// screen now (/explore/discover), so one search covers both (docs/09 §26).
 const SECTIONS: NavItem[] = [
   { href: '/explore', label: 'Trip Planner', icon: 'Route', tone: 'lake', also: ['/explore/journey'] },
-  { href: '/explore/destinations', label: 'Destinations', icon: 'MapPin', tone: 'lily' },
-  { href: '/explore/experiences', label: 'Experiences', icon: 'HeartHandshake', tone: 'brand' },
+  { href: '/explore/discover', label: 'Discover', icon: 'Compass', tone: 'lily', also: ['/explore/destinations', '/explore/experiences'] },
   { href: '/explore/trip', label: 'Live trip', icon: 'Navigation', tone: 'good' },
   { href: '/explore/bookings', label: 'Bookings', icon: 'Ticket', tone: 'info' },
 ];
 
 const TABS: TabItem[] = [
   { href: '/explore', label: 'Plan', icon: 'Route', also: ['/explore/journey'] },
-  { href: '/explore/destinations', label: 'Places', icon: 'MapPin' },
-  { href: '/explore/experiences', label: 'Local', icon: 'HeartHandshake' },
+  { href: '/explore/discover', label: 'Discover', icon: 'Compass', also: ['/explore/destinations', '/explore/experiences'] },
   { href: '/explore/trip', label: 'Trip', icon: 'Navigation' },
   { href: '/explore/bookings', label: 'Booked', icon: 'Ticket' },
 ];

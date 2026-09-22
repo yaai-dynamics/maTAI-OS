@@ -145,12 +145,14 @@ type Panel = 'dates' | 'travellers' | 'budget' | 'refine' | null;
 const shortDate = (date: string) => formatShortDate(`${date}T00:00:00Z`);
 
 export function JourneyPlanner({
+  initialRequest,
   plan,
   choose,
   findOnline,
   journeys,
   today,
 }: {
+  initialRequest?: string;
   plan: (input: unknown) => Promise<PlanResult>;
   choose: (tripId: string) => Promise<{ ok: boolean; error?: string }>;
   findOnline: (groupId: string) => Promise<OnlineSearchResult>;
@@ -163,7 +165,7 @@ export function JourneyPlanner({
   const thread = useSyncExternalStore(subscribe, readThread, () => NO_EXCHANGES);
   const stored = new Map(journeys.map((journey) => [journey.id, journey.status]));
 
-  const [request, setRequest] = useState('');
+  const [request, setRequest] = useState(initialRequest ?? '');
   const [panel, setPanel] = useState<Panel>(null);
   const [startDate, setStartDate] = useState('');
   const [arriveTime, setArriveTime] = useState('');

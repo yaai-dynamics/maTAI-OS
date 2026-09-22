@@ -258,7 +258,7 @@ export default async function PartnerDashboardPage() {
                         ₹{listing.price.toLocaleString('en-IN')} · {listing.durationMinutes} minutes
                       </p>
                       <Link
-                        href={`/explore/experiences?experience=${listing.id}`}
+                        href={`/explore/discover?mode=experiences&experience=${listing.id}`}
                         className="mt-1.5 inline-block text-[12px] font-medium text-brand-700 underline"
                       >
                         See how travellers see it

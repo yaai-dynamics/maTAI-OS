@@ -19,7 +19,7 @@ export default function NotFound() {
           Start again
         </Link>
         <Link
-          href="/explore/destinations"
+          href="/explore/discover"
           className="rounded-md border border-line-strong bg-surface px-4 py-2 text-[13px] font-medium text-ink-800 hover:bg-surface-2"
         >
           Browse destinations

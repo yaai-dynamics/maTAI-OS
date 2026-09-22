@@ -17,12 +17,15 @@ export const dynamic = 'force-dynamic';
  * and every option and journey it has produced beside it. A plan opens on its
  * own page (/explore/journey/[id]), which leads back here.
  */
-export default async function ExplorePage() {
+export default async function ExplorePage(props: { searchParams: Promise<{ plan?: string }> }) {
+  const { plan } = await props.searchParams;
   const trips = await listTrips((await readVisitor()).sessionId);
 
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(340px,420px)]">
       <JourneyPlanner
+        // Handed over from Discover ("Plan a trip with Loktak Lake"): filled in, not sent.
+        initialRequest={plan?.slice(0, 600)}
         plan={planTrip}
         choose={chooseJourney}
         findOnline={findPlacesOnline}

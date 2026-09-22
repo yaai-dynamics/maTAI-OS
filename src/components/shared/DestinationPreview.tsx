@@ -40,7 +40,7 @@ export function DestinationPreviewLink({
   );
 }
 
-function DestinationPreviewModal({
+export function DestinationPreviewModal({
   destination,
   ask,
   onClose,
