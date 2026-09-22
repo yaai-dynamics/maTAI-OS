@@ -33,7 +33,12 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      # The runner image already has the SDK. The action's default package list
+      # includes the retired 'tools' package, which newer sdkmanagers reject;
+      # Gradle downloads the platform and build tools it needs itself.
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
 
       # Skip Prisma/Next postinstall work that the APK does not need.
       - name: Install dependencies
