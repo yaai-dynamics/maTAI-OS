@@ -5,14 +5,17 @@ import { computePulse } from '@/server/analytics/pulse';
 import { getBusinesses, getCreators, getDestinations, getInteractions } from '@/server/data/repository';
 import { isSessionRecord } from '@/server/data/store';
 import { Card, CardBody, CardHeader } from '@/components/ui/primitives';
+import { AccountMenu } from '@/components/shell/AccountMenu';
 import { AppShell } from '@/components/shell/AppShell';
 import { EcosystemLoop } from '@/components/shared/EcosystemLoop';
 import { DemoDataNote } from '@/components/shared/badges';
+import { getCurrentUser } from '@/server/auth/session';
 
 export const metadata: Metadata = { title: 'The ecosystem' };
 export const dynamic = 'force-dynamic';
 
-export default function EcosystemPage() {
+export default async function EcosystemPage() {
+  const user = await getCurrentUser();
   const pulse = computePulse();
   const sessionSignals = getInteractions({}).filter((row) => isSessionRecord(row.id));
 
@@ -60,7 +63,7 @@ export default function EcosystemPage() {
   ];
 
   return (
-    <AppShell>
+    <AppShell actions={<AccountMenu user={user} />}>
       <div className="py-3 sm:py-2">
         <section className="immersive -mx-4 px-5 py-9 sm:mx-0 sm:rounded-2xl sm:px-9">
           <h1 className="max-w-3xl text-[28px] font-semibold leading-tight tracking-tight text-white sm:text-[36px]">

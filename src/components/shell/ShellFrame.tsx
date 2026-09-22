@@ -73,9 +73,8 @@ export function ShellFrame({
             ) : null}
           </Link>
 
-          <InterfaceNav className="ml-6 hidden lg:flex" />
-
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <InterfaceNav />
             {actions}
             {demo ? <DemoToggle /> : null}
           </div>
@@ -123,7 +122,6 @@ export function ShellFrame({
               sections={sections}
               footer={sidebarFooter}
               onNavigate={closeMenu}
-              interfaces
             />
           </div>
         </div>
@@ -154,13 +152,11 @@ function SidebarBody({
   sections,
   footer,
   onNavigate,
-  interfaces = false,
 }: {
   portal?: Portal;
   sections?: NavItem[];
   footer?: ReactNode;
   onNavigate?: () => void;
-  interfaces?: boolean;
 }) {
   return (
     <>
@@ -192,15 +188,6 @@ function SidebarBody({
         {portal && sections && sections.length > 0 ? (
           <div className="px-2 pb-3">
             <SectionList items={sections} label={`${portal.title} sections`} onNavigate={onNavigate} />
-          </div>
-        ) : null}
-
-        {interfaces ? (
-          <div className={cn('px-2 py-3', portal && 'border-t border-line')}>
-            <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-500">
-              Interfaces
-            </p>
-            <InterfaceNav vertical onNavigate={onNavigate} />
           </div>
         ) : null}
       </div>

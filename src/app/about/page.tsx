@@ -7,7 +7,9 @@ import { getBusinesses, getCreators, getDestinations } from '@/server/data/repos
 import { Card, CardBody } from '@/components/ui/primitives';
 import { ProvenanceBadge } from '@/components/shared/badges';
 import { EcosystemLoop } from '@/components/shared/EcosystemLoop';
+import { AccountMenu } from '@/components/shell/AccountMenu';
 import { AppShell } from '@/components/shell/AppShell';
+import { getCurrentUser } from '@/server/auth/session';
 
 /**
  * About maTAI: the whole product on one page — the three interfaces, the
@@ -65,7 +67,8 @@ const ROLES = [
   },
 ] as const;
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const user = await getCurrentUser();
   const pulse = computePulse();
   const stats = [
     { value: getDestinations().length, label: 'destinations' },
@@ -78,7 +81,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <AppShell>
+    <AppShell actions={<AccountMenu user={user} />}>
       <div className="py-3 sm:py-6">
         <section className="immersive -mx-4 px-5 py-10 sm:mx-0 sm:rounded-2xl sm:px-10 sm:py-14">
           <p className="text-[12px] uppercase tracking-[0.14em] text-white/55">About</p>

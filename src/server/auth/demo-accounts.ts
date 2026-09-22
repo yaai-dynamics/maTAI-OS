@@ -28,25 +28,11 @@ export interface DemoAccount {
 
 export const DEMO_ACCOUNTS: readonly DemoAccount[] = [
   {
-    email: 'officer@demo.manipurtourism.test',
-    displayName: 'Demo Tourism Officer',
-    kind: 'GOVERNMENT',
-    governmentRole: 'OFFICER',
-    label: 'Tourism officer',
-  },
-  {
     email: 'admin@demo.manipurtourism.test',
     displayName: 'Demo Administrator',
     kind: 'GOVERNMENT',
     governmentRole: 'ADMINISTRATOR',
     label: 'Administrator',
-  },
-  {
-    email: 'viewer@demo.manipurtourism.test',
-    displayName: 'Demo Viewer',
-    kind: 'GOVERNMENT',
-    governmentRole: 'VIEWER',
-    label: 'Viewer (read only)',
   },
   {
     email: 'partner@demo.manipurtourism.test',

@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
+import { AccountMenu } from '@/components/shell/AccountMenu';
 import { AppShell } from '@/components/shell/AppShell';
 import type { NavItem, TabItem } from '@/components/shell/RoleNav';
 import { AnalyticsNotice } from '@/components/telemetry/AnalyticsNotice';
+import { getCurrentUser } from '@/server/auth/session';
 import { readVisitor } from '@/server/telemetry/visitor';
 
 export const metadata: Metadata = {
@@ -39,6 +41,7 @@ export default async function ExploreLayout({ children }: { children: React.Reac
   // Asked once. A browser sending Global Privacy Control has already answered.
   const visitor = await readVisitor();
   const ask = visitor.choice === 'unset' && !visitor.gpc;
+  const user = await getCurrentUser();
 
   return (
     <AppShell
@@ -51,6 +54,7 @@ export default async function ExploreLayout({ children }: { children: React.Reac
       }}
       sections={SECTIONS}
       tabs={TABS}
+      actions={<AccountMenu user={user} />}
       sidebarFooter={PRIVACY}
     >
       {ask ? <AnalyticsNotice /> : null}

@@ -3,11 +3,12 @@ import type { Metadata } from 'next';
 
 import { DEMO_MODE } from '@/lib/config';
 import { ROLE_DESCRIPTOR } from '@/lib/roles';
-import { DEMO_ACCOUNTS, DEMO_PASSWORD } from '@/server/auth/demo-accounts';
+import { DEMO_ACCOUNTS, DEMO_PASSWORD, type DemoAccount } from '@/server/auth/demo-accounts';
 import { getCurrentUser } from '@/server/auth/session';
 import { signInForm, signOut } from '@/server/actions/auth';
 import { ActionForm, Field, TextInput } from '@/components/shared/ActionForm';
 import { Badge, Button, ButtonLink, Card, CardBody, CardHeader } from '@/components/ui/primitives';
+import { AccountTypeSelect } from './AccountTypeSelect';
 
 export const metadata: Metadata = { title: 'Sign in' };
 export const dynamic = 'force-dynamic';
@@ -24,6 +25,12 @@ const KIND_LABEL: Record<string, string> = {
   GOVERNMENT: 'government',
   PARTNER: 'partner',
   CREATOR: 'creator',
+};
+
+const SURFACE_KIND: Record<string, DemoAccount['kind']> = {
+  government: 'GOVERNMENT',
+  partner: 'PARTNER',
+  creator: 'CREATOR',
 };
 
 export default async function LoginPage(props: {
@@ -43,7 +50,7 @@ export default async function LoginPage(props: {
         <p className="mt-1 max-w-xl text-[13px] text-ink-600">
           {surface
             ? `${SURFACE_LABEL[surface]} needs a ${surface} account.`
-            : 'The department, tourism partners and creators each sign in to their own interface.'}{' '}
+            : 'Choose your account type, then sign in with your email and password.'}{' '}
           Tourists do not need an account —{' '}
           <Link href="/explore" className="font-medium text-brand-700 hover:underline">
             Explore Manipur
@@ -89,6 +96,9 @@ export default async function LoginPage(props: {
                 hiddenFields={next ? { next } : {}}
                 fullWidthSubmit
               >
+                <Field label="Account type" name="as">
+                  <AccountTypeSelect value={surface ?? ''} next={next} />
+                </Field>
                 <Field label="Email" name="email" required>
                   <TextInput id="email" name="email" type="email" autoComplete="username" required />
                 </Field>
@@ -132,7 +142,9 @@ export default async function LoginPage(props: {
             />
             <CardBody>
               <ul className="space-y-2">
-                {DEMO_ACCOUNTS.map((account) => (
+                {DEMO_ACCOUNTS.filter(
+                  (account) => !surface || account.kind === SURFACE_KIND[surface],
+                ).map((account) => (
                   <li key={account.email} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line bg-surface p-2.5">
                     <span className="min-w-0">
                       <span className="block text-[13px] font-medium text-ink-900">{account.label}</span>

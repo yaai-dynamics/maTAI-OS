@@ -6,18 +6,9 @@ import { cn } from '@/components/ui/primitives';
 import { NAV_ICONS, NAV_TONES, type NavIconName, type NavTone } from './nav-icons';
 
 /**
- * The interfaces are one product, so the switch between them sits in the top
- * bar of every screen, and each interface's own sections sit in its sidebar.
+ * Each interface's own sections sit in its sidebar; the top bar now only
+ * carries the "About us" link, with sign-in/account state on the far right.
  */
-
-export const ROLES = [
-  { key: 'explore', href: '/explore', label: 'Explore Manipur', who: 'Tourist' },
-  { key: 'gov', href: '/gov', label: 'Decision Room', who: 'Department' },
-  { key: 'creator', href: '/creator', label: 'Create for Manipur', who: 'Creator' },
-  // Added in roadmap Phase 1: the supply side needs its own surface to report
-  // availability, handle enquiries and register for verification.
-  { key: 'partner', href: '/partner', label: 'Tourism Partners', who: 'Partner' },
-] as const;
 
 export type NavItem = {
   href: string;
@@ -45,7 +36,7 @@ const sectionActive = (
   (item.href === home ? pathname === item.href : within(pathname, item.href)) ||
   (item.also ?? []).some((path) => within(pathname, path));
 
-/** Tourist, Department, Creator, Partner, then About. */
+/** The "About us" link, shown in the top bar. */
 export function InterfaceNav({
   vertical = false,
   onNavigate,
@@ -56,14 +47,12 @@ export function InterfaceNav({
   className?: string;
 }) {
   const pathname = usePathname();
+  const active = within(pathname, '/about');
 
-  const link = (href: string, short: string, full: string) => {
-    const active = within(pathname, href);
-    return (
+  return (
+    <nav aria-label="About" className={className}>
       <Link
-        key={href}
-        href={href}
-        title={vertical ? undefined : full}
+        href="/about"
         onClick={onNavigate}
         aria-current={active ? 'page' : undefined}
         className={cn(
@@ -72,24 +61,8 @@ export function InterfaceNav({
           active ? 'bg-brand-700 text-white' : 'text-ink-600 hover:bg-surface-2 hover:text-ink-900',
         )}
       >
-        {short}
-        {vertical && full !== short ? (
-          <span className={cn('text-[12px] font-normal', active ? 'text-white/75' : 'text-ink-500')}>
-            {full}
-          </span>
-        ) : null}
+        About us
       </Link>
-    );
-  };
-
-  return (
-    <nav
-      aria-label="Interfaces"
-      className={cn(vertical ? 'flex flex-col gap-0.5' : 'flex items-center gap-1', className)}
-    >
-      {ROLES.map((role) => link(role.href, role.who, role.label))}
-      {vertical ? null : <span aria-hidden className="mx-1.5 h-4 w-px bg-line-strong" />}
-      {link('/about', vertical ? 'About maTAI' : 'About', 'About maTAI')}
     </nav>
   );
 }
