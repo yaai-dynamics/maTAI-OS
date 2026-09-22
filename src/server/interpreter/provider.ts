@@ -17,14 +17,14 @@ import type { SpeechLanguage } from '@/lib/types';
  *
  * INTERPRETER_PROVIDER picks the implementation:
  *   mock    (default) no models; the interface runs and says so plainly
- *   runpod  the project's own Manipuri models, hosted on RunPod
+ *   meitei  the project's own Meitei speech service (ASR, TTS, denoising)
  *
  * The mock never invents a translation. An interpreter that guesses is worse
  * than one that admits it cannot help: a visitor would repeat the guess to a
  * person in front of them.
  */
 
-export type InterpreterProviderName = 'mock' | 'runpod';
+export type InterpreterProviderName = 'mock' | 'meitei';
 
 export interface Transcription {
   text: string;
@@ -47,6 +47,13 @@ export interface InterpreterProvider {
   readonly name: InterpreterProviderName;
   /** False when the endpoints are not configured; the route then answers NOT_CONFIGURED. */
   readonly ready: boolean;
+  /**
+   * Whether anything can translate between languages. The speech service
+   * hears and speaks but does not translate, so this can be false while the
+   * rest works: the interface then shows what was said and says plainly that
+   * it cannot carry it across.
+   */
+  readonly translates: boolean;
   /** Languages this provider can listen to and speak. */
   readonly languages: readonly SpeechLanguage[];
   transcribe(audio: Blob, language: SpeechLanguage, signal: AbortSignal): Promise<Transcription>;
@@ -72,14 +79,14 @@ export class InterpreterError extends Error {
 
 export function providerName(): InterpreterProviderName {
   const configured = process.env.INTERPRETER_PROVIDER?.trim().toLowerCase();
-  return configured === 'runpod' ? 'runpod' : 'mock';
+  return configured === 'meitei' ? 'meitei' : 'mock';
 }
 
 /** The provider for this environment. Built per call: configuration can change between requests on a serverless host. */
 export async function interpreterProvider(): Promise<InterpreterProvider> {
-  if (providerName() === 'runpod') {
-    const { runpodProvider } = await import('@/server/interpreter/runpod');
-    return runpodProvider();
+  if (providerName() === 'meitei') {
+    const { meiteiProvider } = await import('@/server/interpreter/meitei');
+    return meiteiProvider();
   }
   const { mockProvider } = await import('@/server/interpreter/mock');
   return mockProvider();

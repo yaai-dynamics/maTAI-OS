@@ -7,9 +7,8 @@ import { interpreterProvider, providerName } from '@/server/interpreter/provider
 describe('interpreter provider', () => {
   beforeEach(() => {
     delete process.env.INTERPRETER_PROVIDER;
-    delete process.env.RUNPOD_ASR_URL;
-    delete process.env.RUNPOD_TTS_URL;
-    delete process.env.RUNPOD_ASR_LANGUAGES;
+    delete process.env.SPEECH_API_URL;
+    delete process.env.SPEECH_MT_URL;
   });
 
   it('is the mock until a provider is named, and the mock is never ready', async () => {
@@ -24,25 +23,41 @@ describe('interpreter provider', () => {
     await expect(provider.translate('kwai', 'mni', 'en', AbortSignal.timeout(50))).rejects.toThrow(/no interpreter models are configured/i);
   });
 
-  it('is ready only once both speech endpoints are configured', async () => {
-    process.env.INTERPRETER_PROVIDER = 'runpod';
+  it('is ready once the speech service has an address', async () => {
+    process.env.INTERPRETER_PROVIDER = 'meitei';
     expect((await interpreterProvider()).ready).toBe(false);
 
-    process.env.RUNPOD_ASR_URL = 'https://api.runpod.ai/v2/asr/runsync';
-    expect((await interpreterProvider()).ready).toBe(false);
-
-    process.env.RUNPOD_TTS_URL = 'https://api.runpod.ai/v2/tts/runsync';
+    process.env.SPEECH_API_URL = 'https://speech.example.test';
     const provider = await interpreterProvider();
     expect(provider.ready).toBe(true);
-    // Manipuri only, until an English or Hindi model is added.
-    expect(provider.languages).toEqual(['mni']);
+    // One service hears both sides: Meitei through N7Speech, English and
+    // Hindi through Whisper.
+    expect(provider.languages).toEqual(['mni', 'en', 'hi']);
   });
 
-  it('reads the languages its speech model accepts from the environment', async () => {
-    process.env.INTERPRETER_PROVIDER = 'runpod';
-    process.env.RUNPOD_ASR_LANGUAGES = 'mni, en , nonsense';
+  it('separates hearing from translating, which is a different service', async () => {
+    process.env.INTERPRETER_PROVIDER = 'meitei';
+    process.env.SPEECH_API_URL = 'https://speech.example.test';
+    expect((await interpreterProvider()).translates).toBe(false);
+
+    process.env.SPEECH_MT_URL = 'https://speech.example.test/translate';
+    expect((await interpreterProvider()).translates).toBe(true);
+  });
+
+  it('says so rather than guessing when nothing can translate', async () => {
+    process.env.INTERPRETER_PROVIDER = 'meitei';
+    process.env.SPEECH_API_URL = 'https://speech.example.test';
     const provider = await interpreterProvider();
-    expect(provider.languages).toEqual(['mni', 'en']);
+    await expect(provider.translate('kwai', 'mni', 'en', AbortSignal.timeout(50))).rejects.toThrow(
+      /no translation service/i,
+    );
+  });
+
+  it('has no Hindi voice, and does not pretend otherwise', async () => {
+    process.env.INTERPRETER_PROVIDER = 'meitei';
+    process.env.SPEECH_API_URL = 'https://speech.example.test';
+    const provider = await interpreterProvider();
+    await expect(provider.speak('नमस्ते', 'hi', AbortSignal.timeout(50))).rejects.toThrow(/no hindi voice/i);
   });
 });
 

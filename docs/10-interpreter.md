@@ -53,33 +53,44 @@ anyone who unzips the file.
 
 ## Connecting the models
 
-Server environment (Vercel project settings, never the repository):
+The service is documented in `API_DOCUMENTATION.md`. Server environment
+(Vercel project settings, never the repository):
 
 ```
-INTERPRETER_PROVIDER=runpod
-RUNPOD_API_KEY=…
-RUNPOD_ASR_URL=…      speech → text   (Meitei Mayek)
-RUNPOD_TTS_URL=…      text → speech   (Meitei Mayek)
-RUNPOD_MT_URL=…       text → text     (translation)
-RUNPOD_ASR_LANGUAGES=mni
-RUNPOD_API_STYLE=runsync   # or "plain" for a non-RunPod HTTP service
-INTERPRETER_TIMEOUT_MS=45000
+INTERPRETER_PROVIDER=meitei
+SPEECH_API_URL=https://…            base URL, no trailing slash
+SPEECH_API_KEY=…                    when the service is behind one
+SPEECH_MT_URL=…                     translation, when there is one
+SPEECH_ISOLATE=auto                 auto (default) | always | never
+SPEECH_TIMEOUT_MS=45000
 ```
 
-`src/server/interpreter/runpod.ts` is written to RunPod's documented
-`{input:…}` / `{output:…}` convention, with the field names in one `FIELDS`
-object at the top. **Confirm them against the real service**: they are a
-convention, not something I have called.
+`src/server/interpreter/meitei.ts` uses three of its endpoints:
+
+| Call | Endpoint | Why |
+| --- | --- | --- |
+| hear | `POST /asr/v2/transcribe?language=…` | Meitei through N7Speech, English and Hindi through Whisper, so one service hears both sides |
+| clean | `POST /voice/isolator` | phones record WebM, which the ASR does not take; it returns WAV and strips market noise on the way |
+| speak | `POST /tts/meitei`, `POST /tts/english` | Meitei Mayek and Piper English |
+
+## What the service cannot do, and what happens then
+
+- **No translation.** Until `SPEECH_MT_URL` exists, a turn returns the
+  transcript and the screen says nothing here can carry it across. It never
+  guesses.
+- **No Hindi voice.** Piper speaks English, N7Speech Meitei. A Hindi listener
+  gets the text, and the browser reads it in a device voice. Manipuri stays
+  text when the service is silent: no device voice speaks Meiteilon, and a
+  wrong accent is worse than silence.
 
 ## Still open
 
-1. **Translation.** The speech models are Manipuri-only; something has to
-   translate mni ⇄ en/hi. AI4Bharat's IndicTrans2 is the strongest open option
-   but works in Manipuri's **Bengali script**, while the speech models use
-   **Meitei Mayek**, so a script conversion sits between them.
-2. **Speech-to-text for the visitor.** The Manipuri ASR does not take English
-   or Hindi. Whisper on the same RunPod endpoint keeps it to one service and
-   one cold start.
+1. **Translation.** AI4Bharat's IndicTrans2 is the strongest open option, but
+   works in Manipuri's **Bengali script** while the speech models use **Meitei
+   Mayek**, so a script conversion sits between them.
+2. **Streaming.** The service also offers WebSocket ASR and TTS
+   (`/asr/v2/stream-vad`, `/tts/meitei/ws`). Press-to-talk over REST is enough
+   for the demo; streaming would remove the pause between turns.
 3. **A government signal.** Counting interpretations by language pair and
    place would tell the department where visitors actually need language help.
    Aggregate only, no text, no audio.

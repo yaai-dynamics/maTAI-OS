@@ -44,7 +44,8 @@ export function Interpreter({ groups }: { groups: PhraseGroup[] }) {
   const [visitorLanguage, setVisitorLanguage] = useState<SpeechLanguage>('en');
   const [turns, setTurns] = useState<InterpreterTurn[]>([]);
   const [status, setStatus] = useState<Status>({ kind: 'checking' });
-  const [models, setModels] = useState<{ ready: boolean; listens: SpeechLanguage[] } | undefined>();
+  const [models, setModels] = useState<{ ready: boolean; translates: boolean; listens: SpeechLanguage[] } | undefined>();
+  const [heardOnly, setHeardOnly] = useState<string | undefined>();
   const [phrasebook, setPhrasebook] = useState(false);
   const recorder = useRef<MediaRecorder | undefined>(undefined);
   const chunks = useRef<Blob[]>([]);
@@ -56,14 +57,18 @@ export function Interpreter({ groups }: { groups: PhraseGroup[] }) {
     let cancelled = false;
     fetch('/api/interpreter/warm')
       .then((response) => (response.ok ? response.json() : undefined))
-      .then((body: { ready?: boolean; listens?: SpeechLanguage[] } | undefined) => {
+      .then((body: { ready?: boolean; translates?: boolean; listens?: SpeechLanguage[] } | undefined) => {
         if (cancelled) return;
-        setModels({ ready: Boolean(body?.ready), listens: body?.listens ?? [] });
+        setModels({
+          ready: Boolean(body?.ready),
+          translates: Boolean(body?.translates),
+          listens: body?.listens ?? [],
+        });
         setStatus({ kind: 'idle' });
       })
       .catch(() => {
         if (cancelled) return;
-        setModels({ ready: false, listens: [] });
+        setModels({ ready: false, translates: false, listens: [] });
         setStatus({ kind: 'idle' });
       });
     return () => {
@@ -77,6 +82,7 @@ export function Interpreter({ groups }: { groups: PhraseGroup[] }) {
       const to = side === 'local' ? visitorLanguage : LOCAL;
       setStatus({ kind: 'working', side });
 
+      setHeardOnly(undefined);
       const body = new FormData();
       body.append('audio', audio, 'turn');
       body.append('from', from);
@@ -86,12 +92,16 @@ export function Interpreter({ groups }: { groups: PhraseGroup[] }) {
         const response = await fetch('/api/interpreter/turn', { method: 'POST', body });
         const result = (await response.json()) as TurnResponse;
         if (!result.ok) {
+          // A transcript without a translation is still worth showing: the
+          // speaker can see they were understood, even if the words could
+          // not be carried across.
+          if (result.heard) setHeardOnly(result.heard);
           setStatus({ kind: 'error', message: FAILURE_MESSAGE[result.failure] });
           return;
         }
         setTurns((current) => [...current, result.turn]);
         setStatus({ kind: 'idle' });
-        if (result.turn.audio) void new Audio(result.turn.audio).play().catch(() => undefined);
+        play(result.turn);
         requestAnimationFrame(() => end.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }));
       } catch {
         setStatus({ kind: 'error', message: 'The interpreter could not be reached. Check the connection.' });
@@ -157,8 +167,20 @@ export function Interpreter({ groups }: { groups: PhraseGroup[] }) {
       <div className="my-3 space-y-2">
         {models && !models.ready ? (
           <p className="rounded-2xl border border-warn-500/30 bg-warn-100 px-3.5 py-2.5 text-[12px] text-warn-700">
-            The Manipuri speech models are not connected to this build yet, so nothing can be interpreted. The
-            phrasebook below still works.
+            The speech service is not connected to this build yet, so nothing can be interpreted. The phrasebook
+            below still works.
+          </p>
+        ) : null}
+        {models?.ready && !models.translates ? (
+          <p className="rounded-2xl border border-warn-500/30 bg-warn-100 px-3.5 py-2.5 text-[12px] text-warn-700">
+            Speech works, but no translation service is connected yet: a turn shows what was said, in the language
+            it was said in.
+          </p>
+        ) : null}
+        {heardOnly ? (
+          <p className="rounded-2xl bg-surface p-3.5 text-[13px] text-ink-800 shadow-card">
+            <span className="block text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-400">Heard</span>
+            {heardOnly}
           </p>
         ) : null}
         {status.kind === 'error' ? (
@@ -222,6 +244,24 @@ export function Interpreter({ groups }: { groups: PhraseGroup[] }) {
   );
 }
 
+/**
+ * Plays a turn: the service's own voice when there is one, otherwise the
+ * device's, which covers Hindi — Piper speaks English and N7Speech Meitei,
+ * so a Hindi listener would otherwise get text alone.
+ */
+function play(turn: InterpreterTurn) {
+  if (turn.audio) {
+    void new Audio(turn.audio).play().catch(() => undefined);
+    return;
+  }
+  // Manipuri has no device voice anywhere, and saying it in another accent
+  // would be worse than silence, so it stays as text.
+  if (typeof speechSynthesis === 'undefined' || turn.to === 'mni') return;
+  const utterance = new SpeechSynthesisUtterance(turn.said);
+  utterance.lang = turn.to === 'hi' ? 'hi-IN' : 'en-IN';
+  speechSynthesis.speak(utterance);
+}
+
 /** One person's half: what they last heard, and their button. */
 function Half({
   side,
@@ -262,12 +302,12 @@ function Half({
             <p className="text-[19px] font-semibold leading-snug text-ink-900">{heardHere.said}</p>
             <button
               type="button"
-              onClick={() => heardHere.audio && void new Audio(heardHere.audio).play().catch(() => undefined)}
-              disabled={!heardHere.audio}
+              onClick={() => play(heardHere)}
+              disabled={!heardHere.audio && heardHere.to === 'mni'}
               className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1.5 text-[12px] font-medium text-ink-700 disabled:opacity-40"
             >
               <Volume2 aria-hidden size={14} />
-              {heardHere.audio ? 'Play again' : 'No voice available'}
+              {heardHere.audio || heardHere.to !== 'mni' ? 'Play again' : 'No voice available'}
             </button>
           </>
         ) : (

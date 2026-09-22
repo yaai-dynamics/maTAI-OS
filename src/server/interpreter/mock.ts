@@ -18,6 +18,7 @@ export function mockProvider(): InterpreterProvider {
   return {
     name: 'mock',
     ready: false,
+    translates: false,
     languages: [] as readonly SpeechLanguage[],
     transcribe: async () => refuse('asr'),
     translate: async () => refuse('translation'),

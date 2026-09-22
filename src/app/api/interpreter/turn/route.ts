@@ -25,8 +25,11 @@ export const maxDuration = 120;
 
 const MAX_AUDIO_BYTES = 4 * 1024 * 1024;
 
-const fail = (failure: InterpreterFailure, detail?: string, status = 200) =>
-  NextResponse.json<TurnResponse>({ ok: false, failure, ...(detail ? { detail } : {}) }, { status });
+const fail = (failure: InterpreterFailure, detail?: string, status = 200, heard?: string) =>
+  NextResponse.json<TurnResponse>(
+    { ok: false, failure, ...(detail ? { detail } : {}), ...(heard ? { heard } : {}) },
+    { status },
+  );
 
 const stageFailure: Record<'asr' | 'translation' | 'tts', InterpreterFailure> = {
   asr: 'ASR_FAILED',
@@ -57,7 +60,16 @@ export async function POST(request: Request): Promise<Response> {
     const heard = await provider.transcribe(audio, from, request.signal);
     if (heard.text.length === 0) return fail('NO_SPEECH');
 
-    const translated = await provider.translate(heard.text, from, to, request.signal);
+    // Hearing can work while translating does not. Returning the transcript
+    // is still worth something: the speaker sees they were understood, and
+    // the other side can read it into a phone of their own.
+    let translated;
+    try {
+      translated = await provider.translate(heard.text, from, to, request.signal);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : undefined;
+      return fail('TRANSLATION_FAILED', detail, 200, heard.text);
+    }
 
     // Text is the result; the spoken version is the best effort on top of it.
     // A listener who can read still gets the message when the voice fails.

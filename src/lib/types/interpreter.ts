@@ -48,7 +48,7 @@ export const FAILURE_MESSAGE: Record<InterpreterFailure, string> = {
   NOT_CONFIGURED: 'The Manipuri speech models are not connected to this build yet.',
   NO_SPEECH: 'Nothing was heard. Hold the button while speaking, close to the phone.',
   ASR_FAILED: 'That could not be transcribed. Try again, a little slower.',
-  TRANSLATION_FAILED: 'The words were heard but could not be translated.',
+  TRANSLATION_FAILED: 'The words were heard, but nothing here can translate them yet.',
   SPEECH_FAILED: 'Translated, but the spoken version could not be produced.',
   TOO_LONG: 'That was too long. Keep each turn under half a minute.',
   TIMEOUT: 'The language service did not answer in time. Try once more.',
@@ -75,7 +75,8 @@ export interface InterpreterTurn {
 /** The answer from POST /api/interpreter/turn. */
 export type TurnResponse =
   | { ok: true; turn: InterpreterTurn }
-  | { ok: false; failure: InterpreterFailure; detail?: string };
+  /** `heard` is what the speaker said, when that much worked. */
+  | { ok: false; failure: InterpreterFailure; detail?: string; heard?: string };
 
 /** A phrase kept on the device, so the interpreter is useful with no network. */
 export interface Phrase {

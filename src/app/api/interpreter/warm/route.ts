@@ -20,6 +20,8 @@ export async function GET(): Promise<Response> {
 
   return NextResponse.json({
     ready: provider.ready,
+    /** False when speech works but nothing can translate between languages. */
+    translates: provider.translates,
     provider: provider.name,
     /** Languages the models can listen to. The browser covers the rest where it can. */
     listens: provider.languages,
