@@ -12,3 +12,6 @@ next-env.d.ts
 .env*.local
 .DS_Store
 npm-debug.log*
+
+# Capacitor native project (generated in CI by .github/workflows/android-apk.yml)
+android/

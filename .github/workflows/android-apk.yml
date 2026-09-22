@@ -1,0 +1,66 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      server_url:
+        description: 'Deployed maTAI URL the app should load (overrides the CAP_SERVER_URL repo variable)'
+        required: false
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      CAP_SERVER_URL: ${{ github.event.inputs.server_url || vars.CAP_SERVER_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - uses: android-actions/setup-android@v3
+
+      # Skip Prisma/Next postinstall work that the APK does not need.
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      # The native project is generated on each run rather than committed.
+      - name: Generate Android project
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Rename APK
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/debug/app-debug.apk "dist/maTAI-${GITHUB_SHA::7}-debug.apk"
+
+      - name: Warn if no server URL
+        if: env.CAP_SERVER_URL == ''
+        run: echo "::warning::CAP_SERVER_URL is not set; the APK will show the offline shell only."
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: maTAI-debug-apk
+          path: dist/*.apk
+          retention-days: 14
