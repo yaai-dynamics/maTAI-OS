@@ -262,6 +262,8 @@ model TourismBusiness {
   contactVisibility ContactVisibility @default(ON_ENQUIRY)
   verified          Boolean           @default(false)
   reportedCapacity  Int?
+  /// What the partner charges, for trip costing (lib/types businessRateSchema).
+  rateJson          Json?
   provenance        Provenance
 
   experiences            Experience[]
@@ -571,15 +573,26 @@ model Trip {
   session          TouristSession @relation(fields: [touristSessionId], references: [id], onDelete: Cascade)
   title            String         @db.VarChar(512)
   theme            String
-  startDate        DateTime       @db.Date
-  endDate          DateTime       @db.Date
+  /// The travel window, when the visitor chose one. Null means dates not set.
+  startDate        DateTime?      @db.Date
+  endDate          DateTime?      @db.Date
+  /// Arrival on the first day and departure on the last, as HH:MM in IST.
+  arriveTime       String?        @db.VarChar(5)
+  departTime       String?        @db.VarChar(5)
   preferencesJson  Json
   alternativesJson Json
+  /// Stays, transport, guides and places found online (lib/types tripLogisticsSchema).
+  logisticsJson    Json?
+  /// DRAFT is an option not yet chosen, SAVED a finalised journey, ACTIVE a
+  /// started one. The current trip is the started one, or a finalised one
+  /// whose travel window contains now.
   status           TripStatus
+  /// One planning request yields several options sharing this id.
+  optionGroupId    String?        @db.VarChar(64)
+  optionLabel      String?        @db.VarChar(64)
+  startedAt        DateTime?
   adaptedReason    String?        @db.Text
   createdAt        DateTime       @default(now())
-  /// Planning, re-planning, saving or switching to a trip touches this; the
-  /// visitor's current trip is the one updated most recently.
   updatedAt        DateTime       @updatedAt
   provenance       Provenance
 
@@ -588,6 +601,7 @@ model Trip {
   feedback     Feedback[]
 
   @@index([touristSessionId, updatedAt])
+  @@index([touristSessionId, optionGroupId])
 }
 
 enum ItineraryItemKind {

@@ -1,7 +1,7 @@
 /**
  * The 5-minute demo path, from docs/07-demo-script.md.
  *
- * Held in code so the demo bar can walk it in order and so the running order
+ * Held in code so the demo panel can walk it in order and so the running order
  * cannot drift from the document.
  */
 
@@ -70,16 +70,16 @@ export const DEMO_STEPS: DemoStep[] = [
     href: '/explore',
     title: 'Tourist plans a trip',
     timing: '2:35',
-    action: 'Enter the three-day request and plan the journey.',
+    action: 'Enter the three-day request with dates and a budget, and plan it. Three options come back, each costed.',
     say: 'That content reaches a traveller, who arrives here.',
   },
   {
     id: 'e2',
     screen: 'E2',
     href: '/explore/journey',
-    title: 'The journey',
+    title: 'The trip',
     timing: '3:05',
-    action: 'Show the itinerary and the reason on each stop.',
+    action: 'Open the best match: the reason on each stop, the partner stays and the cost. Choose this plan, then start the trip.',
     say: 'Not a list of attractions. A journey built from stated preferences, with the reason attached to every recommendation.',
   },
   {

@@ -25,7 +25,7 @@ import {
 } from '@/server/telemetry/ingest';
 import { forgetSessionSignals, resetState } from '@/server/data/store';
 import { getInteractions } from '@/server/data/repository';
-import { getCurrentTrip, getTripFor, saveTrip } from '@/server/data/trips';
+import { getLatestTrip, getTripFor, saveTrip } from '@/server/data/trips';
 import { POST as intake } from '@/app/api/telemetry/route';
 
 const visitor = (sessionId: string, allowed = true): IngestVisitor => ({ sessionId, analyticsAllowed: allowed });
@@ -200,10 +200,10 @@ describe('trips belong to the visitor who planned them', () => {
     await saveTrip({ ...base, id: 'trip-mine', touristSessionId: 'sess-me' });
     await saveTrip({ ...base, id: 'trip-theirs', touristSessionId: 'sess-them' });
 
-    expect((await getCurrentTrip('sess-me'))?.id).toBe('trip-mine');
-    expect((await getCurrentTrip('sess-them'))?.id).toBe('trip-theirs');
-    expect(await getCurrentTrip('sess-nobody')).toBeUndefined();
-    expect(await getCurrentTrip(null)).toBeUndefined();
+    expect((await getLatestTrip('sess-me'))?.id).toBe('trip-mine');
+    expect((await getLatestTrip('sess-them'))?.id).toBe('trip-theirs');
+    expect(await getLatestTrip('sess-nobody')).toBeUndefined();
+    expect(await getLatestTrip(null)).toBeUndefined();
     // Knowing the id is not enough.
     expect(await getTripFor('sess-me', 'trip-theirs')).toBeUndefined();
     await expect(saveTrip({ ...base, id: 'trip-theirs', touristSessionId: 'sess-me' })).rejects.toThrow(/another visitor/);

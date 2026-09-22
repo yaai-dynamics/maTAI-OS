@@ -342,9 +342,12 @@ To use a live model, set `AI_PROVIDER` to `anthropic`, `openai` or `gemini`
 and the matching `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or `GEMINI_API_KEY`
 (§5). Only the prose changes.
 
-**During the demo**, the bar at the top of every screen keeps the DEMO DATA label
-visible, walks the running order from `docs/07-demo-script.md` step by step with
+**During the demo**, the amber ▧ icon at the right end of every top bar marks the
+prototype as demo data. It opens a panel that states the DEMO DATA label in
+words, walks the running order from `docs/07-demo-script.md` step by step with
 the line to say and a jump link, and resets the prototype to its seeded state.
+The panel stays open across navigation until closed, so a presenter can step
+through it. It replaced a full-width bar above every screen (§23).
 
 
 ---
@@ -1262,3 +1265,204 @@ reproduces the reset and plans again.
 - **A journey lives in one browser.** Visitors have no accounts by design, so
   clearing cookies loses access to it: the rows stay, but nothing can reach
   them.
+
+---
+
+## 23. App shell
+
+Every screen now shares one frame (`src/components/shell/ShellFrame.tsx`,
+entered through `AppShell.tsx`), replacing four near-identical headers and a
+demo bar above them.
+
+- **The top bar switches interfaces.** Tourist, Department, Creator, Partner,
+  then About. It spans the full width, with the account menu and the demo icon
+  at the right end.
+- **Each interface's sections are in a sidebar** at the left edge, headed by
+  the interface's name. Content fills the rest of the width, to a cap of
+  1680px, rather than sitting in a centred 1100–1600px column.
+- **Below the `lg` breakpoint (1024px)** the sidebar and the interface switch
+  move into a drawer behind a menu button. The tourist interface keeps its
+  bottom tab bar there as well.
+- **The demo bar is now an icon.** In demo mode, a small amber ▧ icon, the
+  same glyph and colour as the DEMO DATA provenance badge, sits in the top
+  right corner of every screen and opens the demo panel (§11). Figures still
+  carry their own provenance badges, so a screenshot without the panel open is
+  still labelled where it matters.
+- **About maTAI and the ecosystem page use the same frame** without a sidebar.
+  Sign-in and password pages keep their focused, frameless layout.
+- **A button colour is a variant, not a class override.** `cn()` joins classes
+  without resolving conflicts, so `className="bg-white text-brand-800"` on a
+  primary button lost the text colour to the variant and rendered white on
+  white. Dark surfaces use `variant="inverse"`.
+- **The logo is the full wordmark**, maTAI on Loktak teal with the AI picked
+  out, so it never reads as the purple of a selected item.
+- **Sidebar sections carry icons**, each on its own colour tile that turns
+  solid when the section is current. They come from `lucide-react`, the one
+  dependency this adds. Layouts name an icon by string (`icon: 'Route'`),
+  since a component cannot pass from a server layout into the client frame;
+  `src/components/shell/nav-icons.tsx` maps the names.
+
+---
+
+## 24. Journeys screen
+
+The tourist interface no longer has a separate home. `/explore` is the
+planner and the visitor's journeys on one screen:
+
+- **The planner is a conversation.** The request appears as the visitor's
+  message, and the reply names the journey, its days and stops, and the
+  model's introduction, with "View journey" and "Save". The thread is kept in
+  `sessionStorage` for the tab, so opening a journey and coming back keeps it.
+  A reply whose journey has since been replaced or deleted says so instead of
+  linking to nothing.
+- **The list beside it is every stored journey**, saved or not
+  (`listTrips()`), with what the visitor typed to get it. The first is the
+  current journey, the one the live trip follows.
+- **A journey opens at `/explore/journey/[id]`**, read through the session like
+  every trip read, with "← Your journeys" back to the planner. A missing or
+  foreign id shows "This journey is not available".
+- **Re-planning acts on the journey that is open** (`replanJourney(tripId,
+  condition)`), not on the current one, and validates the condition server
+  side. The live trip page keeps `replanCurrentTrip()`.
+- **`/explore/journey` redirects** to the current journey, or to the most
+  recent plan, or to the planner, so older links still work.
+
+(§25 replaced "Travel with this journey" with starting a journey.)
+- **The trending destinations and the three value cards left with the old
+  home.** Destinations are already ranked by interest on their own page, and
+  About maTAI carries the pitch.
+
+---
+
+## 25. The complete planner
+
+A request used to produce one list of places, and the latest plan counted as
+the visitor's current trip. It now produces two or three complete options, the
+visitor chooses one, and a journey is current only while it is actually under
+way.
+
+### 25.1 What the visitor gives
+
+- **Words**, as before. They can now also carry the group and the budget:
+  "for 4 people", "a family of five", "with my parents" (3), "solo";
+  "₹25,000", "30k rupees", "1.5 lakh", "a budget of 18000". A small number
+  after "under" or "within" is taken as days, not rupees.
+- **Dates and times**, optional, in the composer: the day and time of arrival
+  and of departure, in Manipur time. Given dates decide the number of days,
+  overriding any number in the words. The planner refuses a start before
+  today, an end before the start, and more than 10 days.
+- **Travellers and a budget**, optional, in the composer. They override what
+  the words said. A budget amount sets the stay level (simple, comfortable,
+  premium) by what it allows per person per day, unless a level was chosen.
+
+### 25.2 The day, rebuilt
+
+- **Each day starts where the night was spent**, not in Imphal every morning.
+  The day's anchor is the best remaining place that fits the day, with drives
+  over an hour counted against it and none over five hours allowed.
+- **The last day leans back towards Imphal**, where the trip ends, and with a
+  departure time it must leave the drive back plus two hours before the flight.
+- **Arrival shortens the first day**: nothing starts until an hour after
+  landing, and after a late arrival the day is left empty rather than crammed.
+- **A night is spent where the day ends** when a verified partner has a stay
+  within 45 minutes. Otherwise it is spent back in Imphal when the day ends
+  within two hours of it, or where the day ends, flagged "no partner stay
+  yet".
+- **The theme follows the places planned**, not only the first interest named.
+
+### 25.3 What a plan includes
+
+- **Only verified, participating partners** are planned: the rule that decides
+  who counts towards capacity. Each partner record now has a `rate` (amount,
+  per night or per day, and what it covers: a room, a guide or a vehicle), so
+  a cycle-tour operator is never mistaken for car hire. Rates in the seed are
+  demo data, like the experience prices, and are labelled as such.
+- **Stays**: a room per two travellers, cheapest first on a simple budget, most
+  comfortable first on a premium one, and otherwise nearest the room share of
+  the budget given (a planning convention of 35%).
+- **Transport**: a car with driver per four travellers, for every day, from the
+  partner with vehicles nearest Imphal.
+- **Guides**: at most one a day, for the first stop of a kind a guide adds to
+  (heritage, history, adventure, wildlife), from a partner based there or within
+  15 minutes whose own place shares a kind of interest with the stop.
+- **Cost**: stays, transport, guides and experience places, each line with how
+  it was reached, against the budget. It states what it leaves out: meals not
+  included with a stay, entry fees, getting to Imphal, and any night with no
+  partner stay. It is labelled an estimate, and demo data where the rates are.
+
+### 25.4 Options
+
+The best match is always first. The others, in order of preference, until
+there are three:
+
+1. **Another route**: somewhere else entirely where enough remains, otherwise
+   without the places the best match builds its days on. Kept only if at least
+   a third of its places differ.
+2. **Lower cost**, first when the best match is over the budget: simpler stays
+   and one paid experience, kept only if it saves 8% or more.
+3. **Slower pace** or **More to see**, kept only if its places differ.
+4. **Shorter drives**: everything within about two and a half hours of Imphal.
+5. **A wider mix**: culture, nature or heritage added to a narrow request.
+
+A narrow request can end up with only two options. Options share an
+`optionGroupId`. They are drafts: the next request discards the options that
+were never chosen, and choosing one discards its siblings.
+
+**Choosing is what counts as putting places on an itinerary.** The
+ITINERARY_ADD demand signals are raised then, once, for the chosen plan's
+places. They used to be raised for every plan made; three options per request
+would have tripled them, and a plan that was only looked at is not intent.
+
+### 25.5 Current, upcoming, finalised, past
+
+- An **option** is never current, even if its dates cover today.
+- A **chosen** journey is current while now falls inside its travel window
+  (arrival to departure, Manipur time; the whole day where no time is given),
+  **upcoming** before it, **past** after it, and **finalised** when it has no
+  dates.
+- A **started** journey (status ACTIVE) is current whatever its dates, until it
+  is ended. Starting one ends any other under way.
+- The live trip, check-ins and feedback follow the current journey. With none,
+  the live trip page offers to start one.
+- The clock is the app's clock, so in demo mode today is 16 September 2026, as
+  on every other screen, and the date pickers start there.
+- Journeys show both dates: **Plan for** (the travel window, or "dates not set")
+  and **Planned on** (when the plan was made).
+
+### 25.6 Places found online
+
+With `AI_PROVIDER=gemini`, after planning, one Google Search grounded request
+covers every place of every option (`src/lib/ai/web-search.ts`).
+
+- **Only area names are sent**, never the visitor's own words.
+- **The model is not trusted to name places.** A place is kept only when a
+  segment of the answer that Google grounded in search results contains it,
+  and it carries those results as its sources. Lines naming an unknown area or
+  kind, a link instead of a name, or a registered partner are dropped.
+- **No price is ever taken from the web.** A note containing any figure is
+  dropped.
+- **Each place is tagged "Not a partner · found online"**, and listed beside
+  the plan's partner stays, transport and guides, never priced or costed.
+- Results are cached for 12 hours per set of places, and each visitor gets six
+  searches an hour, since each is a billed call. A failed search says so and
+  offers to try again. With any other provider the search is off and says so.
+
+### 25.7 Data
+
+- Migration `20260922060000_complete_planner`: `Trip.startDate` and `endDate`
+  become nullable, and `arriveTime`, `departTime`, `logisticsJson`,
+  `optionGroupId`, `optionLabel` and `startedAt` are added.
+  `TourismBusiness.rateJson` is added. Dates on existing trips were cleared,
+  since they had been set automatically, never chosen.
+- Rates live in `data/businesses.json`; `npm run db:seed` loads them.
+
+### 25.8 Not done
+
+- **Partner availability is not checked** against the dates. Partners report
+  availability daily, but not for future dates.
+- **Nothing is booked.** Stays, transport and guides are planned and costed;
+  experiences can still be requested as bookings (§19).
+- **Re-planning changes places, not times.** A rain or closure swap keeps the
+  replaced stop's start time.
+- **Search results are unverified by design**, and the grounding links are
+  Google redirect URLs, which may expire.

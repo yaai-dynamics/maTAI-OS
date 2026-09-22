@@ -32,9 +32,14 @@ They are not separate apps that share a logo. A destination, a campaign and a
 feedback item are the same record in all three, which is why a tourist check-in
 changes a government dashboard with no export step in between.
 
-`/` opens the tourist home (`/explore`). The product overview — the interfaces,
+`/` opens the tourist home (`/explore`): the journey planner as a chat, with the
+visitor's journeys listed beside it, each opening on its own page. The product overview — the interfaces,
 the closed loop and the provenance rules — is **About maTAI** at `/about`, which
 is also the page to present from.
+
+Every screen shares one frame: the top bar switches between the interfaces and
+About, and the current interface's sections sit in a sidebar on the left (a
+menu drawer on smaller screens).
 
 ---
 
@@ -54,7 +59,7 @@ npm run dev                  # http://localhost:3000
 
 ```bash
 npm run verify       # typecheck + lint + test + build
-npm run test         # 263 unit tests + 62 against MySQL
+npm run test         # 299 unit tests + 63 against MySQL
 ```
 
 The unit tests need no database. The integration tests skip themselves
@@ -91,6 +96,25 @@ Pay with UPI ID `success@razorpay` or card `4111 1111 1111 1111` (any future
 expiry, any CVV). Live keys are refused. See `docs/09-implementation-notes.md`
 §19.
 
+### The trip planner
+
+A request, with optional dates and times, travellers and a budget, comes back
+as two or three options: the best match, another route, and a cheaper or
+differently paced version. Each includes where every night is spent, a car
+with driver, guides where they help, and local experiences, all from
+**verified partners at their own rates**, and a cost estimate against the
+budget. The visitor chooses one to keep. A journey is **current** once it is
+started, or while today falls inside its dates.
+
+With `AI_PROVIDER=gemini`, the planner also searches the web for stays, guides
+and transport that are **not partners**. They are listed beside the plan,
+tagged "Not a partner · found online", with their sources and never a price.
+See `docs/09-implementation-notes.md` §25.
+
+After `npm run db:migrate` on an existing database, run `npm run db:seed` to
+load the partner rates the planner costs with. Without them it plans places
+but no stays, transport or guides.
+
 ### Visit counting
 
 Tourist signals — page views, directions, plans, check-ins — enter through one
@@ -117,9 +141,10 @@ production target. Only three mechanical differences exist; see
 
 ## The 5-minute demo
 
-Open any screen. The bar at the top:
+Open any screen. The amber **▧** icon at the right end of the top bar marks
+the prototype as demo data, and opens a panel that:
 
-- keeps the **DEMO DATA** label visible at all times;
+- states the **DEMO DATA** label in words;
 - walks the running order from `docs/07-demo-script.md` step by step, with the
   line to say and a jump link for each;
 - resets the prototype to its deterministic seeded state.

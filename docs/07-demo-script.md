@@ -77,7 +77,7 @@ Say:
 Enter:
 > “I have three days. I like nature, culture and local food, and I want to avoid crowded places.”
 
-Click Plan My Journey.
+Add the dates, two travellers and a budget of ₹25,000, then click Plan My Trip. Three options come back in the chat, each with its stays, transport, guides and cost against the budget. Click View details on the best match.
 
 Say:
 > “That content now reaches a traveller.”
@@ -85,6 +85,8 @@ Say:
 ## 3:05–3:30 — Personalized journey
 
 **Screen:** E2
+
+Show the reason on each stop, the partner stay for each night, and the cost. Click Choose this plan, then Start this trip: the live trip is now this journey.
 
 Say:
 > “Instead of giving the tourist a generic list of attractions, the platform builds a journey around their preferences. Each recommendation also explains why it was selected.”

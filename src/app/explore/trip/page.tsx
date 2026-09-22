@@ -3,11 +3,12 @@ import type { Metadata } from 'next';
 
 import { ISSUE_CATEGORY_LABEL } from '@/lib/types';
 import { formatDuration } from '@/lib/geo';
-import { formatLongDate } from '@/lib/date';
+import { now } from '@/lib/config';
+import { formatIstDay, formatPlanFor, istDate, journeyPhase, PHASE_LABEL } from '@/lib/journey';
 import { currentWindow } from '@/server/analytics/windows';
 import { computeDestinationSentiment } from '@/server/analytics/sentiment';
 import { getDestination, getFeedback, getInteractions } from '@/server/data/repository';
-import { getCurrentTrip } from '@/server/data/trips';
+import { getCurrentTrip, listTrips } from '@/server/data/trips';
 import { readVisitor } from '@/server/telemetry/visitor';
 import { isSessionRecord } from '@/server/data/store';
 import { Badge, Card, CardBody, CardHeader, EmptyState } from '@/components/ui/primitives';
@@ -17,7 +18,9 @@ import { DestinationSwatch } from '@/components/shared/DestinationVisual';
 import { ReplanControls } from '@/components/shared/ReplanControls';
 import { ActionForm, Field, Select, TextArea } from '@/components/shared/ActionForm';
 import { checkInForm, submitFeedbackForm } from '@/server/actions/forms';
-import { replanCurrentTrip } from '@/server/actions/tourist';
+import { endJourney, replanCurrentTrip, startJourney } from '@/server/actions/tourist';
+import { TripButton } from '@/components/shared/TripActions';
+import type { Trip } from '@/lib/types';
 
 export const metadata: Metadata = { title: 'Live trip' };
 export const dynamic = 'force-dynamic';
@@ -28,29 +31,70 @@ export default async function LiveTripPage(props: {
   searchParams: Promise<{ destination?: string }>;
 }) {
   const { destination: destinationParam } = await props.searchParams;
-  const trip = await getCurrentTrip((await readVisitor()).sessionId);
+  const { sessionId } = await readVisitor();
+  const trip = await getCurrentTrip(sessionId);
 
   if (!trip) {
+    // A journey is current once started, or while today is inside its dates.
+    // Offer the ones that could be started.
+    const at = now();
+    const startable = (await listTrips(sessionId))
+      .map((row) => ({ row, phase: journeyPhase(row, at) }))
+      .filter(({ phase }) => phase === 'UPCOMING' || phase === 'FINALISED');
     return (
-      <EmptyState
-        icon="✓"
-        title="No trip in progress"
-        description="Plan a journey first. The live trip view is where you check in and leave feedback as you travel."
-        action={
-          <Link
-            href="/explore"
-            className="rounded-md bg-brand-700 px-4 py-2 text-[13px] font-medium text-white hover:bg-brand-600"
-          >
-            Plan a journey
-          </Link>
-        }
-      />
+      <div className="space-y-5">
+        <EmptyState
+          icon="✓"
+          title="No trip in progress"
+          description={
+            startable.length > 0
+              ? 'A trip becomes current when you start it, or on the days you planned it for. Start one to check in and leave feedback as you travel.'
+              : 'Plan a trip and choose one of its options. The live trip view is where you check in and leave feedback as you travel.'
+          }
+          action={
+            startable.length > 0 ? undefined : (
+              <Link
+                href="/explore"
+                className="rounded-md bg-brand-700 px-4 py-2 text-[13px] font-medium text-white hover:bg-brand-600"
+              >
+                Plan a trip
+              </Link>
+            )
+          }
+        />
+        {startable.length > 0 ? (
+          <Card>
+            <CardHeader title="Your trips" subtitle="Start the one you are on." />
+            <CardBody>
+              <ul className="divide-y divide-line">
+                {startable.map(({ row, phase }) => (
+                  <li key={row.id} className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-medium text-ink-900">{row.theme}</p>
+                      <p className="text-[12px] text-ink-500">
+                        {PHASE_LABEL[phase]} · {formatPlanFor(row) ?? 'dates not set'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Link href={`/explore/journey/${row.id}`} className="text-[12px] font-medium text-brand-700 underline">
+                        Details
+                      </Link>
+                      <TripButton tripId={row.id} action={startJourney} label="Start this trip" pendingLabel="Starting…" />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </CardBody>
+          </Card>
+        ) : null}
+      </div>
     );
   }
 
   const stops = trip.items.filter((item) => item.kind === 'DESTINATION');
-  const todayStops = stops.filter((item) => item.day === 1);
-  const upcoming = stops.filter((item) => item.day > 1);
+  const today = dayOfTrip(trip);
+  const todayStops = stops.filter((item) => item.day === today);
+  const upcoming = stops.filter((item) => item.day > today);
 
   const focusId = destinationParam ?? todayStops[0]?.destinationId ?? stops[0]?.destinationId;
   const focus = focusId ? getDestination(focusId) : undefined;
@@ -69,9 +113,20 @@ export default async function LiveTripPage(props: {
     <div className="space-y-5">
       <div>
         <h1 className="text-[22px] font-semibold tracking-tight text-ink-900">Live trip</h1>
-        <p className="mt-1 text-[13px] text-ink-600">
-          {trip.theme} · {formatLongDate(trip.startDate)} to {formatLongDate(trip.endDate)}
-        </p>
+        <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[13px] text-ink-600">
+            {trip.theme} · {formatPlanFor(trip) ?? 'dates not set'}
+            {trip.status === 'ACTIVE' && trip.startedAt ? ` · started ${formatIstDay(trip.startedAt)}` : ''}
+          </p>
+          <div className="flex items-center gap-3">
+            <Link href={`/explore/journey/${trip.id}`} className="text-[12px] font-medium text-brand-700 underline">
+              Trip details
+            </Link>
+            {trip.status === 'ACTIVE' ? (
+              <TripButton tripId={trip.id} action={endJourney} label="End this trip" pendingLabel="Ending…" variant="secondary" />
+            ) : null}
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -79,7 +134,7 @@ export default async function LiveTripPage(props: {
           <Card>
             <CardHeader
               title="Today"
-              subtitle="Day 1 of your plan"
+              subtitle={`Day ${today} of ${Math.max(trip.preferences.durationDays, 1)}`}
               action={<Badge tone="neutral">{todayStops.length} stops</Badge>}
             />
             <CardBody>
@@ -331,4 +386,16 @@ export default async function LiveTripPage(props: {
       </div>
     </div>
   );
+}
+
+/**
+ * Which day of the trip today is: counted from its first date when it has
+ * dates, otherwise from the day it was started. Always within the trip.
+ */
+function dayOfTrip(trip: Trip): number {
+  const days = Math.max(1, trip.preferences.durationDays);
+  const from = trip.startDate ?? (trip.startedAt ? istDate(new Date(trip.startedAt)) : undefined);
+  if (!from) return 1;
+  const elapsed = Math.floor((Date.parse(istDate(now())) - Date.parse(from)) / 86_400_000);
+  return Math.min(days, Math.max(1, elapsed + 1));
 }

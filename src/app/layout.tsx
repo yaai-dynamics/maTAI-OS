@@ -1,10 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
-import { DEMO_MODE } from '@/lib/config';
-import { DemoBar } from '@/components/shell/DemoBar';
-import { resetDemo } from '@/server/actions/demo';
-
 export const metadata: Metadata = {
   title: {
     default: 'maTAI',
@@ -31,7 +27,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
-        {DEMO_MODE ? <DemoBar onReset={resetDemo} /> : null}
         {children}
       </body>
     </html>

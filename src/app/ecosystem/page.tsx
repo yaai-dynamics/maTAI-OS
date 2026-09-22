@@ -5,7 +5,7 @@ import { computePulse } from '@/server/analytics/pulse';
 import { getBusinesses, getCreators, getDestinations, getInteractions } from '@/server/data/repository';
 import { isSessionRecord } from '@/server/data/store';
 import { Card, CardBody, CardHeader } from '@/components/ui/primitives';
-import { RoleSwitcher } from '@/components/shell/RoleNav';
+import { AppShell } from '@/components/shell/AppShell';
 import { EcosystemLoop } from '@/components/shared/EcosystemLoop';
 import { DemoDataNote } from '@/components/shared/badges';
 
@@ -60,17 +60,8 @@ export default function EcosystemPage() {
   ];
 
   return (
-    <div className="min-h-dvh bg-paper">
-      <header className="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-3 px-4 py-2.5">
-          <Link href="/" className="text-[14px] font-semibold text-ink-900">
-            maTAI
-          </Link>
-          <RoleSwitcher compact />
-        </div>
-      </header>
-
-      <main id="main" className="mx-auto max-w-[1200px] px-4 py-8">
+    <AppShell>
+      <div className="py-3 sm:py-2">
         <section className="immersive -mx-4 px-5 py-9 sm:mx-0 sm:rounded-2xl sm:px-9">
           <h1 className="max-w-3xl text-[28px] font-semibold leading-tight tracking-tight text-white sm:text-[36px]">
             We are not building another tourism app. We are building the intelligence layer
@@ -99,7 +90,7 @@ export default function EcosystemPage() {
             <CardBody>
               {sessionSignals.length === 0 ? (
                 <p className="text-[13px] text-ink-600">
-                  No live signals yet. Plan a journey, open a destination, check in and leave feedback,
+                  No live signals yet. Plan a trip, open a destination, check in and leave feedback,
                   then come back: the counts here and the figures in the department views move
                   together.
                 </p>
@@ -234,7 +225,7 @@ export default function EcosystemPage() {
             Explore Manipur
           </Link>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

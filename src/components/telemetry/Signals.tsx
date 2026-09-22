@@ -9,13 +9,19 @@ import { track, type ClientSignal } from '@/components/telemetry/track';
  * itself the interaction the government views aggregate; the server decides
  * whether it is recorded, and a reload inside half an hour is not a new view.
  */
-export function ViewSignal({ destinationId }: { destinationId: string }) {
+export function ViewSignal({
+  destinationId,
+  surface = 'destination-page',
+}: {
+  destinationId: string;
+  surface?: string;
+}) {
   const fired = useRef(false);
   useEffect(() => {
     if (fired.current) return;
     fired.current = true;
-    track({ type: 'DESTINATION_VIEW', destinationId, surface: 'destination-page' });
-  }, [destinationId]);
+    track({ type: 'DESTINATION_VIEW', destinationId, surface });
+  }, [destinationId, surface]);
   return null;
 }
 

@@ -34,6 +34,19 @@ export const businessStatusSchema = z.enum([
 ]);
 export type BusinessStatus = z.infer<typeof businessStatusSchema>;
 
+/**
+ * What a partner charges, used to cost a trip. covers says what the price buys,
+ * so a cycle-tour operator is never mistaken for car hire.
+ */
+export const businessRateSchema = z.object({
+  amount: z.number().int().positive(),
+  unit: z.enum(['NIGHT', 'DAY']),
+  covers: z.enum(['ROOM', 'GUIDE', 'VEHICLE']),
+  /** What the rate includes, in the partner's words. */
+  note: z.string().optional(),
+});
+export type BusinessRate = z.infer<typeof businessRateSchema>;
+
 export const tourismBusinessSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -47,6 +60,7 @@ export const tourismBusinessSchema = z.object({
   verified: z.boolean().default(false),
   /** Rooms or seats offered, where the partner has reported it. */
   reportedCapacity: z.number().int().nonnegative().optional(),
+  rate: businessRateSchema.optional(),
   provenance: provenanceSchema,
 });
 export type TourismBusiness = z.infer<typeof tourismBusinessSchema>;

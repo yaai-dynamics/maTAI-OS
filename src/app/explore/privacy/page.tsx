@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 const COUNTED = [
   ['Opening a destination page', 'Once per half hour per place, so a reload is not a second visit.'],
   ['Following "Get directions"', 'That you set off, not where from. No location is read.'],
-  ['Planning a journey', 'The places on the plan and the interests you chose.'],
+  ['Planning a trip', 'The places on the plan and the interests you chose.'],
   ['Asking about a place', 'The question, so the department can see what visitors want to know.'],
   ['Requesting a booking', 'That a request was made for that experience — not your name or phone number.'],
 ] as const;
@@ -95,19 +95,19 @@ export default async function PrivacyPage() {
 
       <Card>
         <CardHeader
-          title="Your journeys"
+          title="Your trips"
           action={<Badge tone="neutral">{journeys === 0 ? 'None stored' : `${journeys} stored`}</Badge>}
-          subtitle="Plans you make are kept so the journey page still shows them when you come back. They are not visit counts, the department does not see them, and they stay whatever you choose above."
+          subtitle="Plans you make are kept so the trip page still shows them when you come back. They are not visit counts, the department does not see them, and they stay whatever you choose above."
         />
         <CardBody className="space-y-2">
           <p className="text-[12px] text-ink-600">
-            A plan you have not saved is replaced by the next one you make. Saved journeys stay until you delete them,
-            here or on the journey page. Deleting them does not remove the visit counts above.
+            A plan you have not saved is replaced by the next one you make. Saved trips stay until you delete them,
+            here or on the trip page. Deleting them does not remove the visit counts above.
           </p>
           {journeys > 0 ? (
             <ActionForm
               action={deleteMyJourneysForm}
-              submitLabel="Delete all my journeys"
+              submitLabel="Delete all my trips"
               pendingLabel="Deleting…"
               variant="ghost"
               size="sm"

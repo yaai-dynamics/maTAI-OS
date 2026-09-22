@@ -50,6 +50,10 @@ export const tripProfileSchema = z.object({
   languages: z.array(z.string()).default(['English']),
   /** Free text the tourist originally typed, kept for explanation only. */
   rawRequest: z.string().default(''),
+  /** How many are travelling. Rooms, cars and experience places follow from it. */
+  travellers: z.number().int().min(1).max(20).default(1),
+  /** The whole trip's budget in rupees, for everyone travelling, when given. */
+  budgetAmount: z.number().int().positive().max(10_000_000).optional(),
 });
 export type TripProfile = z.infer<typeof tripProfileSchema>;
 
@@ -81,18 +85,94 @@ export const itineraryAlternativeSchema = z.object({
 });
 export type ItineraryAlternative = z.infer<typeof itineraryAlternativeSchema>;
 
+/* --------------------------- What a plan includes --------------------------- */
+
+const clockTime = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+
+/** A place found by web search: never a partner, never priced, always sourced. */
+export const onlinePlaceSchema = z.object({
+  kind: z.enum(['STAY', 'GUIDE', 'TRANSPORT']),
+  destinationId: z.string(),
+  name: z.string().min(2).max(120),
+  note: z.string().max(240).optional(),
+  sources: z.array(z.object({ uri: z.string().url(), title: z.string() })).min(1),
+});
+export type OnlinePlace = z.infer<typeof onlinePlaceSchema>;
+
+/** One night. No businessId means no verified partner stay was found near it. */
+export const tripStaySchema = z.object({
+  night: z.number().int().min(1),
+  /** Where the night is spent: the day's last stop. */
+  destinationId: z.string(),
+  businessId: z.string().optional(),
+  rooms: z.number().int().min(1),
+  /** Per room per night, as the partner quoted it when the plan was made. */
+  rate: z.number().int().nonnegative().optional(),
+  /** From the day's last stop to the stay, when the stay is elsewhere. */
+  travelMinutes: z.number().int().nonnegative().default(0),
+});
+export type TripStay = z.infer<typeof tripStaySchema>;
+
+export const tripTransportSchema = z.object({
+  businessId: z.string().optional(),
+  vehicles: z.number().int().min(1),
+  days: z.number().int().min(1),
+  /** Per vehicle per day. */
+  rate: z.number().int().nonnegative().optional(),
+});
+export type TripTransport = z.infer<typeof tripTransportSchema>;
+
+export const tripGuideSchema = z.object({
+  day: z.number().int().min(1),
+  destinationId: z.string(),
+  businessId: z.string(),
+  /** Per day, for the group. */
+  rate: z.number().int().nonnegative().optional(),
+});
+export type TripGuide = z.infer<typeof tripGuideSchema>;
+
+export const onlineSearchStatusSchema = z.enum(['NOT_RUN', 'FOUND', 'NONE_FOUND', 'OFF', 'FAILED', 'LIMITED']);
+export type OnlineSearchStatus = z.infer<typeof onlineSearchStatusSchema>;
+
+export const tripLogisticsSchema = z.object({
+  stays: z.array(tripStaySchema).default([]),
+  transport: tripTransportSchema.optional(),
+  guides: z.array(tripGuideSchema).default([]),
+  online: z
+    .object({
+      status: onlineSearchStatusSchema,
+      checkedAt: z.string().optional(),
+      places: z.array(onlinePlaceSchema).default([]),
+    })
+    .default({ status: 'NOT_RUN', places: [] }),
+});
+export type TripLogistics = z.infer<typeof tripLogisticsSchema>;
+
 export const tripSchema = z.object({
   id: z.string(),
   touristSessionId: z.string(),
   title: z.string(),
   /** Narrative theme, for example "The floating world of Loktak". */
   theme: z.string(),
-  startDate: z.string(),
-  endDate: z.string(),
+  /** The travel window, when the visitor gave one (YYYY-MM-DD, Manipur time). */
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  /** Arrival on the first day and departure on the last, HH:MM in IST. */
+  arriveTime: clockTime.optional(),
+  departTime: clockTime.optional(),
   preferences: tripProfileSchema,
   items: z.array(itineraryItemSchema),
   alternatives: z.array(itineraryAlternativeSchema).default([]),
+  logistics: tripLogisticsSchema.optional(),
+  /**
+   * DRAFT is an option not yet chosen, SAVED a finalised journey, ACTIVE a
+   * started one, COMPLETED an ended one.
+   */
   status: tripStatusSchema,
+  /** Options from one planning request share a group. */
+  optionGroupId: z.string().optional(),
+  optionLabel: z.string().optional(),
+  startedAt: z.string().optional(),
   createdAt: z.string(),
   /** Set when an adaptive re-plan has been applied. */
   adaptedReason: z.string().optional(),

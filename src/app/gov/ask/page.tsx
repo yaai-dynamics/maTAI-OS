@@ -14,7 +14,7 @@ import { requireGovernment } from '@/server/auth/session';
 export const metadata: Metadata = { title: 'Ask the Decision Room' };
 export const dynamic = 'force-dynamic';
 
-/** Deep links from the demo bar and from other screens. */
+/** Deep links from the demo panel and from other screens. */
 const PRESETS: Record<string, string> = {
   promote:
     'Which destination should we promote to diversify tourism away from the most concentrated destinations?',

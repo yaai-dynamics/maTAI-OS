@@ -1,14 +1,18 @@
 import { randomBytes } from 'node:crypto';
 
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 
+import { now } from '@/lib/config';
+import { journeyPhase, tripWindow } from '@/lib/journey';
 import {
   destinationCategorySchema,
   itineraryAlternativeSchema,
+  tripLogisticsSchema,
   tripProfileSchema,
   type ItineraryItem,
   type Trip,
+  type TripLogistics,
 } from '@/lib/types';
 import { prisma } from '@/server/data/client';
 import { getState } from '@/server/data/store';
@@ -24,18 +28,22 @@ import { getState } from '@/server/data/store';
  *
  *   - A trip belongs to one anonymous session, and every read takes that
  *     session. A trip id alone never reaches a trip.
- *   - The visitor's current trip is the one updated most recently: planned,
- *     re-planned, saved or switched to.
- *   - Planning a new trip discards the visitor's other drafts. Journeys they
- *     chose to save are kept until they delete them.
+ *   - One planning request produces two or three options (DRAFT), sharing an
+ *     option group. The visitor finalises one (SAVED) and the others go.
+ *     Planning again discards options that were never chosen.
+ *   - A finalised journey is current once the visitor starts it (ACTIVE), or
+ *     while the time is inside its travel window. Being the latest plan does
+ *     not make a journey current.
  *
  * Deleting a trip does not delete the signals raised while planning it. The
  * database clears their trip reference; the demand they record still counts.
  */
 
+/** Journeys a visitor may keep: finalised, in progress and past. Options do not count. */
 export const MAX_SAVED_TRIPS = 10;
 
 export const newTripId = (): string => `trip-${randomBytes(12).toString('base64url')}`;
+export const newOptionGroupId = (): string => `plan-${randomBytes(9).toString('base64url')}`;
 
 const toDbDate = (date: string): Date => new Date(`${date}T00:00:00.000Z`);
 const fromDbDate = (date: Date): string => date.toISOString().slice(0, 10);
@@ -46,6 +54,9 @@ type TripRow = Prisma.TripGetPayload<{ include: typeof tripWithItems }>;
 const interestsSchema = z.array(destinationCategorySchema);
 const alternativesSchema = z.array(itineraryAlternativeSchema);
 
+/** Enough rows for every option and every kept journey, most recent first. */
+const READ_LIMIT = MAX_SAVED_TRIPS + 12;
+
 /**
  * A stored trip, or undefined if its JSON no longer matches the current
  * shape. An old trip that cannot be read is treated as absent, so a schema
@@ -55,6 +66,8 @@ function toTrip(row: TripRow): Trip | undefined {
   const preferences = tripProfileSchema.safeParse(row.preferencesJson);
   const alternatives = alternativesSchema.safeParse(row.alternativesJson);
   if (!preferences.success || !alternatives.success) return undefined;
+  const logistics = row.logisticsJson === null ? undefined : tripLogisticsSchema.safeParse(row.logisticsJson);
+  if (logistics && !logistics.success) return undefined;
 
   const items: ItineraryItem[] = [];
   for (const item of row.items) {
@@ -81,12 +94,18 @@ function toTrip(row: TripRow): Trip | undefined {
     touristSessionId: row.touristSessionId,
     title: row.title,
     theme: row.theme,
-    startDate: fromDbDate(row.startDate),
-    endDate: fromDbDate(row.endDate),
+    ...(row.startDate ? { startDate: fromDbDate(row.startDate) } : {}),
+    ...(row.endDate ? { endDate: fromDbDate(row.endDate) } : {}),
+    ...(row.arriveTime ? { arriveTime: row.arriveTime } : {}),
+    ...(row.departTime ? { departTime: row.departTime } : {}),
     preferences: preferences.data,
     items,
     alternatives: alternatives.data,
+    ...(logistics?.success ? { logistics: logistics.data } : {}),
     status: row.status,
+    ...(row.optionGroupId ? { optionGroupId: row.optionGroupId } : {}),
+    ...(row.optionLabel ? { optionLabel: row.optionLabel } : {}),
+    ...(row.startedAt ? { startedAt: row.startedAt.toISOString() } : {}),
     createdAt: row.createdAt.toISOString(),
     ...(row.adaptedReason ? { adaptedReason: row.adaptedReason } : {}),
     provenance: row.provenance,
@@ -95,7 +114,7 @@ function toTrip(row: TripRow): Trip | undefined {
 
 /* -------------------------------- In memory -------------------------------- */
 
-/** Most recently updated last, so the current trip is the last one. */
+/** Most recently updated last. */
 function touchInMemory(trip: Trip): void {
   const state = getState();
   state.trips = [...state.trips.filter((row) => row.id !== trip.id), trip];
@@ -104,25 +123,48 @@ function touchInMemory(trip: Trip): void {
 const memoryTripsFor = (sessionId: string): Trip[] =>
   getState().trips.filter((trip) => trip.touristSessionId === sessionId);
 
+function removeInMemory(keep: (trip: Trip) => boolean): number {
+  const state = getState();
+  const before = state.trips.length;
+  state.trips = state.trips.filter(keep);
+  return before - state.trips.length;
+}
+
 /* ---------------------------------- Reads ---------------------------------- */
 
-/** The visitor's current trip: the one they most recently planned, changed or opened. */
-export async function getCurrentTrip(sessionId: string | null | undefined): Promise<Trip | undefined> {
-  if (!sessionId) return undefined;
-  if (!getState().persistent) return memoryTripsFor(sessionId).at(-1);
-
-  // A handful of rows at most, so skipping an unreadable one is cheap.
+/** Every journey and option the visitor has, most recently changed first. */
+export async function listTrips(sessionId: string | null | undefined): Promise<Trip[]> {
+  if (!sessionId) return [];
+  if (!getState().persistent) return memoryTripsFor(sessionId).reverse();
   const rows = await prisma.trip.findMany({
     where: { touristSessionId: sessionId },
     orderBy: { updatedAt: 'desc' },
     include: tripWithItems,
-    take: MAX_SAVED_TRIPS + 1,
+    take: READ_LIMIT,
   });
-  for (const row of rows) {
-    const trip = toTrip(row);
-    if (trip) return trip;
-  }
-  return undefined;
+  // A handful of rows at most, so skipping an unreadable one is cheap.
+  return rows.map(toTrip).filter((trip): trip is Trip => trip !== undefined);
+}
+
+/**
+ * The journey the visitor is on now: the one they started, or else a
+ * finalised one whose travel window contains the current time.
+ */
+export async function getCurrentTrip(sessionId: string | null | undefined): Promise<Trip | undefined> {
+  const at = now();
+  const trips = await listTrips(sessionId);
+  const started = trips
+    .filter((trip) => trip.status === 'ACTIVE')
+    .sort((a, b) => (b.startedAt ?? '').localeCompare(a.startedAt ?? ''))[0];
+  if (started) return started;
+  return trips
+    .filter((trip) => journeyPhase(trip, at) === 'IN_PROGRESS')
+    .sort((a, b) => tripWindow(a)!.start.getTime() - tripWindow(b)!.start.getTime())[0];
+}
+
+/** The most recently changed journey, for links that name no journey. */
+export async function getLatestTrip(sessionId: string | null | undefined): Promise<Trip | undefined> {
+  return (await listTrips(sessionId))[0];
 }
 
 /** One of the visitor's trips, or undefined if it is not theirs. */
@@ -136,41 +178,11 @@ export async function getTripFor(sessionId: string | null | undefined, tripId: s
   return row ? toTrip(row) : undefined;
 }
 
-export interface TripSummary {
-  id: string;
-  theme: string;
-  title: string;
-  startDate: string;
-  endDate: string;
-  status: Trip['status'];
-  stops: number;
-}
-
-/** The visitor's saved journeys, most recently used first. */
-export async function listSavedTrips(sessionId: string | null | undefined): Promise<TripSummary[]> {
-  if (!sessionId) return [];
-  const summarise = (trip: Trip): TripSummary => ({
-    id: trip.id,
-    theme: trip.theme,
-    title: trip.title,
-    startDate: trip.startDate,
-    endDate: trip.endDate,
-    status: trip.status,
-    stops: trip.items.filter((item) => item.kind === 'DESTINATION').length,
-  });
-  if (!getState().persistent) {
-    return memoryTripsFor(sessionId)
-      .filter((trip) => trip.status === 'SAVED')
-      .reverse()
-      .map(summarise);
-  }
-  const rows = await prisma.trip.findMany({
-    where: { touristSessionId: sessionId, status: 'SAVED' },
-    orderBy: { updatedAt: 'desc' },
-    include: tripWithItems,
-    take: MAX_SAVED_TRIPS,
-  });
-  return rows.map(toTrip).filter((trip): trip is Trip => trip !== undefined).map(summarise);
+/** Journeys kept past planning: finalised, in progress or past. */
+export async function countKeptTrips(sessionId: string | null | undefined): Promise<number> {
+  if (!sessionId) return 0;
+  if (!getState().persistent) return memoryTripsFor(sessionId).filter((trip) => trip.status !== 'DRAFT').length;
+  return prisma.trip.count({ where: { touristSessionId: sessionId, status: { not: 'DRAFT' } } });
 }
 
 /** How many trips are stored for this visitor, for the privacy page. */
@@ -188,9 +200,10 @@ export class TripOwnershipError extends Error {
   }
 }
 
+const json = (value: unknown) => value as Prisma.InputJsonValue;
+
 /**
- * Stores a trip and its items, replacing any items it had. The trip becomes
- * the visitor's current one.
+ * Stores a trip and its items, replacing any items it had.
  *
  * Refuses to overwrite a trip that belongs to another session: trip ids are
  * random and never accepted from a browser, but the check costs one read.
@@ -206,14 +219,20 @@ export async function saveTrip(trip: Trip): Promise<Trip> {
   const data = {
     title: trip.title.slice(0, 512),
     theme: trip.theme.slice(0, 191),
-    startDate: toDbDate(trip.startDate),
-    endDate: toDbDate(trip.endDate),
-    preferencesJson: trip.preferences as unknown as Prisma.InputJsonValue,
-    alternativesJson: trip.alternatives as unknown as Prisma.InputJsonValue,
+    startDate: trip.startDate ? toDbDate(trip.startDate) : null,
+    endDate: trip.endDate ? toDbDate(trip.endDate) : null,
+    arriveTime: trip.arriveTime ?? null,
+    departTime: trip.departTime ?? null,
+    preferencesJson: json(trip.preferences),
+    alternativesJson: json(trip.alternatives),
+    logisticsJson: trip.logistics ? json(trip.logistics) : Prisma.DbNull,
     status: trip.status,
+    optionGroupId: trip.optionGroupId ?? null,
+    optionLabel: trip.optionLabel?.slice(0, 64) ?? null,
+    startedAt: trip.startedAt ? new Date(trip.startedAt) : null,
     adaptedReason: trip.adaptedReason ?? null,
     provenance: trip.provenance,
-    // Set explicitly so a save that changes nothing else still makes this the current trip.
+    // Set explicitly so a save that changes nothing else still counts as a change.
     updatedAt: new Date(),
   };
 
@@ -251,72 +270,115 @@ export async function saveTrip(trip: Trip): Promise<Trip> {
   return trip;
 }
 
-/**
- * Removes the visitor's drafts other than `keepId`. Called when a new trip is
- * planned, so abandoned plans do not pile up under a session.
- */
-export async function discardOtherDrafts(sessionId: string, keepId: string): Promise<number> {
+/** Replaces only what a trip includes (stays, transport, guides, online finds). */
+export async function saveLogistics(sessionId: string, tripId: string, logistics: TripLogistics): Promise<boolean> {
+  const trip = await getTripFor(sessionId, tripId);
+  if (!trip) return false;
   if (!getState().persistent) {
-    const state = getState();
-    const before = state.trips.length;
-    state.trips = state.trips.filter(
-      (trip) => !(trip.touristSessionId === sessionId && trip.status === 'DRAFT' && trip.id !== keepId),
+    // In place, so the order of the visitor's trips does not change.
+    getState().trips = getState().trips.map((row) => (row.id === tripId ? { ...row, logistics } : row));
+    return true;
+  }
+  await prisma.trip.updateMany({
+    where: { id: tripId, touristSessionId: sessionId },
+    data: { logisticsJson: json(logistics) },
+  });
+  return true;
+}
+
+/**
+ * Removes the visitor's options that were never chosen, other than those of
+ * `keepGroupId`. Called when a new plan is made, so abandoned options do not
+ * pile up under a session.
+ */
+export async function discardUnchosenOptions(sessionId: string, keepGroupId: string): Promise<number> {
+  if (!getState().persistent) {
+    return removeInMemory(
+      (trip) => !(trip.touristSessionId === sessionId && trip.status === 'DRAFT' && trip.optionGroupId !== keepGroupId),
     );
-    return before - state.trips.length;
   }
   const { count } = await prisma.trip.deleteMany({
-    where: { touristSessionId: sessionId, status: 'DRAFT', id: { not: keepId } },
+    where: {
+      touristSessionId: sessionId,
+      status: 'DRAFT',
+      OR: [{ optionGroupId: null }, { optionGroupId: { not: keepGroupId } }],
+    },
   });
   return count;
 }
 
-export type SaveOutcome = 'SAVED' | 'ALREADY_SAVED' | 'LIMIT_REACHED' | 'NOT_FOUND';
+export type ChooseOutcome = 'CHOSEN' | 'ALREADY_CHOSEN' | 'LIMIT_REACHED' | 'NOT_FOUND';
 
 /**
- * Keeps a trip past the next plan. A visitor may keep MAX_SAVED_TRIPS; beyond
- * that they choose one to delete, rather than the oldest vanishing unasked.
+ * Finalises one option: it becomes a kept journey and the other options from
+ * the same request go. A visitor may keep MAX_SAVED_TRIPS; beyond that they
+ * choose one to delete, rather than the oldest vanishing unasked.
  */
-export async function markTripSaved(sessionId: string, tripId: string): Promise<SaveOutcome> {
+export async function chooseOption(
+  sessionId: string,
+  tripId: string,
+): Promise<{ outcome: ChooseOutcome; trip?: Trip }> {
   const trip = await getTripFor(sessionId, tripId);
-  if (!trip) return 'NOT_FOUND';
-  if (trip.status === 'SAVED') return 'ALREADY_SAVED';
-  if ((await listSavedTrips(sessionId)).length >= MAX_SAVED_TRIPS) return 'LIMIT_REACHED';
-  await saveTrip({ ...trip, status: 'SAVED' });
-  return 'SAVED';
+  if (!trip) return { outcome: 'NOT_FOUND' };
+  if (trip.status !== 'DRAFT') return { outcome: 'ALREADY_CHOSEN', trip };
+  if ((await countKeptTrips(sessionId)) >= MAX_SAVED_TRIPS) return { outcome: 'LIMIT_REACHED' };
+
+  const chosen = await saveTrip({ ...trip, status: 'SAVED' });
+  if (trip.optionGroupId) {
+    const group = trip.optionGroupId;
+    if (!getState().persistent) {
+      removeInMemory(
+        (row) =>
+          !(row.touristSessionId === sessionId && row.optionGroupId === group && row.status === 'DRAFT' && row.id !== tripId),
+      );
+    } else {
+      await prisma.trip.deleteMany({
+        where: { touristSessionId: sessionId, optionGroupId: group, status: 'DRAFT', id: { not: tripId } },
+      });
+    }
+  }
+  return { outcome: 'CHOSEN', trip: chosen };
 }
 
-/** Makes one of the visitor's saved trips their current one. */
-export async function switchToTrip(sessionId: string, tripId: string): Promise<Trip | undefined> {
+export type StartOutcome = 'STARTED' | 'ALREADY_STARTED' | 'NOT_CHOSEN' | 'NOT_FOUND';
+
+/**
+ * Starts a finalised journey: it is the current one from now on. A journey
+ * already under way is ended, since a visitor travels one at a time.
+ */
+export async function startTrip(sessionId: string, tripId: string): Promise<{ outcome: StartOutcome; ended?: Trip }> {
   const trip = await getTripFor(sessionId, tripId);
-  if (!trip) return undefined;
-  if (!getState().persistent) {
-    touchInMemory(trip);
-    return trip;
-  }
-  await prisma.trip.updateMany({ where: { id: tripId, touristSessionId: sessionId }, data: { updatedAt: new Date() } });
-  return trip;
+  if (!trip) return { outcome: 'NOT_FOUND' };
+  if (trip.status === 'ACTIVE') return { outcome: 'ALREADY_STARTED' };
+  if (trip.status === 'DRAFT') return { outcome: 'NOT_CHOSEN' };
+
+  const others = (await listTrips(sessionId)).filter((row) => row.status === 'ACTIVE' && row.id !== tripId);
+  for (const other of others) await saveTrip({ ...other, status: 'COMPLETED' });
+  await saveTrip({ ...trip, status: 'ACTIVE', startedAt: now().toISOString() });
+  return { outcome: 'STARTED', ...(others[0] ? { ended: others[0] } : {}) };
+}
+
+/** Ends a journey the visitor started. */
+export async function endTrip(sessionId: string, tripId: string): Promise<'ENDED' | 'NOT_STARTED' | 'NOT_FOUND'> {
+  const trip = await getTripFor(sessionId, tripId);
+  if (!trip) return 'NOT_FOUND';
+  if (trip.status !== 'ACTIVE') return 'NOT_STARTED';
+  await saveTrip({ ...trip, status: 'COMPLETED' });
+  return 'ENDED';
 }
 
 /** Deletes one of the visitor's trips. */
 export async function deleteTrip(sessionId: string, tripId: string): Promise<boolean> {
   if (!getState().persistent) {
-    const state = getState();
-    const before = state.trips.length;
-    state.trips = state.trips.filter((trip) => !(trip.id === tripId && trip.touristSessionId === sessionId));
-    return state.trips.length < before;
+    return removeInMemory((trip) => !(trip.id === tripId && trip.touristSessionId === sessionId)) > 0;
   }
   const { count } = await prisma.trip.deleteMany({ where: { id: tripId, touristSessionId: sessionId } });
   return count > 0;
 }
 
-/** Deletes every trip the visitor has, saved or not. */
+/** Deletes every trip the visitor has, kept or not. */
 export async function deleteTripsForSession(sessionId: string): Promise<number> {
-  if (!getState().persistent) {
-    const state = getState();
-    const before = state.trips.length;
-    state.trips = state.trips.filter((trip) => trip.touristSessionId !== sessionId);
-    return before - state.trips.length;
-  }
+  if (!getState().persistent) return removeInMemory((trip) => trip.touristSessionId !== sessionId);
   const { count } = await prisma.trip.deleteMany({ where: { touristSessionId: sessionId } });
   return count;
 }

@@ -7,7 +7,7 @@ import { getBusinesses, getCreators, getDestinations } from '@/server/data/repos
 import { Card, CardBody } from '@/components/ui/primitives';
 import { ProvenanceBadge } from '@/components/shared/badges';
 import { EcosystemLoop } from '@/components/shared/EcosystemLoop';
-import { RoleSwitcher } from '@/components/shell/RoleNav';
+import { AppShell } from '@/components/shell/AppShell';
 
 /**
  * About maTAI: the whole product on one page — the three interfaces, the
@@ -30,7 +30,7 @@ const ROLES = [
     who: 'Tourism Department',
     promise: 'Understand what is happening, decide what to promote, and test it before acting.',
     accent: 'bg-brand-700',
-    letter: 'M',
+    letter: 'D',
     points: [
       'Six headline indicators with their method and source attached',
       'Natural-language questions routed to authorised analytical tools',
@@ -78,17 +78,8 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="min-h-dvh bg-paper">
-      <header className="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-3 px-4 py-2.5">
-          <Link href="/" className="text-[14px] font-semibold text-ink-900">
-            maTAI
-          </Link>
-          <RoleSwitcher compact />
-        </div>
-      </header>
-
-      <main id="main" className="mx-auto max-w-[1200px] px-4 py-8 sm:py-12">
+    <AppShell>
+      <div className="py-3 sm:py-6">
         <section className="immersive -mx-4 px-5 py-10 sm:mx-0 sm:rounded-2xl sm:px-10 sm:py-14">
           <p className="text-[12px] uppercase tracking-[0.14em] text-white/55">About</p>
           <h1 className="mt-2 max-w-3xl text-[32px] font-semibold leading-tight tracking-tight text-white sm:text-[44px]">
@@ -234,7 +225,7 @@ export default function AboutPage() {
             </CardBody>
           </Card>
         </footer>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

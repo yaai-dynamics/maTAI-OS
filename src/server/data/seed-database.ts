@@ -271,6 +271,7 @@ export async function seedDatabase(prisma: PrismaClient): Promise<Record<string,
       contactVisibility: b.contactVisibility,
       verified: b.verified,
       reportedCapacity: b.reportedCapacity,
+      ...(b.rate ? { rateJson: b.rate } : {}),
       provenance: b.provenance,
     })),
   });

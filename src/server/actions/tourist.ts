@@ -4,32 +4,44 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 import { now } from '@/lib/config';
+import { formatPlanFor, istDate } from '@/lib/journey';
 import {
   feedbackCategorySchema,
   type Feedback,
+  type OnlineSearchStatus,
   type Trip,
   type TripProfile,
 } from '@/lib/types';
+import { webSearchAvailable } from '@/lib/ai/web-search';
+import { findOnlineFor } from '@/server/ai/online-places';
+import { buildLogistics, nightsFromItems, stopNamesOf, summariseTrip } from '@/server/ai/trip-logistics';
 import { askAboutDestination, type GroundedAnswer } from '@/server/ai/storyteller';
 import {
-  buildItinerary,
   describeTrip,
   extractTripProfile,
+  MAX_TRIP_DAYS,
+  planOptions,
   replanTrip,
+  windowDays,
   type BuiltTrip,
+  type TravelWindow,
   type TripCondition,
 } from '@/server/ai/trip-planner';
 import { getExperience } from '@/server/data/repository';
 import { createEnquiry, forgetSessionSignals, nextId, submitFeedback } from '@/server/data/store';
 import {
+  chooseOption,
   deleteTrip,
   deleteTripsForSession,
-  discardOtherDrafts,
+  discardUnchosenOptions,
+  endTrip,
   getCurrentTrip,
-  markTripSaved,
+  getTripFor,
+  listTrips,
   MAX_SAVED_TRIPS,
+  saveLogistics,
   saveTrip,
-  switchToTrip,
+  startTrip,
 } from '@/server/data/trips';
 import { activeCampaignFor } from '@/server/data/attribution';
 import { ensureVisitor, setAnalyticsChoice } from '@/server/telemetry/visitor';
@@ -47,6 +59,9 @@ import { ingest, PASSIVE_TYPES } from '@/server/telemetry/ingest';
  * itself still works for them: declining analytics never breaks a page.
  */
 
+const dateText = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const timeText = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+
 const planInput = z.object({
   request: z.string().min(3).max(600),
   durationDays: z.coerce.number().int().min(1).max(10).optional(),
@@ -54,23 +69,89 @@ const planInput = z.object({
   budget: z.enum(['BUDGET', 'MODERATE', 'PREMIUM']).optional(),
   crowdPreference: z.enum(['QUIET', 'BALANCED', 'POPULAR']).optional(),
   accessibility: z.enum(['NONE', 'LOW_MOBILITY', 'SENIOR_FRIENDLY', 'FAMILY_WITH_CHILDREN']).optional(),
+  travellers: z.coerce.number().int().min(1).max(20).optional(),
+  budgetAmount: z.coerce.number().int().min(500).max(10_000_000).optional(),
+  window: z
+    .object({
+      startDate: dateText,
+      endDate: dateText,
+      arriveTime: timeText.optional(),
+      departTime: timeText.optional(),
+    })
+    .optional(),
 });
+
+/** A travel window the planner can use, or the reason it cannot. */
+function checkWindow(window: TravelWindow): string | undefined {
+  if (window.startDate < istDate(now())) return 'The trip cannot start before today.';
+  if (window.endDate < window.startDate) return 'The trip ends before it starts. Check the dates.';
+  const span = (Date.parse(window.endDate) - Date.parse(window.startDate)) / 86_400_000 + 1;
+  if (span > MAX_TRIP_DAYS) return `The planner builds trips of up to ${MAX_TRIP_DAYS} days.`;
+  if (window.startDate === window.endDate && window.arriveTime && window.departTime && window.departTime <= window.arriveTime) {
+    return 'On a one-day trip, departure has to be after arrival.';
+  }
+  return undefined;
+}
+
+/** What the planner's reply shows for each option. */
+export interface PlanOptionView {
+  tripId: string;
+  label: string;
+  summary: string;
+  theme: string;
+  days: number;
+  stopNames: string[];
+  experiences: number;
+  nights: number;
+  partnerNights: number;
+  guides: number;
+  /** The estimate from partner rates, in rupees. */
+  cost: number;
+  fitsBudget?: boolean;
+}
 
 export interface PlanResult {
   ok: boolean;
   error?: string;
+  /** The best match, for callers that want one trip. */
   trip?: Trip;
   profile?: TripProfile;
+  groupId?: string;
+  options?: PlanOptionView[];
   notIncluded?: BuiltTrip['notIncluded'];
   introduction?: string;
   provider?: string;
+  /** The destinations of the best match, in order. */
+  stopNames?: string[];
+  /** "17 Sep 10:00 → 19 Sep 2026 18:00", when dates were given. */
+  planFor?: string;
+  /** Whether a web search for places that are not partners can follow. */
+  searchOnline?: boolean;
 }
 
+function optionView(trip: Trip, label: string, summary: string): PlanOptionView {
+  return {
+    tripId: trip.id,
+    label,
+    summary,
+    theme: trip.theme,
+    days: trip.preferences.durationDays,
+    ...summariseTrip(trip),
+  };
+}
+
+/**
+ * E1: plans two or three options for one request. The visitor chooses one;
+ * nothing is kept past the next request until they do.
+ */
 export async function planTrip(input: unknown): Promise<PlanResult> {
   const parsed = planInput.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: 'Tell us a little about the trip you want, in a sentence or two.' };
   }
+  const window = parsed.data.window;
+  const problem = window ? checkWindow(window) : undefined;
+  if (problem) return { ok: false, error: problem };
 
   const visitor = await ensureVisitor();
   const sessionId = visitor.sessionId;
@@ -79,6 +160,9 @@ export async function planTrip(input: unknown): Promise<PlanResult> {
   if (parsed.data.budget) overrides.budget = parsed.data.budget;
   if (parsed.data.crowdPreference) overrides.crowdPreference = parsed.data.crowdPreference;
   if (parsed.data.accessibility) overrides.accessibility = parsed.data.accessibility;
+  if (parsed.data.travellers) overrides.travellers = parsed.data.travellers;
+  if (parsed.data.budgetAmount) overrides.budgetAmount = parsed.data.budgetAmount;
+  if (window) overrides.durationDays = windowDays(window);
 
   const profile = extractTripProfile(parsed.data.request, overrides);
 
@@ -93,51 +177,71 @@ export async function planTrip(input: unknown): Promise<PlanResult> {
     metadata: { request: parsed.data.request.slice(0, 180), interests: profile.interests.join(',') },
   });
 
-  const built = buildItinerary(profile, sessionId);
-  const { notIncluded } = built;
-  if (built.trip.items.length === 0) {
-    return { ok: false, error: 'No destination matched those preferences. Try widening the interests.' };
+  const options = planOptions(profile, sessionId, window);
+  const best = options[0]!;
+  if (best.trip.items.length === 0) {
+    return {
+      ok: false,
+      error: window?.arriveTime || window?.departTime
+        ? 'Nothing fits between those arrival and departure times. Try a longer window.'
+        : 'No destination matched those preferences. Try widening the interests.',
+    };
   }
 
-  // Stored before the signals below, which reference it. A new plan replaces
-  // the visitor's previous draft; journeys they saved are left alone.
-  const trip = await saveTrip({ ...built.trip, status: 'DRAFT' });
-  await discardOtherDrafts(sessionId, trip.id);
+  // A new request replaces options that were never chosen; chosen journeys stay.
+  // Saved last to first, so the best match is the most recent and lists first.
+  for (const option of [...options].reverse()) await saveTrip(option.trip);
+  await discardUnchosenOptions(sessionId, best.trip.optionGroupId!);
 
-  // Each stop placed on a plan is a real itinerary addition signal.
-  for (const item of trip.items) {
-    if (item.kind !== 'DESTINATION') continue;
-    await ingest(visitor, {
-      type: 'ITINERARY_ADD',
-      destinationId: item.destinationId,
-      tripId: trip.id,
-      metadata: { day: item.day },
-    });
-  }
-
-  const introduction = await describeTrip(trip, notIncluded);
+  const introduction = await describeTrip(best.trip, best.notIncluded);
 
   revalidatePath('/explore', 'layout');
-  revalidatePath('/gov', 'layout');
 
+  const planFor = formatPlanFor(best.trip);
   return {
     ok: true,
-    trip,
-    profile,
-    notIncluded,
+    trip: best.trip,
+    profile: best.trip.preferences,
+    groupId: best.trip.optionGroupId!,
+    options: options.map((option) => optionView(option.trip, option.label, option.summary)),
+    notIncluded: best.notIncluded,
     introduction: introduction.text,
     provider: introduction.fallback ? `${introduction.provider} (fallback)` : introduction.provider,
+    stopNames: stopNamesOf(best.trip),
+    ...(planFor ? { planFor } : {}),
+    searchOnline: webSearchAvailable(),
   };
 }
 
+const conditionInput = z.enum(['RAIN', 'SHORT_ON_TIME', 'CLOSURE']);
+
+/** Re-plans the visitor's current journey: the one the live trip follows. */
 export async function replanCurrentTrip(condition: TripCondition): Promise<PlanResult> {
   const visitor = await ensureVisitor();
-  const trip = await getCurrentTrip(visitor.sessionId);
-  if (!trip) return { ok: false, error: 'Plan a journey first.' };
+  return replanFor(visitor, await getCurrentTrip(visitor.sessionId), condition);
+}
 
-  const replanned = await saveTrip(replanTrip(trip, condition));
+/** Re-plans one of the visitor's journeys, from its own page. */
+export async function replanJourney(tripId: unknown, condition: unknown): Promise<PlanResult> {
+  const id = tripIdInput.safeParse(tripId);
+  const visitor = await ensureVisitor();
+  const trip = id.success ? await getTripFor(visitor.sessionId, id.data) : undefined;
+  if (!trip) return { ok: false, error: 'That trip could not be found.' };
+  return replanFor(visitor, trip, condition);
+}
 
-  await ingest(visitor, { type: 'SEARCH', tripId: trip.id, metadata: { replan: condition } });
+async function replanFor(
+  visitor: Awaited<ReturnType<typeof ensureVisitor>>,
+  trip: Trip | undefined,
+  condition: unknown,
+): Promise<PlanResult> {
+  if (!trip) return { ok: false, error: 'Plan a trip first.' };
+  const parsed = conditionInput.safeParse(condition);
+  if (!parsed.success) return { ok: false, error: 'Choose what changed.' };
+
+  const replanned = await saveTrip(replanTrip(trip, parsed.data));
+
+  await ingest(visitor, { type: 'SEARCH', tripId: trip.id, metadata: { replan: parsed.data } });
 
   revalidatePath('/explore', 'layout');
   return { ok: true, trip: replanned, profile: replanned.preferences };
@@ -283,35 +387,101 @@ export async function sendEnquiry(input: unknown): Promise<{ ok: boolean; error?
 const tripIdInput = z.string().min(1).max(64);
 
 /**
- * Keeps a planned journey, so the next plan does not replace it. A trip id is
- * not a credential: every trip action is scoped to the visitor's own session,
- * so another visitor's id reaches nothing.
+ * Finalises one option of a plan: it becomes a kept journey and the other
+ * options go. A trip id is not a credential: every trip action is scoped to
+ * the visitor's own session, so another visitor's id reaches nothing.
+ *
+ * Choosing is what counts as putting places on an itinerary, so the demand
+ * signals are raised here, once, rather than for every option shown.
  */
-export async function saveCurrentTrip(tripId: unknown): Promise<{ ok: boolean; error?: string }> {
+export async function chooseJourney(tripId: unknown): Promise<{ ok: boolean; error?: string }> {
   const id = tripIdInput.safeParse(tripId);
-  if (!id.success) return { ok: false, error: 'That journey could not be found.' };
+  if (!id.success) return { ok: false, error: 'That plan could not be found.' };
   const visitor = await ensureVisitor();
-  const outcome = await markTripSaved(visitor.sessionId, id.data);
-  if (outcome === 'NOT_FOUND') return { ok: false, error: 'That journey could not be found.' };
+  const { outcome, trip } = await chooseOption(visitor.sessionId, id.data);
+  if (outcome === 'NOT_FOUND') return { ok: false, error: 'That plan could not be found. It may have been replaced by a newer one.' };
   if (outcome === 'LIMIT_REACHED') {
-    return {
-      ok: false,
-      error: `You already have ${MAX_SAVED_TRIPS} saved journeys. Delete one to keep this one.`,
-    };
+    return { ok: false, error: `You already keep ${MAX_SAVED_TRIPS} trips. Delete one to keep this one.` };
+  }
+  if (outcome === 'CHOSEN' && trip) {
+    for (const item of trip.items) {
+      if (item.kind !== 'DESTINATION') continue;
+      await ingest(visitor, {
+        type: 'ITINERARY_ADD',
+        destinationId: item.destinationId,
+        tripId: trip.id,
+        metadata: { day: item.day },
+      });
+    }
+    revalidatePath('/gov', 'layout');
   }
   revalidatePath('/explore', 'layout');
   return { ok: true };
 }
 
-/** Makes one of the visitor's saved journeys their current one. */
-export async function switchJourney(tripId: unknown): Promise<{ ok: boolean; error?: string }> {
+/** Starts a finalised journey: from now on it is the current one. */
+export async function startJourney(tripId: unknown): Promise<{ ok: boolean; error?: string; ended?: string }> {
   const id = tripIdInput.safeParse(tripId);
+  if (!id.success) return { ok: false, error: 'That trip could not be found.' };
   const visitor = await ensureVisitor();
-  if (!id.success || !(await switchToTrip(visitor.sessionId, id.data))) {
-    return { ok: false, error: 'That journey could not be found.' };
-  }
+  const { outcome, ended } = await startTrip(visitor.sessionId, id.data);
+  if (outcome === 'NOT_FOUND') return { ok: false, error: 'That trip could not be found.' };
+  if (outcome === 'NOT_CHOSEN') return { ok: false, error: 'Choose this plan first, then start it.' };
+  revalidatePath('/explore', 'layout');
+  return { ok: true, ...(ended ? { ended: ended.theme } : {}) };
+}
+
+/** Ends the journey under way. */
+export async function endJourney(tripId: unknown): Promise<{ ok: boolean; error?: string }> {
+  const id = tripIdInput.safeParse(tripId);
+  if (!id.success) return { ok: false, error: 'That trip could not be found.' };
+  const visitor = await ensureVisitor();
+  const outcome = await endTrip(visitor.sessionId, id.data);
+  if (outcome === 'NOT_FOUND') return { ok: false, error: 'That trip could not be found.' };
+  if (outcome === 'NOT_STARTED') return { ok: false, error: 'This trip has not been started.' };
   revalidatePath('/explore', 'layout');
   return { ok: true };
+}
+
+export interface OnlineSearchResult {
+  ok: boolean;
+  status: OnlineSearchStatus;
+  found: number;
+  error?: string;
+}
+
+/**
+ * Looks online for stays, guides and transport that are not partners, for
+ * every option of a plan (a group id) or for one journey (a trip id). What is
+ * found is stored on each plan, labelled as found online.
+ */
+export async function findPlacesOnline(planOrTripId: unknown): Promise<OnlineSearchResult> {
+  const id = tripIdInput.safeParse(planOrTripId);
+  if (!id.success) return { ok: false, status: 'FAILED', found: 0, error: 'That plan could not be found.' };
+  const visitor = await ensureVisitor();
+  const trips = (await listTrips(visitor.sessionId)).filter(
+    (trip) => trip.id === id.data || trip.optionGroupId === id.data,
+  );
+  if (trips.length === 0) return { ok: false, status: 'FAILED', found: 0, error: 'That plan could not be found.' };
+
+  const result = await findOnlineFor(visitor.sessionId, trips);
+  if (result.status === 'LIMITED') {
+    return { ok: false, status: 'LIMITED', found: 0, error: 'Online search is paused for a while: this browser has used its searches for the hour.' };
+  }
+  for (const trip of trips) {
+    const logistics = trip.logistics ?? buildLogistics(trip, nightsFromItems(trip));
+    const areas = new Set([...trip.items.map((item) => item.destinationId), ...logistics.stays.map((stay) => stay.destinationId)]);
+    await saveLogistics(visitor.sessionId, trip.id, {
+      ...logistics,
+      online: {
+        status: result.status,
+        ...(result.checkedAt ? { checkedAt: result.checkedAt } : {}),
+        places: result.places.filter((place) => areas.has(place.destinationId)),
+      },
+    });
+  }
+  revalidatePath('/explore', 'layout');
+  return { ok: result.status === 'FOUND' || result.status === 'NONE_FOUND', status: result.status, found: result.places.length };
 }
 
 /** Deletes one of the visitor's journeys. */
@@ -319,7 +489,7 @@ export async function deleteJourney(tripId: unknown): Promise<{ ok: boolean; err
   const id = tripIdInput.safeParse(tripId);
   const visitor = await ensureVisitor();
   if (!id.success || !(await deleteTrip(visitor.sessionId, id.data))) {
-    return { ok: false, error: 'That journey could not be found.' };
+    return { ok: false, error: 'That trip could not be found.' };
   }
   revalidatePath('/explore', 'layout');
   return { ok: true };

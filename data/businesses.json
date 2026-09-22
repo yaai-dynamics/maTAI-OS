@@ -10,6 +10,12 @@
     "contactVisibility": "ON_ENQUIRY",
     "verified": true,
     "reportedCapacity": 8,
+    "rate": {
+      "amount": 1800,
+      "unit": "NIGHT",
+      "covers": "ROOM",
+      "note": "Double room with breakfast"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -23,6 +29,12 @@
     "contactVisibility": "ON_ENQUIRY",
     "verified": true,
     "reportedCapacity": 12,
+    "rate": {
+      "amount": 2000,
+      "unit": "DAY",
+      "covers": "GUIDE",
+      "note": "Guide for the day, for the group"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -49,6 +61,12 @@
     "contactVisibility": "PUBLIC",
     "verified": true,
     "reportedCapacity": 25,
+    "rate": {
+      "amount": 1500,
+      "unit": "DAY",
+      "covers": "GUIDE",
+      "note": "Heritage walk guide in Imphal, for the group"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -75,6 +93,12 @@
     "contactVisibility": "ON_ENQUIRY",
     "verified": true,
     "reportedCapacity": 10,
+    "rate": {
+      "amount": 1500,
+      "unit": "NIGHT",
+      "covers": "ROOM",
+      "note": "Double room with breakfast"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -101,6 +125,12 @@
     "contactVisibility": "PUBLIC",
     "verified": true,
     "reportedCapacity": 24,
+    "rate": {
+      "amount": 3800,
+      "unit": "NIGHT",
+      "covers": "ROOM",
+      "note": "Lake-view double room with breakfast"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -114,6 +144,12 @@
     "contactVisibility": "ON_ENQUIRY",
     "verified": true,
     "reportedCapacity": 15,
+    "rate": {
+      "amount": 1500,
+      "unit": "DAY",
+      "covers": "GUIDE",
+      "note": "Wetland guide for the day, for the group"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -127,6 +163,12 @@
     "contactVisibility": "PUBLIC",
     "verified": true,
     "reportedCapacity": 40,
+    "rate": {
+      "amount": 2600,
+      "unit": "NIGHT",
+      "covers": "ROOM",
+      "note": "Double room with breakfast"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -166,6 +208,12 @@
     "contactVisibility": "ON_ENQUIRY",
     "verified": true,
     "reportedCapacity": 18,
+    "rate": {
+      "amount": 1400,
+      "unit": "NIGHT",
+      "covers": "ROOM",
+      "note": "Room in a village home, meals included"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -179,6 +227,12 @@
     "contactVisibility": "PUBLIC",
     "verified": false,
     "reportedCapacity": 22,
+    "rate": {
+      "amount": 3500,
+      "unit": "DAY",
+      "covers": "VEHICLE",
+      "note": "Car with driver for the day, up to 4 people"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -205,6 +259,12 @@
     "contactVisibility": "ON_ENQUIRY",
     "verified": true,
     "reportedCapacity": 10,
+    "rate": {
+      "amount": 1200,
+      "unit": "DAY",
+      "covers": "GUIDE",
+      "note": "Memorial guide for the day, for the group"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -218,6 +278,12 @@
     "contactVisibility": "PUBLIC",
     "verified": true,
     "reportedCapacity": 18,
+    "rate": {
+      "amount": 3200,
+      "unit": "DAY",
+      "covers": "VEHICLE",
+      "note": "Car with driver for the day, up to 4 people"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -231,6 +297,12 @@
     "contactVisibility": "ON_ENQUIRY",
     "verified": true,
     "reportedCapacity": 6,
+    "rate": {
+      "amount": 1600,
+      "unit": "NIGHT",
+      "covers": "ROOM",
+      "note": "Double room with breakfast"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -244,6 +316,12 @@
     "contactVisibility": "ON_ENQUIRY",
     "verified": true,
     "reportedCapacity": 16,
+    "rate": {
+      "amount": 2500,
+      "unit": "DAY",
+      "covers": "GUIDE",
+      "note": "Trek guide for the day, for the group"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -257,6 +335,12 @@
     "contactVisibility": "ON_ENQUIRY",
     "verified": false,
     "reportedCapacity": 12,
+    "rate": {
+      "amount": 1200,
+      "unit": "NIGHT",
+      "covers": "ROOM",
+      "note": "Tent or dormitory bed"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -270,6 +354,12 @@
     "contactVisibility": "PRIVATE",
     "verified": false,
     "reportedCapacity": 9,
+    "rate": {
+      "amount": 1300,
+      "unit": "NIGHT",
+      "covers": "ROOM",
+      "note": "Double room with breakfast"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -283,6 +373,12 @@
     "contactVisibility": "PRIVATE",
     "verified": false,
     "reportedCapacity": 8,
+    "rate": {
+      "amount": 1500,
+      "unit": "DAY",
+      "covers": "GUIDE",
+      "note": "Guide for the day, for the group"
+    },
     "provenance": "DEMO_SYNTHETIC"
   },
   {

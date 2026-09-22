@@ -1,16 +1,17 @@
-import type {
-  AccommodationSnapshot,
-  Campaign,
-  CampaignContent,
-  Creator,
-  CreatorApplication,
-  Destination,
-  District,
-  Enquiry,
-  Feedback,
-  Payout,
-  TourismBusiness,
-  TourismInteraction,
+import {
+  businessRateSchema,
+  type AccommodationSnapshot,
+  type Campaign,
+  type CampaignContent,
+  type Creator,
+  type CreatorApplication,
+  type Destination,
+  type District,
+  type Enquiry,
+  type Feedback,
+  type Payout,
+  type TourismBusiness,
+  type TourismInteraction,
 } from '@/lib/types';
 import { prisma } from '@/server/data/client';
 
@@ -39,6 +40,12 @@ const list = <T extends string>(value: unknown): T[] => (Array.isArray(value) ? 
 
 /** Prisma models nullable columns as null; the domain types use undefined. */
 const opt = <T>(value: T | null): T | undefined => (value === null ? undefined : value);
+
+/** A partner rate that no longer parses is left off, rather than failing the load. */
+const rateOf = (value: unknown) => {
+  const rate = businessRateSchema.safeParse(value);
+  return rate.success ? { rate: rate.data } : {};
+};
 
 export interface LoadedState {
   districts: District[];
@@ -128,6 +135,7 @@ export async function loadState(): Promise<LoadedState> {
       contactVisibility: b.contactVisibility,
       verified: b.verified,
       reportedCapacity: opt(b.reportedCapacity),
+      ...rateOf(b.rateJson),
       provenance: b.provenance,
     })) as TourismBusiness[],
 

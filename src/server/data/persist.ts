@@ -9,6 +9,8 @@ import type {
   TourismBusiness,
   TourismInteraction,
 } from '@/lib/types';
+import { Prisma } from '@prisma/client';
+
 import { prisma } from '@/server/data/client';
 
 /**
@@ -172,6 +174,7 @@ export async function persistBusiness(business: TourismBusiness): Promise<void> 
     contactVisibility: business.contactVisibility,
     verified: business.verified,
     reportedCapacity: business.reportedCapacity ?? null,
+    rateJson: business.rate ?? Prisma.DbNull,
     provenance: business.provenance,
   };
   await prisma.tourismBusiness.upsert({

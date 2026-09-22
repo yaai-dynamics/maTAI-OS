@@ -21,7 +21,6 @@ import {
   forgetMyVisits,
   sendEnquiry,
   submitTouristFeedback,
-  switchJourney,
 } from '@/server/actions/tourist';
 import { cancelMyBooking, requestBooking } from '@/server/actions/bookings';
 import { answerBookingRequest, cancelBookingAsHost, markBookingCompleted } from '@/server/actions/partner-bookings';
@@ -354,18 +353,11 @@ export async function forgetMyVisitsForm(): Promise<FormState> {
 
 /* -------------------------------- Journeys -------------------------------- */
 
-export async function switchJourneyForm(_prev: FormState, data: FormData): Promise<FormState> {
-  const result = await switchJourney(text(data, 'tripId'));
-  return result.ok
-    ? { status: 'ok', message: 'This is now your current journey.' }
-    : { status: 'error', message: result.error ?? 'Could not open that journey.' };
-}
-
 export async function deleteJourneyForm(_prev: FormState, data: FormData): Promise<FormState> {
   const result = await deleteJourney(text(data, 'tripId'));
   return result.ok
-    ? { status: 'ok', message: 'Journey deleted.' }
-    : { status: 'error', message: result.error ?? 'Could not delete that journey.' };
+    ? { status: 'ok', message: 'Trip deleted.' }
+    : { status: 'error', message: result.error ?? 'Could not delete that trip.' };
 }
 
 export async function deleteMyJourneysForm(): Promise<FormState> {
@@ -374,8 +366,8 @@ export async function deleteMyJourneysForm(): Promise<FormState> {
     status: 'ok',
     message:
       removed === 0
-        ? 'There were no journeys to delete.'
-        : `Done. ${removed} ${removed === 1 ? 'journey was' : 'journeys were'} deleted.`,
+        ? 'There were no trips to delete.'
+        : `Done. ${removed} ${removed === 1 ? 'trip was' : 'trips were'} deleted.`,
   };
 }
 

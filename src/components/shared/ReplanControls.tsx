@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { PlanResult } from '@/server/actions/tourist';
 import type { TripCondition } from '@/server/ai/trip-planner';
-import { Button, cn } from '@/components/ui/primitives';
+import { cn } from '@/components/ui/primitives';
 
 /**
  * Adaptive re-planning.
@@ -93,47 +93,6 @@ export function ReplanControls({
         >
           {message}
         </p>
-      ) : null}
-    </div>
-  );
-}
-
-export function SaveTripButton({
-  tripId,
-  save,
-  saved,
-}: {
-  tripId: string;
-  save: (tripId: string) => Promise<{ ok: boolean; error?: string }>;
-  saved: boolean;
-}) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  const [done, setDone] = useState(saved);
-  const [error, setError] = useState<string | null>(null);
-
-  return (
-    <div className="space-y-1.5">
-      <Button
-        variant={done ? 'secondary' : 'primary'}
-        disabled={pending || done}
-        onClick={() =>
-          startTransition(async () => {
-            const result = await save(tripId);
-            setError(result.ok ? null : (result.error ?? 'Could not save this journey.'));
-            if (result.ok) setDone(true);
-            router.refresh();
-          })
-        }
-      >
-        {done ? 'Saved — a new plan will not replace it' : pending ? 'Saving…' : 'Save this journey'}
-      </Button>
-      {error ? (
-        <p role="alert" className="text-[12px] text-risk-700">
-          {error}
-        </p>
-      ) : !done ? (
-        <p className="text-[11px] text-ink-500">Not saved yet: the next journey you plan will replace this one.</p>
       ) : null}
     </div>
   );
