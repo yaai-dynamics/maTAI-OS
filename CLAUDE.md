@@ -1,8 +1,8 @@
-# maTAI — Claude Code Instructions
+# OneStop Manipur — Claude Code Instructions
 
 ## 1. Mission
 
-Build a hackathon-ready, production-minded MVP called **maTAI** (Manipur Tourism Intelligence Platform).
+Build a hackathon-ready, production-minded MVP called **OneStop Manipur** (Manipur Tourism Intelligence Platform).
 
 The platform connects three primary roles through one shared tourism intelligence/data layer:
 

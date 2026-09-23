@@ -21,7 +21,7 @@ Those documents remain the specification; this one is the build log.
 **Account administration: live.** See §21.
 **Trips: persisted.** See §22.
 
-All 16 screens in `docs/02-mvp-spec.md` are implemented, plus an About maTAI page
+All 16 screens in `docs/02-mvp-spec.md` are implemented, plus an About OneStop Manipur page
 (`/about`; `/` opens the tourist home at `/explore`) and
 a closing ecosystem screen. The full 5-minute demo path in `docs/07-demo-script.md`
 runs end to end, and the closed loop is covered by tests rather than asserted in
@@ -1288,13 +1288,13 @@ demo bar above them.
   right corner of every screen and opens the demo panel (§11). Figures still
   carry their own provenance badges, so a screenshot without the panel open is
   still labelled where it matters.
-- **About maTAI and the ecosystem page use the same frame** without a sidebar.
+- **About OneStop Manipur and the ecosystem page use the same frame** without a sidebar.
   Sign-in and password pages keep their focused, frameless layout.
 - **A button colour is a variant, not a class override.** `cn()` joins classes
   without resolving conflicts, so `className="bg-white text-brand-800"` on a
   primary button lost the text colour to the variant and rendered white on
   white. Dark surfaces use `variant="inverse"`.
-- **The logo is the full wordmark**, maTAI on Loktak teal with the AI picked
+- **The logo is the full wordmark**, OneStop Manipur on Loktak teal with the AI picked
   out, so it never reads as the purple of a selected item.
 - **Sidebar sections carry icons**, each on its own colour tile that turns
   solid when the section is current. They come from `lucide-react`, the one
@@ -1330,7 +1330,7 @@ planner and the visitor's journeys on one screen:
 (§25 replaced "Travel with this journey" with starting a journey.)
 - **The trending destinations and the three value cards left with the old
   home.** Destinations are already ranked by interest on their own page, and
-  About maTAI carries the pitch.
+  About OneStop Manipur carries the pitch.
 
 ---
 
@@ -1525,7 +1525,7 @@ Asking for photos, videos or anything "online" about a place, or pressing
 - **Facts**: up to five sentences from the same search, each kept only if
   Google's grounding ties it to results, shown with those sources. A sentence
   that mentions a price is dropped.
-- It is all labelled Public / external, "not verified by maTAI".
+- It is all labelled Public / external, "not verified by OneStop Manipur".
 - **Only the place's name and district are sent**, never the visitor's words:
   the lookup takes a destination id. A name the chat does not recognise is not
   looked up.
@@ -1805,3 +1805,13 @@ experience. 26 pass there, 379 across the suite.
 it looks for a demo account with `governmentRole: 'OFFICER'`, and
 `DEMO_ACCOUNTS` only has `ADMINISTRATOR`, so `officer` is undefined. Not
 caused by, and not fixed by, this change.
+## Rename: maTAI → OneStop Manipur
+
+The product is now **OneStop Manipur**. Every visible name changed: page
+titles, the wordmark (One**Stop**), the About page, the Android app name and
+package id (`in.onestopmanipur.app`), prompts, data-source owners and docs.
+Partner badges read "OneStop partner". Internal identifiers keep the old
+prefix on purpose — CSS classes (`matai-pin`), map source ids (`matai-dem`)
+and browser storage keys (`matai-planner-chat-v2`) — because renaming the
+storage keys would drop visitors' saved planner threads for no visible gain.
+The repository is still called maTAI-OS.

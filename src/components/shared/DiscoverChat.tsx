@@ -25,7 +25,7 @@ import { ProvenanceBadge } from '@/components/shared/badges';
  *
  * "Photos and videos" looks the place up on the web (Wikipedia, YouTube,
  * grounded search) and says so: it is labelled as public external content,
- * not maTAI's verified records.
+ * not OneStop Manipur's verified records.
  */
 
 type OnlineState =
@@ -539,7 +539,7 @@ function OnlineView({ online }: { online: OnlineState }) {
     <div className="space-y-3 border-t border-line pt-2.5">
       <div className="flex flex-wrap items-center gap-1.5">
         <ProvenanceBadge provenance="PUBLIC_EXTERNAL" />
-        <span className="text-[11px] text-ink-500">From the web, not verified by maTAI</span>
+        <span className="text-[11px] text-ink-500">From the web, not verified by OneStop Manipur</span>
       </div>
 
       {empty ? <p className="text-[13px] text-ink-600">Nothing about {media.name} turned up on the web just now.</p> : null}

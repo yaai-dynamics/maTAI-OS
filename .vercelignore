@@ -1,0 +1,11 @@
+# Uploaded by `vercel deploy` from this folder: keep secrets and local
+# build output out. Keys live in Vercel's Environment Variables instead.
+.env
+.env.*
+!.env.example
+node_modules
+.next
+android
+coverage
+public/maplibre
+*.tsbuildinfo

@@ -3,8 +3,8 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: {
-    default: 'maTAI',
-    template: '%s — maTAI',
+    default: 'OneStop Manipur',
+    template: '%s — OneStop Manipur',
   },
   description:
     'An intelligent tourism ecosystem connecting tourists, local tourism businesses, creators and the Tourism Department through a shared Manipur tourism knowledge and intelligence layer.',

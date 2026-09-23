@@ -27,7 +27,7 @@ export default async function MobileHeritagePage(props: { params: Promise<{ id: 
 
   return (
     <div className="-mx-4 -mb-24 min-h-dvh bg-ink-900 px-4 pb-28 text-white">
-      <BackLink fallbackHref={`/m/place/${id}`} tone="floating" label={`Back to ${destination.name}`} />
+      <BackLink fallbackHref={`/m/place/${id}`} label={`Back to ${destination.name}`} />
       <header className="flex min-h-11 items-center pb-3 pl-14 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
         <div className="min-w-0">
           <p className="text-[11px] uppercase tracking-[0.12em] text-white/55">Living heritage · {destination.name}</p>

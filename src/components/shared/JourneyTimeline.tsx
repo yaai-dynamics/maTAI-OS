@@ -188,7 +188,7 @@ function NightLine({ trip, day, last }: { trip: Trip; day: number; last: boolean
       {partner ? (
         <>
           <span className="font-medium text-ink-800">{partner.name}</span>, {place}
-          <Badge tone="lake">maTAI partner</Badge>
+          <Badge tone="lake">OneStop partner</Badge>
         </>
       ) : (
         <>near {place}, no partner stay yet</>

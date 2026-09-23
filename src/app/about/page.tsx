@@ -12,15 +12,15 @@ import { AppShell } from '@/components/shell/AppShell';
 import { getCurrentUser } from '@/server/auth/session';
 
 /**
- * About maTAI: the whole product on one page — the three interfaces, the
+ * About OneStop Manipur: the whole product on one page — the three interfaces, the
  * closed loop and the provenance rules. The tourist home at /explore is the
  * front door; this is the page to present from.
  */
 
 export const metadata: Metadata = {
-  title: { absolute: 'About maTAI' },
+  title: { absolute: 'About OneStop Manipur' },
   description:
-    'maTAI connects the Tourism Department, creators and tourists through a shared tourism intelligence layer.',
+    'OneStop Manipur connects the Tourism Department, creators and tourists through a shared tourism intelligence layer.',
 };
 
 export const dynamic = 'force-dynamic';
@@ -86,7 +86,7 @@ export default async function AboutPage() {
         <section className="immersive -mx-4 px-5 py-10 sm:mx-0 sm:rounded-2xl sm:px-10 sm:py-14">
           <p className="text-[12px] uppercase tracking-[0.14em] text-white/55">About</p>
           <h1 className="mt-2 max-w-3xl text-[32px] font-semibold leading-tight tracking-tight text-white sm:text-[44px]">
-            maTAI
+            OneStop Manipur
           </h1>
           <p className="mt-2 text-[12px] uppercase tracking-[0.14em] text-white/55">
             Manipur Tourism Intelligence Platform

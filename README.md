@@ -1,12 +1,15 @@
-# maTAI
+# OneStop Manipur
 
 **Manipur Tourism Intelligence Platform** — AI-powered tourism ecosystem for
 Manipur connecting tourists, local tourism businesses, creators and the
 Tourism Department through one shared tourism knowledge and intelligence
 layer.
 
-*The name: **Ma**nipur + **T**ourism + **AI**. "Matai" also means the edge, the
-border, the flanking side — fitting, for a platform built at India's frontier.*
+*The name: one stop for everyone in Manipur's tourism — the visitor planning a
+trip, the host taking a booking, the creator telling the story and the
+department deciding what to do next. (Formerly maTAI.)*
+
+**Live:** <https://onestop-manipur.vercel.app> — phones open the mobile app at `/m`, computers the desktop site.
 
 > **This is a prototype.** Figures are synthetic and labelled as such throughout.
 > There is no integration with the Department of Tourism, and the official data
@@ -34,7 +37,7 @@ changes a government dashboard with no export step in between.
 
 `/` opens the tourist home (`/explore`): the journey planner as a chat, with the
 visitor's journeys listed beside it, each opening on its own page. The product overview — the interfaces,
-the closed loop and the provenance rules — is **About maTAI** at `/about`, which
+the closed loop and the provenance rules — is **About OneStop Manipur** at `/about`, which
 is also the page to present from.
 
 Every screen shares one frame: the top bar switches between the interfaces and
@@ -292,14 +295,14 @@ project has no data for. See `docs/09-implementation-notes.md` §16 for what the
 architecture already supports and what it actually needs.
 
 33 routes, covered by 175 tests.
-# maTAI-OS
 
 ## Android APK (Capacitor)
 
-The Android app is a Capacitor shell that loads the deployed maTAI site, since the app needs its Next.js server for API routes, the database and AI calls. It opens the mobile tourist view at `/m` (see below).
+The Android app is a Capacitor shell that loads the deployed OneStop Manipur site, since the app needs its Next.js server for API routes, the database and AI calls. It opens the mobile tourist view at `/m` (see below).
 
-- **CI:** `.github/workflows/android-apk.yml` builds a debug APK on every push to `main`, and you can also run it by hand from the Actions tab. Download it from the run's **Artifacts** (`maTAI-debug-apk`).
-- **Server URL:** set the repository variable `CAP_SERVER_URL` (Settings → Secrets and variables → Actions → Variables) to the deployed URL, or pass `server_url` when running it by hand. Without it, the APK shows an offline placeholder.
+- **CI:** `.github/workflows/android-apk.yml` builds a debug APK on every push to `main`, and you can also run it by hand from the Actions tab. Download it from the run's **Artifacts** (`onestop-manipur-debug-apk`).
+- **Server URL:** set the repository variable `CAP_SERVER_URL` (Settings → Secrets and variables → Actions → Variables) to the deployed URL — `https://onestop-manipur.vercel.app` — or pass `server_url` when running it by hand. Without it, the APK shows an offline placeholder.
+- **Installing:** the artifact is a zip; unzip it and open the `.apk` on an Android phone, allowing "install unknown apps". It is a debug build, for sideloading rather than the Play Store, and Android only. The app id is `in.onestopmanipur.app`, so it installs beside (not over) any build from before the rename.
 - **Local:** `CAP_SERVER_URL=https://your-site npm run cap:android`, then open `android/` in Android Studio. `android/` is generated and gitignored.
 
 ## Mobile tourist view (`/m`)
@@ -322,6 +325,12 @@ A phone-first version of Explore Manipur lives under `src/app/m` (screens) and `
 **Theme and photos.** The mobile app uses a minimalist monochrome theme (`src/app/m/mobile.css`, scoped so desktop keeps its palette), with real colour photographs of destinations. The photos are downloaded once from Wikimedia Commons by `node scripts/fetch-destination-photos.mjs` into `public/photos/`, with author and licence in `data/destination-photos.json`. They are served locally, so the demo works offline, and each destination page credits its photo. A destination without a suitable photo keeps its generated artwork. Check new photos by eye before committing them.
 
 Shared components that link to `/explore/...` are kept inside `/m` by `src/components/mobile/LinkScope.tsx`, using the mapping in `src/lib/mobile/routes.ts`. Open `http://localhost:3000/m` in a phone-sized browser window during development.
+
+## Interpreter (Manipuri ⇄ English/Hindi)
+
+A floating **Talk** bubble on every mobile screen opens `/m/talk`: two halves of one screen, the local person's upside down, each with a hold-to-speak button. Speech goes to `POST /api/interpreter/turn`, which calls the speech models server-side and returns text and audio.
+
+No models are connected yet, so the screen says so and the offline phrasebook (`data/phrasebook.json`) carries it. `docs/10-interpreter.md` has the environment variables, the provider boundary (`src/server/interpreter/`) and what is still open — translation, and speech-to-text for the visitor's language.
 
 ## Hosting on Vercel
 

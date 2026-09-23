@@ -8,10 +8,13 @@ import { currentWindow } from '@/server/analytics/windows';
 import { computeDemand } from '@/server/analytics/demand';
 import { getBusiness, getDestination, getDestinations, getExperiences } from '@/server/data/repository';
 import { businessesAcceptingBookings } from '@/server/bookings/ledger';
-import { askPlace, getDestinationPreview, mapPlaceSnapshot } from '@/server/actions/tourist';
-import { DiscoverMap, type MapExperience } from '@/components/map/DiscoverMap';
+import { askPlace, getDestinationPreview } from '@/server/actions/tourist';
+import { mobilePlaceSnapshot } from '@/server/actions/mobile';
+import type { MapExperience } from '@/components/map/DiscoverMap';
+import { MobileDiscoverMap } from '@/components/mobile/MobileDiscoverMap';
+import { CategoryGlyph } from '@/components/mobile/CategoryIcon';
 import { TourismMap } from '@/components/shared/TourismMap';
-import { ExperienceRow, MobileEmpty, MobileHeader, PillBar, PlaceRow, Segmented } from '@/components/mobile/ui';
+import { ExperienceRow, MobileEmpty, MobileHeader, PillBar, PlaceRow, PlaceTile, Rail, Segmented } from '@/components/mobile/ui';
 
 export const metadata: Metadata = { title: 'Discover' };
 export const dynamic = 'force-dynamic';
@@ -150,7 +153,11 @@ export default async function MobileDiscoverPage(props: {
         <PillBar
           label="Filter by category"
           active={category}
-          options={pills.map((pill) => ({ ...pill, href: href({ category: pill.value === 'all' ? undefined : pill.value }) }))}
+          options={pills.map((pill) => ({
+            ...pill,
+            icon: <CategoryGlyph category={pill.value} />,
+            href: href({ category: pill.value === 'all' ? undefined : pill.value }),
+          }))}
         />
       </div>
 
@@ -176,7 +183,7 @@ export default async function MobileDiscoverPage(props: {
           <MapView mode={mode} places={places} experiences={experiences} bookable={bookable} demand={demand} />
         ) : mode === 'places' ? (
           places.length === 0 ? (
-            <MobileEmpty icon={<Search aria-hidden size={24} />} title="No places match" description="Try another word or clear the filter." />
+            <MobileEmpty icon={Search} tone="graphite" title="No places match" description="Try another word or clear the filter." />
           ) : (
             <ul className="space-y-2.5">
               {places.map((destination) => {
@@ -201,7 +208,7 @@ export default async function MobileDiscoverPage(props: {
             </ul>
           )
         ) : experiences.length === 0 ? (
-          <MobileEmpty icon={<Search aria-hidden size={24} />} title="Nothing listed here yet" description="Provider onboarding is ongoing. Try another category." />
+          <MobileEmpty icon={Search} tone="graphite" title="Nothing listed here yet" description="Provider onboarding is ongoing. Try another category." />
         ) : (
           <ul className="space-y-2.5">
             {experiences.map((experience) => (
@@ -244,7 +251,7 @@ function MapView({
   const shown = mode === 'places' ? places : getDestinations().filter((destination) => countAt(destination.id) > 0);
 
   if (shown.length === 0) {
-    return <MobileEmpty icon={<MapIcon aria-hidden size={24} />} title="Nothing to show on the map" description="Clear the search or filter." />;
+    return <MobileEmpty icon={MapIcon} tone="teal" title="Nothing to show on the map" description="Clear the search or filter." />;
   }
 
   const mapPlaces: MapPlace[] = shown.map((destination) => ({
@@ -275,12 +282,12 @@ function MapView({
     }));
 
   return (
-    <div className="-mx-4">
-      <DiscoverMap
-        mode={mode === 'places' ? 'destinations' : 'experiences'}
+    <div>
+      <MobileDiscoverMap
+        mode={mode}
         places={mapPlaces}
         experiences={mapExperiences}
-        snapshot={mapPlaceSnapshot}
+        snapshot={mobilePlaceSnapshot}
         getPreview={getDestinationPreview}
         askPlace={askPlace}
         fallback={
@@ -293,6 +300,15 @@ function MapView({
           />
         }
       />
+      <p className="mb-3 mt-4 text-[13px] font-semibold text-ink-900">
+        {shown.length} {shown.length === 1 ? 'place' : 'places'} on the map
+      </p>
+      <Rail label="Places on the map">
+        {shown.map((destination) => (
+          <PlaceTile key={destination.id} destination={destination} href={`/m/place/${destination.id}`} />
+        ))}
+      </Rail>
+      <p className="mt-2 text-[11px] text-ink-500">Two fingers move the map; one scrolls the page. Tap a pin for photos and details.</p>
     </div>
   );
 }

@@ -18,11 +18,11 @@ import {
   askPlace,
   endJourney,
   getDestinationPreview,
-  mapPlaceSnapshot,
   replanCurrentTrip,
   startJourney,
   tripRoutes,
 } from '@/server/actions/tourist';
+import { mobilePlaceSnapshot } from '@/server/actions/mobile';
 import { ProvenanceBadge } from '@/components/shared/badges';
 import { FeedbackCard } from '@/components/shared/cards';
 import { DestinationSwatch } from '@/components/shared/DestinationVisual';
@@ -31,6 +31,7 @@ import { TripButton } from '@/components/shared/TripActions';
 import { TourismMap } from '@/components/shared/TourismMap';
 import { TripMap } from '@/components/map/TripMap';
 import { MobileField, MobileForm, StarRating, mobileInput } from '@/components/mobile/form';
+import { IconTile } from '@/components/mobile/IconTile';
 import { MobileEmpty, MobileHeader, PrimaryLink, Section } from '@/components/mobile/ui';
 import { cn } from '@/components/ui/primitives';
 
@@ -62,7 +63,8 @@ export default async function MobileTripPage(props: { searchParams: Promise<{ de
       <div>
         <MobileHeader title="Live trip" />
         <MobileEmpty
-          icon={<Navigation aria-hidden size={24} />}
+          icon={Navigation}
+          tone="green"
           title="No trip in progress"
           description={
             startable.length > 0
@@ -185,7 +187,7 @@ export default async function MobileTripPage(props: { searchParams: Promise<{ de
             {/* Check in */}
             <div className="rounded-2xl bg-surface p-4 shadow-card">
               <p className="flex items-center gap-2 text-[15px] font-semibold text-ink-900">
-                <MapPin aria-hidden size={17} className="text-lake-600" />
+                <IconTile icon={MapPin} tone="blue" size="sm" />
                 Check in
               </p>
               <p className="mb-3 mt-0.5 text-[12px] text-ink-500">Counts the visit. Records no identity, and you can decline.</p>
@@ -216,7 +218,7 @@ export default async function MobileTripPage(props: { searchParams: Promise<{ de
             {/* Feedback */}
             <div className="mt-3 rounded-2xl bg-surface p-4 shadow-card">
               <p className="flex items-center gap-2 text-[15px] font-semibold text-ink-900">
-                <MessageSquareHeart aria-hidden size={17} className="text-lily-500" />
+                <IconTile icon={MessageSquareHeart} tone="pink" size="sm" />
                 How was {focus.name}?
               </p>
               <p className="mb-4 mt-0.5 text-[12px] text-ink-500">This turns a visit into a signal the department can act on.</p>
@@ -287,7 +289,7 @@ export default async function MobileTripPage(props: { searchParams: Promise<{ de
           <TripMap
             data={buildTripMap(trip)}
             routes={tripRoutes}
-            snapshot={mapPlaceSnapshot}
+            snapshot={mobilePlaceSnapshot}
             getPreview={getDestinationPreview}
             askPlace={askPlace}
             variant="card"

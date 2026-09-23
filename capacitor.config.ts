@@ -1,6 +1,6 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-// maTAI needs its Next.js server (API routes, Prisma, AI provider), so the
+// OneStop Manipur needs its Next.js server (API routes, Prisma, AI provider), so the
 // Android app is a native shell that loads the deployed site.
 // Set CAP_SERVER_URL at build time (GitHub Actions variable or local env).
 // Without it, the app shows the offline shell in mobile/www.
@@ -22,8 +22,8 @@ function appUrl(raw: string | undefined): string | undefined {
 const serverUrl = appUrl(process.env.CAP_SERVER_URL);
 
 const config: CapacitorConfig = {
-  appId: 'in.matai.app',
-  appName: 'maTAI',
+  appId: 'in.onestopmanipur.app',
+  appName: 'OneStop Manipur',
   webDir: 'mobile/www',
   server: serverUrl
     ? {

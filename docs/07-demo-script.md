@@ -24,7 +24,7 @@ Say:
 >
 > So we asked: what if one intelligent platform could connect all three—the tourist, the creator and the Tourism Department?
 >
-> This is our solution: maTAI — the Manipur Tourism Intelligence Platform.”
+> This is our solution: OneStop Manipur — the Manipur Tourism Intelligence Platform.”
 
 ## 0:30–1:10 — Government identifies an opportunity
 

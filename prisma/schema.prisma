@@ -1,4 +1,4 @@
-// maTAI — relational schema (MySQL).
+// OneStop Manipur — relational schema (MySQL).
 //
 // Live schema. prisma/schema.postgres.prisma keeps the Postgres form as the
 // production target; differences are MySQL limitations only:

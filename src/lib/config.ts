@@ -29,7 +29,7 @@ export const HISTORY_DAYS = 90;
 /** Seed for the deterministic generator. Changing it changes the whole dataset. */
 export const DATA_SEED = 'manipur-tourism-2026';
 
-export const PLATFORM_NAME = 'maTAI';
+export const PLATFORM_NAME = 'OneStop Manipur';
 
 /**
  * Absolute origin used when a link has to leave the browser — currently only the

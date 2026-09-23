@@ -1,0 +1,55 @@
+{
+  "note": "Phrases kept on the device for the interpreter (src/app/m/talk). Meitei Mayek lines are null until a Manipuri speaker on the team has checked them; the interface shows 'awaiting a Manipuri speaker' rather than a guess.",
+  "groups": [
+    {
+      "id": "greeting",
+      "title": "Greetings",
+      "phrases": [
+        { "id": "hello", "en": "Hello", "hi": "नमस्ते", "mni": null },
+        { "id": "thanks", "en": "Thank you", "hi": "धन्यवाद", "mni": null },
+        { "id": "sorry", "en": "Sorry", "hi": "माफ़ कीजिए", "mni": null },
+        { "id": "name", "en": "My name is…", "hi": "मेरा नाम… है", "mni": null }
+      ]
+    },
+    {
+      "id": "way",
+      "title": "Finding the way",
+      "phrases": [
+        { "id": "where", "en": "Where is this place?", "hi": "यह जगह कहाँ है?", "mni": null },
+        { "id": "far", "en": "How far is it?", "hi": "यह कितनी दूर है?", "mni": null },
+        { "id": "toilet", "en": "Where is the toilet?", "hi": "शौचालय कहाँ है?", "mni": null },
+        { "id": "boat", "en": "Where do the boats leave from?", "hi": "नाव कहाँ से जाती है?", "mni": null }
+      ]
+    },
+    {
+      "id": "buying",
+      "title": "Buying and paying",
+      "phrases": [
+        { "id": "price", "en": "How much is this?", "hi": "यह कितने का है?", "mni": null },
+        { "id": "upi", "en": "Can I pay by UPI?", "hi": "क्या मैं UPI से भुगतान कर सकता हूँ?", "mni": null },
+        { "id": "handmade", "en": "Is this handmade here?", "hi": "क्या यह यहीं हाथ से बना है?", "mni": null },
+        { "id": "photo", "en": "May I take a photograph?", "hi": "क्या मैं फ़ोटो ले सकता हूँ?", "mni": null }
+      ]
+    },
+    {
+      "id": "food",
+      "title": "Food",
+      "phrases": [
+        { "id": "vegetarian", "en": "I am vegetarian", "hi": "मैं शाकाहारी हूँ", "mni": null },
+        { "id": "spicy", "en": "Is it very spicy?", "hi": "क्या यह बहुत तीखा है?", "mni": null },
+        { "id": "local", "en": "What is the local dish here?", "hi": "यहाँ का ख़ास व्यंजन क्या है?", "mni": null },
+        { "id": "water", "en": "Drinking water, please", "hi": "पीने का पानी चाहिए", "mni": null }
+      ]
+    },
+    {
+      "id": "help",
+      "title": "Help",
+      "phrases": [
+        { "id": "help", "en": "I need help", "hi": "मुझे मदद चाहिए", "mni": null },
+        { "id": "doctor", "en": "Is there a doctor nearby?", "hi": "क्या पास में डॉक्टर है?", "mni": null },
+        { "id": "slower", "en": "Please speak slowly", "hi": "कृपया धीरे बोलिए", "mni": null },
+        { "id": "again", "en": "Could you say that again?", "hi": "कृपया फिर से कहिए", "mni": null }
+      ]
+    }
+  ]
+}

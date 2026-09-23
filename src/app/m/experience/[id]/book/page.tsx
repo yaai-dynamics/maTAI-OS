@@ -31,7 +31,8 @@ export default async function MobileBookPage(props: { params: Promise<{ id: stri
       <div>
         <MobileHeader title="Request to book" backHref={`/m/experience/${id}`} />
         <MobileEmpty
-          icon={<CalendarCheck aria-hidden size={24} />}
+          icon={CalendarCheck}
+          tone="orange"
           title="Not bookable online"
           description="This host does not take bookings online yet. Send them an enquiry instead."
           action={<PrimaryLink href={`/m/experience/${id}#enquire`}>Send an enquiry</PrimaryLink>}

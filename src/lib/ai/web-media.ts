@@ -50,7 +50,7 @@ export interface PlaceMedia {
   searchNote?: string;
 }
 
-const USER_AGENT = 'maTAI/0.1 (Manipur tourism prototype)';
+const USER_AGENT = 'OneStopManipur/0.1 (Manipur tourism prototype)';
 const WIKI_TIMEOUT_MS = 8_000;
 const SEARCH_TIMEOUT_MS = 25_000;
 const OEMBED_TIMEOUT_MS = 6_000;

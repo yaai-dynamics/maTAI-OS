@@ -1,4 +1,4 @@
-// maTAI — relational schema.
+// OneStop Manipur — relational schema.
 //
 // The hackathon prototype runs on a seeded in-memory store so the demo needs no
 // external service (CLAUDE.md section 3). This file is the relational shape that

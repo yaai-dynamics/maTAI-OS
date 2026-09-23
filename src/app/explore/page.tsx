@@ -8,8 +8,8 @@ import { JourneyList } from '@/components/shared/JourneyList';
 import { JourneyPlanner } from '@/components/shared/JourneyPlanner';
 import { chooseJourney, findPlacesOnline, planTrip } from '@/server/actions/tourist';
 
-// The home page of the product, so the tab reads as maTAI rather than as a section.
-export const metadata: Metadata = { title: { absolute: 'maTAI — Plan your Manipur journey' } };
+// The home page of the product, so the tab reads as OneStop Manipur rather than as a section.
+export const metadata: Metadata = { title: { absolute: 'OneStop Manipur — Plan your Manipur journey' } };
 export const dynamic = 'force-dynamic';
 
 /**
