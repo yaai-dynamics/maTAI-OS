@@ -246,6 +246,7 @@
     "contactVisibility": "ON_ENQUIRY",
     "verified": true,
     "reportedCapacity": 14,
+    "products": ["Wheel-free black pottery", "Terracotta cooking pots", "Decorative pieces"],
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -392,6 +393,7 @@
     "contactVisibility": "ON_ENQUIRY",
     "verified": false,
     "reportedCapacity": 6,
+    "products": ["Wood carvings", "Devotional prints"],
     "provenance": "DEMO_SYNTHETIC"
   },
   {
@@ -431,6 +433,125 @@
     "contactVisibility": "ON_ENQUIRY",
     "verified": true,
     "reportedCapacity": 20,
+    "products": ["Woven fishing nets", "Phumdi reed craft"],
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "biz-027",
+    "name": "Ima Keithel Handloom Stalls",
+    "businessType": "ARTISAN",
+    "district": "Imphal West",
+    "destinationId": "dest-ima-keithel",
+    "status": "PARTICIPATING",
+    "description": "A row of weaver-run stalls in the women's market selling handloom textiles direct from the loom.",
+    "contactVisibility": "ON_ENQUIRY",
+    "verified": true,
+    "reportedCapacity": 30,
+    "products": ["Moirang phee shawls", "Innaphi wraps", "Handloom stoles"],
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "biz-028",
+    "name": "Ukhrul Shawl Weavers",
+    "businessType": "ARTISAN",
+    "district": "Ukhrul",
+    "destinationId": "dest-ukhrul",
+    "status": "PARTICIPATING",
+    "description": "A small weavers' cooperative producing Tangkhul shawls on traditional looms.",
+    "contactVisibility": "ON_ENQUIRY",
+    "verified": true,
+    "reportedCapacity": 9,
+    "products": ["Tangkhul shawls", "Waist-woven textiles"],
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "biz-029",
+    "name": "Moreh Border Bazaar Traders",
+    "businessType": "ARTISAN",
+    "district": "Tengnoupal",
+    "destinationId": "dest-moreh",
+    "status": "PENDING_VERIFICATION",
+    "description": "Stallholders at the border bazaar selling cross-border goods and local handicrafts, subject to current access advisories.",
+    "contactVisibility": "PRIVATE",
+    "verified": false,
+    "reportedCapacity": 15,
+    "products": ["Cross-border imported goods", "Local handicrafts"],
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "biz-030",
+    "name": "Valley Shuttle Service",
+    "businessType": "TRANSPORT",
+    "district": "Imphal West",
+    "destinationId": "dest-kangla",
+    "status": "PARTICIPATING",
+    "description": "Shared and private vehicles from Imphal to Moirang, Bishnupur and the Loktak lake road.",
+    "contactVisibility": "PUBLIC",
+    "verified": true,
+    "reportedCapacity": 18,
+    "rate": {
+      "amount": 2800,
+      "unit": "DAY",
+      "covers": "VEHICLE",
+      "note": "Car with driver for the day, up to 4 people"
+    },
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "biz-031",
+    "name": "Tengnoupal Border Transport",
+    "businessType": "TRANSPORT",
+    "district": "Tengnoupal",
+    "destinationId": "dest-moreh",
+    "status": "PENDING_VERIFICATION",
+    "description": "Vehicles on the Imphal to Moreh road, subject to current access advisories.",
+    "contactVisibility": "PRIVATE",
+    "verified": false,
+    "reportedCapacity": 10,
+    "rate": {
+      "amount": 4500,
+      "unit": "DAY",
+      "covers": "VEHICLE",
+      "note": "Car with driver for the day, up to 4 people"
+    },
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "biz-032",
+    "name": "Barak Hills Travels",
+    "businessType": "TRANSPORT",
+    "district": "Tamenglong",
+    "destinationId": "dest-tamenglong",
+    "status": "INVITED",
+    "description": "Local operator interested in running the Imphal to Tamenglong hill route.",
+    "contactVisibility": "PRIVATE",
+    "verified": false,
+    "reportedCapacity": 8,
+    "rate": {
+      "amount": 4000,
+      "unit": "DAY",
+      "covers": "VEHICLE",
+      "note": "Car with driver for the day, up to 4 people"
+    },
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "biz-033",
+    "name": "Senapati Hill Roads",
+    "businessType": "TRANSPORT",
+    "district": "Senapati",
+    "destinationId": "dest-dzukou",
+    "status": "PARTICIPATING",
+    "description": "Vehicles from Imphal to the Dzukou trailhead, and porter arrangements on request.",
+    "contactVisibility": "PUBLIC",
+    "verified": false,
+    "reportedCapacity": 12,
+    "rate": {
+      "amount": 3200,
+      "unit": "DAY",
+      "covers": "VEHICLE",
+      "note": "Car with driver for the day, up to 4 people"
+    },
     "provenance": "DEMO_SYNTHETIC"
   }
 ]

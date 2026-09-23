@@ -7,7 +7,11 @@ import { now } from '@/lib/config';
 import { formatPeriod, formatRelative } from '@/lib/date';
 import { directionsHref, planHref } from '@/lib/map';
 import { EVENT_CATEGORY_LABEL } from '@/lib/types';
-import { getDestination, getEvent, getUpcomingEvents } from '@/server/data/repository';
+import { getBusiness, getDestination, getEvent, getUpcomingEvents } from '@/server/data/repository';
+import { businessesAcceptingBookings, placesTaken } from '@/server/bookings/ledger';
+import { CANCELLATION_POLICY, MAX_PARTY_SIZE, PAYMENT_WINDOW_HOURS } from '@/server/bookings/policy';
+import { requestEventPlaceForm } from '@/server/actions/forms';
+import { ActionForm, CheckboxRow, Field, TextArea, TextInput } from '@/components/shared/ActionForm';
 import { ProvenanceBadge } from '@/components/shared/badges';
 import { DestinationVisual } from '@/components/shared/DestinationVisual';
 import { Badge, ButtonLink, Card, CardBody, CardHeader, DefinitionRow } from '@/components/ui/primitives';
@@ -31,6 +35,16 @@ export default async function EventPage(props: { params: Promise<{ id: string }>
   const start = new Date(event.startAt);
   const finished = new Date(event.endAt) < at;
   const running = !finished && start <= at;
+
+  // A place can be held when the organiser is a partner who can answer, the
+  // event charges or limits entry, and it has not already begun.
+  const host = event.organiserBusinessId ? getBusiness(event.organiserBusinessId) : undefined;
+  const organiserOnline =
+    Boolean(host) && host!.status === 'PARTICIPATING' && (await businessesAcceptingBookings()).has(host!.id);
+  const bookable = event.admission !== 'FREE' && organiserOnline && !finished && !running;
+  const taken = bookable && event.capacity !== undefined ? await placesTaken(event.id, at) : 0;
+  const placesLeft = event.capacity !== undefined ? Math.max(0, event.capacity - taken) : undefined;
+  const full = placesLeft === 0;
 
   const alsoThere = getUpcomingEvents(at)
     .filter((other) => other.id !== event.id && other.destinationId === event.destinationId)
@@ -124,9 +138,11 @@ export default async function EventPage(props: { params: Promise<{ id: string }>
             ) : null}
           </dl>
 
-          {event.admission !== 'FREE' && !finished ? (
+          {event.admission !== 'FREE' && !finished && !bookable ? (
             <div className="rounded-lg border border-dashed border-line-strong bg-surface-2/50 p-3 text-[13px] text-ink-600">
-              Holding a place through maTAI is not built yet. For now, contact the organiser.
+              {running
+                ? 'This event has already begun, so places can no longer be held here.'
+                : 'The organiser does not take bookings through this platform. Contact them directly.'}
             </div>
           ) : null}
 
@@ -165,6 +181,85 @@ export default async function EventPage(props: { params: Promise<{ id: string }>
         </CardBody>
       </Card>
 
+      {bookable ? (
+        <Card>
+          <CardHeader
+            title={event.admission === 'TICKETED' ? 'Book a place' : 'Hold a place'}
+            subtitle={
+              event.admission === 'TICKETED'
+                ? `${event.organiser} answers first. Nothing is charged until they accept, and you then have up to ${PAYMENT_WINDOW_HOURS} hours to pay.`
+                : `Free, but the group is limited. ${event.organiser} confirms your place — there is nothing to pay.`
+            }
+            action={
+              placesLeft !== undefined ? (
+                <Badge tone={full ? 'risk' : placesLeft <= 5 ? 'warn' : 'neutral'}>
+                  {full ? 'Full' : `${placesLeft} of ${event.capacity} left`}
+                </Badge>
+              ) : undefined
+            }
+          />
+          <CardBody>
+            {full ? (
+              <p className="text-[13px] text-ink-600">
+                Every place is taken or held. Places come back if a request is declined, so it is worth looking
+                again.
+              </p>
+            ) : (
+              <ActionForm
+                action={requestEventPlaceForm}
+                submitLabel={event.admission === 'TICKETED' ? 'Request a place' : 'Register'}
+                pendingLabel="Sending…"
+                hiddenFields={{ eventId: event.id }}
+                footer={<span className="text-[12px] text-ink-500">{CANCELLATION_POLICY}</span>}
+              >
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="How many people" name="partySize" required>
+                    <TextInput
+                      id="partySize"
+                      name="partySize"
+                      type="number"
+                      min={1}
+                      max={Math.min(MAX_PARTY_SIZE, placesLeft ?? MAX_PARTY_SIZE)}
+                      defaultValue={2}
+                      required
+                    />
+                  </Field>
+                  <Field label="Your name" name="guestName" required>
+                    <TextInput id="guestName" name="guestName" autoComplete="name" maxLength={120} required />
+                  </Field>
+                  <Field label="Phone" name="guestPhone" required>
+                    <TextInput id="guestPhone" name="guestPhone" type="tel" autoComplete="tel" inputMode="tel" required />
+                  </Field>
+                  <Field label="Email (optional)" name="guestEmail">
+                    <TextInput id="guestEmail" name="guestEmail" type="email" autoComplete="email" />
+                  </Field>
+                  <div className="sm:col-span-2">
+                    <Field label="Anything the organiser should know" name="note">
+                      <TextArea
+                        id="note"
+                        name="note"
+                        maxLength={400}
+                        placeholder="Dietary needs, mobility, who you are coming with."
+                      />
+                    </Field>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <CheckboxRow
+                      name="consent"
+                      value="on"
+                      label="Share my name and phone number with the organiser, so they can arrange my place."
+                    />
+                    <p className="mt-1.5 text-[12px] text-ink-500">
+                      Only the organiser sees them. The Tourism Department sees booking counts, never who booked.
+                    </p>
+                  </div>
+                </div>
+              </ActionForm>
+            )}
+          </CardBody>
+        </Card>
+      ) : null}
+
       {alsoThere.length > 0 ? (
         <Card>
           <CardHeader title={`Also at ${destination?.name ?? 'this place'}`} />
@@ -190,7 +285,7 @@ export default async function EventPage(props: { params: Promise<{ id: string }>
 
       <p className="flex flex-wrap items-center gap-2 text-[12px] text-ink-500">
         <ProvenanceBadge provenance={event.provenance} />
-        Dates, venue and entry are set by the organiser. maTAI lists them; it does not run this event.
+        Dates, venue and entry are set by the organiser. This platform lists them; it does not run the event.
       </p>
     </div>
   );

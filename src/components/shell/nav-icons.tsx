@@ -26,6 +26,7 @@ import {
   Upload,
   UserCog,
   UserPlus,
+  UtensilsCrossed,
   WandSparkles,
   type LucideIcon,
 } from 'lucide-react';
@@ -65,6 +66,7 @@ export const NAV_ICONS = {
   Upload,
   UserCog,
   UserPlus,
+  UtensilsCrossed,
   WandSparkles,
 } satisfies Record<string, LucideIcon>;
 

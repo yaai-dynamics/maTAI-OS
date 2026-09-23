@@ -1,0 +1,70 @@
+[
+  {
+    "id": "lp-001",
+    "ownerType": "BUSINESS",
+    "businessId": "biz-013",
+    "slug": "tangkhul-village-homestay-network",
+    "title": "Tangkhul Village Homestay Network",
+    "tagline": "Stay with a village household in the hills above Ukhrul.",
+    "sections": [
+      {
+        "key": "about",
+        "heading": "About this stay",
+        "body": "Six participating village households around Ukhrul open a room and share their table, so a night here is spent inside a Tangkhul Naga home rather than in a hotel built for visitors. Meals are included, and each household hosts a small number of guests at a time."
+      },
+      {
+        "key": "highlights",
+        "heading": "What guests can expect",
+        "body": "A private room in a working village household\nMeals cooked and shared with the host family\nHosted introductions to local craft and food\nSix households across Ukhrul, so a return visit can mean a different home"
+      },
+      {
+        "key": "practical",
+        "heading": "Good to know",
+        "body": "₹1,400 per room per night, meals included\nUkhrul district, Manipur\nEnquire on OneStop Manipur to check availability"
+      }
+    ],
+    "hashtags": ["ExploreManipur", "ManipurTourism", "Ukhrul", "Homestay"],
+    "status": "PUBLISHED",
+    "viewCount": 0,
+    "shareCount": 0,
+    "generatedBy": "mock",
+    "generatedAt": "2026-09-20T09:00:00Z",
+    "publishedAt": "2026-09-20T09:05:00Z",
+    "createdBy": "partner@demo.manipurtourism.test",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "lp-002",
+    "ownerType": "CAMPAIGN",
+    "eventId": "ev-006",
+    "slug": "sangai-festival-2026",
+    "title": "Manipur Sangai Festival 2026",
+    "tagline": "Ten days of craft, cuisine, sport and nightly performance across Imphal.",
+    "sections": [
+      {
+        "key": "about",
+        "heading": "About the festival",
+        "body": "The Manipur Sangai Festival is the state's flagship tourism festival, bringing craft, cuisine, indigenous sport and nightly performance to venues across Imphal. It usually runs from 21 to 30 November; the exact programme and any entry charge are announced by the Department of Tourism each year."
+      },
+      {
+        "key": "highlights",
+        "heading": "What's on",
+        "body": "Craft and cuisine stalls from across Manipur's districts\nIndigenous sport demonstrations\nNightly cultural performance\nFree admission, multiple venues across Imphal"
+      },
+      {
+        "key": "practical",
+        "heading": "Good to know",
+        "body": "21 to 30 November 2026 (dates provisional, announced annually)\nMultiple venues across Imphal\nFree admission\nOrganised by the Department of Tourism, Government of Manipur"
+      }
+    ],
+    "hashtags": ["ExploreManipur", "ManipurTourism", "SangaiFestival", "NortheastIndia"],
+    "status": "PUBLISHED",
+    "viewCount": 0,
+    "shareCount": 0,
+    "generatedBy": "mock",
+    "generatedAt": "2026-09-18T09:00:00Z",
+    "publishedAt": "2026-09-18T09:10:00Z",
+    "createdBy": "admin@demo.manipurtourism.test",
+    "provenance": "DEMO_SYNTHETIC"
+  }
+]

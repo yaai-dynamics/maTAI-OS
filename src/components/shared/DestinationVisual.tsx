@@ -17,6 +17,8 @@ import { creditLine, photoFor } from '@/lib/mobile/photos';
 
 export type Palette = Destination['palette'];
 
+export const PALETTES: readonly Palette[] = ['lake', 'hill', 'heritage', 'market', 'forest', 'border'];
+
 const SCENES: Record<Palette, { sky: [string, string]; land: string[]; accent: string }> = {
   lake: { sky: ['#f6d9b0', '#9ec4cf'], land: ['#4d8ea0', '#2f6d80', '#1d4e5e'], accent: '#e8b15f' },
   hill: { sky: ['#e7dcf2', '#a9b7d6'], land: ['#7b87ad', '#5b6690', '#3d4670'], accent: '#c77da8' },
@@ -33,36 +35,38 @@ function offset(seed: string, range: number): number {
   return (h % (range * 2)) - range;
 }
 
-export function DestinationVisual({
-  destination,
-  className,
-  height = 'md',
+/**
+ * The deterministic layered illustration on its own, keyed by any palette and
+ * seed string rather than a destination record — reused by GeneratedArt.tsx
+ * as the offline/failure-safe fallback for a landing page hero, so a page
+ * that has no destination of its own still gets a designed, on-brand visual.
+ */
+export function SceneArt({
+  palette,
+  seed,
+  label,
   overlay = false,
-  /** Show the photographer's credit over the image. Reserve for a page's single primary photo. */
-  showCredit = false,
+  className,
 }: {
-  destination: Pick<Destination, 'id' | 'name' | 'palette' | 'category'>;
-  className?: string;
-  height?: 'sm' | 'md' | 'lg' | 'hero';
+  palette: Palette;
+  seed: string;
+  label: string;
   overlay?: boolean;
-  showCredit?: boolean;
+  className?: string;
 }) {
-  const scene = SCENES[destination.palette];
-  const jitter = offset(destination.id, 40);
-  const jitter2 = offset(`${destination.id}-b`, 24);
-  const gradientId = `sky-${destination.id}`;
+  const scene = SCENES[palette];
+  const jitter = offset(seed, 40);
+  const jitter2 = offset(`${seed}-b`, 24);
+  const gradientId = `sky-${seed}`;
 
-  const heights = { sm: 'h-24', md: 'h-40', lg: 'h-56', hero: 'h-64 sm:h-80' }[height];
-  const photo = photoFor(destination.id);
-
-  const artwork = (
-    <div className="relative h-full w-full overflow-hidden bg-surface-3">
+  return (
+    <div className={cn('relative h-full w-full overflow-hidden bg-surface-3', className)}>
       <svg
         viewBox="0 0 400 200"
         preserveAspectRatio="xMidYMid slice"
         className="h-full w-full"
         role="img"
-        aria-label={`Illustrative artwork for ${destination.name}. Generated, not a photograph.`}
+        aria-label={`Illustrative artwork for ${label}. Generated, not a photograph.`}
       >
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -74,7 +78,7 @@ export function DestinationVisual({
         <rect width="400" height="200" fill={`url(#${gradientId})`} />
         <circle cx={300 + jitter} cy={48 + jitter2 / 2} r="22" fill={scene.accent} opacity="0.85" />
 
-        {destination.palette === 'lake' ? (
+        {palette === 'lake' ? (
           <>
             <path d={`M0 118 L400 ${112 + jitter2 / 4} L400 200 L0 200 Z`} fill={scene.land[0]} />
             <path d={`M0 140 Q ${120 + jitter} 128 400 146 L400 200 L0 200 Z`} fill={scene.land[1]} />
@@ -94,7 +98,7 @@ export function DestinationVisual({
           </>
         ) : null}
 
-        {destination.palette === 'hill' ? (
+        {palette === 'hill' ? (
           <>
             <path d={`M0 128 L${90 + jitter} 74 L170 124 L${250 + jitter2} 62 L400 128 L400 200 L0 200 Z`} fill={scene.land[0]} />
             <path d={`M0 152 L${130 + jitter2} 104 L240 150 L${330 + jitter} 112 L400 152 L400 200 L0 200 Z`} fill={scene.land[1]} />
@@ -103,7 +107,7 @@ export function DestinationVisual({
           </>
         ) : null}
 
-        {destination.palette === 'heritage' ? (
+        {palette === 'heritage' ? (
           <>
             <rect x="0" y="150" width="400" height="50" fill={scene.land[0]} />
             {[0, 1, 2].map((index) => {
@@ -119,7 +123,7 @@ export function DestinationVisual({
           </>
         ) : null}
 
-        {destination.palette === 'market' ? (
+        {palette === 'market' ? (
           <>
             <rect x="0" y="146" width="400" height="54" fill={scene.land[2]} />
             {[0, 1, 2, 3, 4, 5].map((index) => {
@@ -134,7 +138,7 @@ export function DestinationVisual({
           </>
         ) : null}
 
-        {destination.palette === 'forest' ? (
+        {palette === 'forest' ? (
           <>
             <rect x="0" y="140" width="400" height="60" fill={scene.land[2]} />
             {[0, 1, 2, 3, 4, 5, 6].map((index) => {
@@ -153,7 +157,7 @@ export function DestinationVisual({
           </>
         ) : null}
 
-        {destination.palette === 'border' ? (
+        {palette === 'border' ? (
           <>
             <path d={`M0 132 L${140 + jitter} 92 L260 134 L400 104 L400 200 L0 200 Z`} fill={scene.land[0]} />
             <rect x="0" y="156" width="400" height="44" fill={scene.land[1]} />
@@ -172,6 +176,24 @@ export function DestinationVisual({
       ) : null}
     </div>
   );
+}
+
+export function DestinationVisual({
+  destination,
+  className,
+  height = 'md',
+  overlay = false,
+  /** Show the photographer's credit over the image. Reserve for a page's single primary photo. */
+  showCredit = false,
+}: {
+  destination: Pick<Destination, 'id' | 'name' | 'palette' | 'category'>;
+  className?: string;
+  height?: 'sm' | 'md' | 'lg' | 'hero';
+  overlay?: boolean;
+  showCredit?: boolean;
+}) {
+  const heights = { sm: 'h-24', md: 'h-40', lg: 'h-56', hero: 'h-64 sm:h-80' }[height];
+  const photo = photoFor(destination.id);
 
   return (
     <PlacePhoto
@@ -181,7 +203,7 @@ export function DestinationVisual({
       eager={height === 'hero'}
       credit={showCredit && photo ? { label: creditLine(photo.credit), href: photo.credit.source || undefined } : undefined}
       className={cn(heights, className)}
-      fallback={artwork}
+      fallback={<SceneArt palette={destination.palette} seed={destination.id} label={destination.name} overlay={overlay} />}
     />
   );
 }

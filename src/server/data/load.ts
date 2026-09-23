@@ -9,6 +9,7 @@ import {
   type District,
   type Enquiry,
   type Feedback,
+  type LandingPage,
   type Payout,
   type TourismBusiness,
   type TourismInteraction,
@@ -47,6 +48,12 @@ const rateOf = (value: unknown) => {
   return rate.success ? { rate: rate.data } : {};
 };
 
+/** Left off entirely when empty, so an artisan without products reads the same as before this field existed. */
+const productsOf = (value: unknown) => {
+  const products = list<string>(value);
+  return products.length > 0 ? { products } : {};
+};
+
 export interface LoadedState {
   districts: District[];
   destinations: Destination[];
@@ -60,6 +67,7 @@ export interface LoadedState {
   accommodationSnapshots: AccommodationSnapshot[];
   enquiries: Enquiry[];
   payouts: Payout[];
+  landingPages: LandingPage[];
 }
 
 export async function loadState(): Promise<LoadedState> {
@@ -76,6 +84,7 @@ export async function loadState(): Promise<LoadedState> {
     accommodationRows,
     enquiryRows,
     payoutRows,
+    landingPageRows,
   ] = await Promise.all([
     prisma.district.findMany(),
     prisma.destination.findMany(),
@@ -89,6 +98,7 @@ export async function loadState(): Promise<LoadedState> {
     prisma.accommodationSnapshot.findMany(),
     prisma.enquiry.findMany(),
     prisma.payout.findMany(),
+    prisma.landingPage.findMany(),
   ]);
 
   // District name is denormalised onto Destination and TourismBusiness in the
@@ -136,6 +146,7 @@ export async function loadState(): Promise<LoadedState> {
       verified: b.verified,
       reportedCapacity: opt(b.reportedCapacity),
       ...rateOf(b.rateJson),
+      ...productsOf(b.productsJson),
       provenance: b.provenance,
     })) as TourismBusiness[],
 
@@ -244,11 +255,14 @@ export async function loadState(): Promise<LoadedState> {
 
     enquiries: enquiryRows.map((e) => ({
       id: e.id,
-      experienceId: e.experienceId,
+      experienceId: opt(e.experienceId),
       businessId: e.businessId,
       anonymousSessionId: e.anonymousSessionId,
-      partySize: e.partySize,
-      preferredDate: iso(e.preferredDate).slice(0, 10),
+      partySize: opt(e.partySize),
+      preferredDate: e.preferredDate ? iso(e.preferredDate).slice(0, 10) : undefined,
+      contactName: opt(e.contactName),
+      contactPhone: opt(e.contactPhone),
+      message: opt(e.message),
       note: opt(e.note),
       status: e.status,
       createdAt: iso(e.createdAt),
@@ -265,5 +279,31 @@ export async function loadState(): Promise<LoadedState> {
       recordedAt: iso(p.recordedAt),
       provenance: p.provenance,
     })) as Payout[],
+
+    landingPages: landingPageRows.map((p) => {
+      const content = (p.contentJson ?? {}) as { sections?: LandingPage['sections']; hashtags?: unknown };
+      return {
+        id: p.id,
+        ownerType: p.ownerType,
+        businessId: opt(p.businessId),
+        campaignId: opt(p.campaignId),
+        eventId: opt(p.eventId),
+        slug: p.slug,
+        title: p.title,
+        tagline: p.tagline,
+        heroImageUrl: opt(p.heroImageUrl),
+        sections: Array.isArray(content.sections) ? content.sections : [],
+        hashtags: list<string>(content.hashtags),
+        bookingUrl: opt(p.bookingUrl),
+        status: p.status,
+        viewCount: p.viewCount,
+        shareCount: p.shareCount,
+        generatedBy: p.generatedBy,
+        generatedAt: iso(p.generatedAt),
+        publishedAt: p.publishedAt ? iso(p.publishedAt) : undefined,
+        createdBy: p.createdBy,
+        provenance: p.provenance,
+      };
+    }) as LandingPage[],
   };
 }

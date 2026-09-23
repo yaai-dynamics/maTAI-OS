@@ -1,12 +1,12 @@
 'use client';
 
-import { ArrowRight, ArrowUp, ExternalLink, Globe, Play, X } from 'lucide-react';
+import { ArrowRight, ArrowUp, ExternalLink, Globe, MessageSquareText, Play, X } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useRef, useState, useSyncExternalStore, useTransition } from 'react';
-import type { Destination, Experience } from '@/lib/types';
+import type { Destination, Experience, TourismBusiness } from '@/lib/types';
 import type { PlaceMedia, WebVideo } from '@/lib/ai/web-media';
 import type { GroundedAnswer } from '@/server/ai/storyteller';
-import type { DiscoverAction, DiscoverChatAnswer } from '@/server/ai/discover';
+import type { DiscoverAction, DiscoverChatAnswer, DiscoverFocus } from '@/server/ai/discover';
 import type { DestinationDetailsData } from '@/components/shared/DestinationDetails';
 import { Button, ErrorState, Skeleton, cn } from '@/components/ui/primitives';
 import { Modal } from '@/components/ui/interactive';
@@ -92,6 +92,28 @@ const SUGGESTIONS = [
   'Food experiences run by local homestays',
 ];
 
+/** What to suggest asking first, when the chat opens already knowing a place, experience or stay. */
+function contextSuggestions(destination?: Destination, experience?: Experience, business?: TourismBusiness): string[] {
+  if (experience) {
+    return [
+      `Tell me about ${experience.title}`,
+      'Is this bookable right now?',
+      'What else is there to do nearby?',
+    ];
+  }
+  if (business) {
+    return [`What's the rate at ${business.name}?`, 'How do I contact them?', 'What else is nearby?'];
+  }
+  if (destination) {
+    return [
+      `What can I do at ${destination.name}?`,
+      `When should I go to ${destination.name}?`,
+      `Plan a trip with ${destination.name}`,
+    ];
+  }
+  return SUGGESTIONS;
+}
+
 const normalize = (text: string) => text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 
 /** A step is "taken" once its question was asked or its web lookup ran for that place, anywhere in the chat. */
@@ -103,9 +125,9 @@ function untaken(actions: DiscoverAction[], thread: Turn[]): DiscoverAction[] {
   const open = actions
     .filter((action) => !(action.kind === 'ask' && asked.has(normalize(action.value))))
     .filter((action) => !(action.kind === 'online' && looked.has(action.destinationId)));
-  // Booking and planning are never the ones trimmed: they are where the ladder leads.
-  const commit = open.filter((action) => action.kind === 'link').slice(0, 2);
-  const explore = open.filter((action) => action.kind !== 'link').slice(0, MAX_STEPS - commit.length);
+  // Booking, planning and enquiring are never the ones trimmed: they are where the ladder leads.
+  const commit = open.filter((action) => action.kind === 'link' || action.kind === 'enquire').slice(0, 2);
+  const explore = open.filter((action) => action.kind !== 'link' && action.kind !== 'enquire').slice(0, MAX_STEPS - commit.length);
   return [...explore, ...commit];
 }
 
@@ -125,33 +147,63 @@ type PreviewState =
   | { status: 'open'; data: DestinationDetailsData }
   | { status: 'error'; error: string };
 
+interface EnquiryMessage {
+  from: 'assistant' | 'visitor';
+  text: string;
+}
+
+/**
+ * The chat's own guided enquiry: name, then phone, then a message, each typed
+ * as a plain reply rather than filled into a form. `recipient` is who it
+ * reaches; the main input is captured by this flow until it finishes.
+ */
+interface EnquiryFlowState {
+  recipient: { label: string; experienceId?: string; businessId?: string };
+  step: 'name' | 'phone' | 'message' | 'sending' | 'done' | 'error';
+  visitorName?: string;
+  visitorPhone?: string;
+  messages: EnquiryMessage[];
+}
+
 export function DiscoverChat({
   ask,
   lookUpOnline,
   getPreview,
   askPlace,
+  submitEnquiry,
   destinationById,
   experienceById,
+  businessById = new Map(),
   onClose,
   onPlaces,
+  initialFocus,
 }: {
   ask: (input: unknown) => Promise<{ ok: boolean; error?: string; answer?: DiscoverChatAnswer }>;
   lookUpOnline: (destinationId: unknown) => Promise<{ ok: boolean; error?: string; media?: PlaceMedia; actions?: DiscoverAction[] }>;
   getPreview: (destinationId: unknown) => Promise<{ ok: boolean; error?: string; data?: DestinationDetailsData }>;
   askPlace: (destinationId: string, question: string) => Promise<{ ok: boolean; error?: string; answer?: GroundedAnswer }>;
+  /** The chat's guided enquiry: a name, a phone number and a message, collected as plain replies. */
+  submitEnquiry: (input: unknown) => Promise<{ ok: boolean; error?: string }>;
   destinationById: Map<string, Destination>;
   experienceById: Map<string, Experience>;
+  businessById?: Map<string, TourismBusiness>;
   onClose?: () => void;
   /** The places an answer is about, for a map beside the chat to show. */
   onPlaces?: (destinationIds: string[]) => void;
+  /** Seeds the first message's context: the destination, experience or stay the visitor was already on, if any. */
+  initialFocus?: DiscoverFocus;
 }) {
   const thread = useSyncExternalStore(subscribe, readThread, () => NO_TURNS);
   const [question, setQuestion] = useState('');
   const [asking, setAsking] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<PreviewState>({ status: 'closed' });
+  const [enquiry, setEnquiry] = useState<EnquiryFlowState | null>(null);
   const [, startTransition] = useTransition();
   const end = useRef<HTMLDivElement>(null);
+  const focusedDestination = initialFocus?.destinationId ? destinationById.get(initialFocus.destinationId) : undefined;
+  const focusedExperience = initialFocus?.experienceId ? experienceById.get(initialFocus.experienceId) : undefined;
+  const focusedBusiness = initialFocus?.businessId ? businessById.get(initialFocus.businessId) : undefined;
 
   const toScroll = useCallback(() => {
     requestAnimationFrame(() => end.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
@@ -188,12 +240,16 @@ export function DiscoverChat({
   const submit = (value: string) => {
     const trimmed = value.trim();
     if (asking || trimmed.length < 1) return;
+    if (enquiry && enquiry.step !== 'sending' && enquiry.step !== 'done' && enquiry.step !== 'error') {
+      advanceEnquiry(trimmed);
+      return;
+    }
     setError(null);
     setAsking(trimmed);
     setQuestion('');
     toScroll();
 
-    const focus = readThread().at(-1)?.answer.focus;
+    const focus = readThread().at(-1)?.answer.focus ?? initialFocus;
     startTransition(async () => {
       const result = await ask({ message: trimmed, ...(focus ? { focus } : {}) });
       setAsking(null);
@@ -210,6 +266,76 @@ export function DiscoverChat({
       const target = result.answer.lookUpOnline?.destinationId;
       if (target) setTimeout(() => runOnline(turn.id, target), 0);
     });
+  };
+
+  const startEnquiry = (action: DiscoverAction) => {
+    setEnquiry({
+      recipient: { label: action.value, experienceId: action.experienceId, businessId: action.businessId },
+      step: 'name',
+      messages: [{ from: 'assistant', text: `Happy to pass this to ${action.value}. What name should they have for you?` }],
+    });
+    setQuestion('');
+    toScroll();
+  };
+
+  const runEnquirySubmit = (state: EnquiryFlowState, message: string) => {
+    void submitEnquiry({
+      ...state.recipient,
+      contactName: state.visitorName,
+      contactPhone: state.visitorPhone,
+      message,
+    }).then((result) => {
+      setEnquiry((current) => {
+        if (!current || current.step !== 'sending') return current;
+        return {
+          ...current,
+          step: result.ok ? 'done' : 'error',
+          messages: [
+            ...current.messages,
+            {
+              from: 'assistant',
+              text: result.ok
+                ? `Sent to ${current.recipient.label}. They'll get in touch with you directly.`
+                : (result.error ?? 'Could not send that. Try again from the "Send an enquiry" button.'),
+            },
+          ],
+        };
+      });
+      toScroll();
+    });
+  };
+
+  const advanceEnquiry = (value: string) => {
+    setQuestion('');
+    setEnquiry((current) => {
+      if (!current) return current;
+      const messages: EnquiryMessage[] = [...current.messages, { from: 'visitor', text: value }];
+      if (current.step === 'name') {
+        return {
+          ...current,
+          step: 'phone',
+          visitorName: value,
+          messages: [...messages, { from: 'assistant', text: 'And a phone number they can reach you on?' }],
+        };
+      }
+      if (current.step === 'phone') {
+        return {
+          ...current,
+          step: 'message',
+          visitorPhone: value,
+          messages: [...messages, { from: 'assistant', text: 'What would you like to ask or tell them?' }],
+        };
+      }
+      // 'message'
+      const next: EnquiryFlowState = {
+        ...current,
+        step: 'sending',
+        messages: [...messages, { from: 'assistant', text: 'Sending…' }],
+      };
+      runEnquirySubmit(next, value);
+      return next;
+    });
+    toScroll();
   };
 
   return (
@@ -246,12 +372,19 @@ export function DiscoverChat({
         {thread.length === 0 && !asking ? (
           <div className="space-y-3">
             <p className="text-[13px] text-ink-600">
-              Tell me what you like and I will find the places and local hosts for it, show you photos
-              and videos, and help you book or plan the trip. Follow-ups like &ldquo;when should I
-              go?&rdquo; know which place you mean.
+              {focusedExperience
+                ? `Ask me anything about "${focusedExperience.title}" — when to go, what else is nearby, or how to book it.`
+                : focusedBusiness
+                  ? `Ask me anything about ${focusedBusiness.name} — its rate, its rooms, or send an enquiry to the host.`
+                  : focusedDestination
+                    ? `Ask me anything about ${focusedDestination.name} — what to do there, when to go, or how to book a local experience.`
+                    : 'Tell me what you like and I will find the places and local hosts for it, show you photos and videos, and help you book or plan the trip. Follow-ups like "when should I go?" know which place you mean.'}
             </p>
             <div className="flex flex-wrap gap-1.5">
-              {SUGGESTIONS.map((suggestion) => (
+              {(focusedDestination || focusedExperience || focusedBusiness
+                ? contextSuggestions(focusedDestination, focusedExperience, focusedBusiness)
+                : SUGGESTIONS
+              ).map((suggestion) => (
                 <button
                   key={suggestion}
                   type="button"
@@ -261,6 +394,22 @@ export function DiscoverChat({
                   {suggestion}
                 </button>
               ))}
+              {focusedExperience || focusedBusiness ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    startEnquiry(
+                      focusedExperience
+                        ? { label: 'Send an enquiry', kind: 'enquire', value: focusedExperience.title, experienceId: focusedExperience.id }
+                        : { label: 'Send an enquiry', kind: 'enquire', value: focusedBusiness!.name, businessId: focusedBusiness!.id },
+                    )
+                  }
+                  className="inline-flex items-center gap-1 rounded-full bg-brand-700 px-2.5 py-1 text-[12px] font-medium text-white hover:bg-brand-600"
+                >
+                  <MessageSquareText aria-hidden size={12} />
+                  Send an enquiry
+                </button>
+              ) : null}
             </div>
           </div>
         ) : null}
@@ -278,6 +427,7 @@ export function DiscoverChat({
                 onAsk={submit}
                 onOnline={(destinationId) => runOnline(turn.id, destinationId)}
                 onOpenPlace={openPreview}
+                onEnquire={startEnquiry}
               />
             </Assistant>
           </div>
@@ -289,6 +439,29 @@ export function DiscoverChat({
             <Assistant>
               <Typing>Looking…</Typing>
             </Assistant>
+          </div>
+        ) : null}
+
+        {enquiry ? (
+          <div className="space-y-2">
+            {enquiry.messages.map((message, index) =>
+              message.from === 'visitor' ? (
+                <Visitor key={index}>{message.text}</Visitor>
+              ) : (
+                <Assistant key={index}>{message.text}</Assistant>
+              ),
+            )}
+            {enquiry.step === 'done' || enquiry.step === 'error' ? (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setEnquiry(null)}
+                  className="text-[12px] font-medium text-ink-500 hover:text-ink-900 hover:underline"
+                >
+                  Close
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : null}
 
@@ -307,18 +480,42 @@ export function DiscoverChat({
         }}
         className="shrink-0 border-t border-line p-3"
       >
+        {enquiry && (enquiry.step === 'name' || enquiry.step === 'phone' || enquiry.step === 'message') ? (
+          <button
+            type="button"
+            onClick={() => setEnquiry(null)}
+            className="mb-2 text-[11px] font-medium text-ink-500 hover:text-ink-900 hover:underline"
+          >
+            Cancel the enquiry
+          </button>
+        ) : null}
         <div className="flex items-center gap-2">
           <label htmlFor="discover-chat-input" className="sr-only">
-            Ask about a destination or experience
+            {enquiry?.step === 'name'
+              ? 'Your name'
+              : enquiry?.step === 'phone'
+                ? 'Your phone number'
+                : enquiry?.step === 'message'
+                  ? 'Your message'
+                  : 'Ask about a destination or experience'}
           </label>
           <input
             id="discover-chat-input"
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
-            placeholder="Ask about a place or a local experience…"
-            className="min-w-0 flex-1 rounded-md border border-line-strong bg-surface px-3 py-2 text-[14px] text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none"
+            placeholder={
+              enquiry?.step === 'name'
+                ? 'Your name…'
+                : enquiry?.step === 'phone'
+                  ? 'Your phone number…'
+                  : enquiry?.step === 'message'
+                    ? 'What would you like to say…'
+                    : 'Ask about a place or a local experience…'
+            }
+            disabled={enquiry?.step === 'sending'}
+            className="min-w-0 flex-1 rounded-md border border-line-strong bg-surface px-3 py-2 text-[14px] text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none disabled:opacity-60"
           />
-          <Button type="submit" size="sm" disabled={asking !== null}>
+          <Button type="submit" size="sm" disabled={asking !== null || enquiry?.step === 'sending' || enquiry?.step === 'done'}>
             {asking ? 'Asking…' : 'Ask'}
             <ArrowUp aria-hidden size={15} />
           </Button>
@@ -389,10 +586,12 @@ function Steps({
   actions,
   onAsk,
   onOnline,
+  onEnquire,
 }: {
   actions: DiscoverAction[];
   onAsk: (text: string) => void;
   onOnline: (destinationId: string) => void;
+  onEnquire: (action: DiscoverAction) => void;
 }) {
   if (actions.length === 0) return null;
   return (
@@ -400,7 +599,7 @@ function Steps({
       <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-500">Next</p>
       <div className="flex flex-wrap gap-1.5">
         {actions.map((action) => {
-          // Links to booking or planning are the actions that commit to something, so they stand out.
+          // Links, and starting an enquiry, are the actions that commit to something, so they stand out.
           if (action.kind === 'link') {
             return (
               <Link
@@ -411,6 +610,19 @@ function Steps({
                 {action.label}
                 <ArrowRight aria-hidden size={12} />
               </Link>
+            );
+          }
+          if (action.kind === 'enquire') {
+            return (
+              <button
+                key={action.label}
+                type="button"
+                onClick={() => onEnquire(action)}
+                className="inline-flex items-center gap-1 rounded-full bg-brand-700 px-2.5 py-1 text-[12px] font-medium text-white hover:bg-brand-600"
+              >
+                <MessageSquareText aria-hidden size={12} />
+                {action.label}
+              </button>
             );
           }
           return (
@@ -439,6 +651,7 @@ function Reply({
   onAsk,
   onOnline,
   onOpenPlace,
+  onEnquire,
 }: {
   turn: Turn;
   steps: DiscoverAction[];
@@ -448,6 +661,7 @@ function Reply({
   onAsk: (text: string) => void;
   onOnline: (destinationId: string) => void;
   onOpenPlace: (destinationId: string) => void;
+  onEnquire: (action: DiscoverAction) => void;
 }) {
   const { answer, online } = turn;
   const destinations = answer.destinationIds.map((id) => destinationById.get(id)).filter((d): d is Destination => Boolean(d));
@@ -462,7 +676,7 @@ function Reply({
           onClick={() => onOpenPlace(hero.id)}
           className="group relative block w-full overflow-hidden rounded-lg text-left"
         >
-          <DestinationVisual destination={hero} height="sm" overlay />
+          <DestinationVisual destination={hero} height="lg" overlay />
           <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-2.5">
             <span className="text-[14px] font-semibold text-white">{hero.name}</span>
             <span className="rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-medium text-brand-800 group-hover:bg-white">
@@ -508,9 +722,15 @@ function Reply({
         </div>
       ) : null}
 
-      {online ? <OnlineView online={online} /> : <Steps actions={steps} onAsk={onAsk} onOnline={onOnline} />}
-      {online?.status === 'DONE' ? <Steps actions={onlineSteps} onAsk={onAsk} onOnline={onOnline} /> : null}
-      {online?.status === 'FAILED' ? <Steps actions={steps} onAsk={onAsk} onOnline={onOnline} /> : null}
+      {online ? (
+        <OnlineView online={online} />
+      ) : (
+        <Steps actions={steps} onAsk={onAsk} onOnline={onOnline} onEnquire={onEnquire} />
+      )}
+      {online?.status === 'DONE' ? (
+        <Steps actions={onlineSteps} onAsk={onAsk} onOnline={onOnline} onEnquire={onEnquire} />
+      ) : null}
+      {online?.status === 'FAILED' ? <Steps actions={steps} onAsk={onAsk} onOnline={onOnline} onEnquire={onEnquire} /> : null}
     </div>
   );
 }

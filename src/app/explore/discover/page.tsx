@@ -5,17 +5,24 @@ import { now } from '@/lib/config';
 import { EXPERIENCE_CATEGORY_LABEL, type DestinationCategory, type Experience, type ExperienceCategory } from '@/lib/types';
 import { currentWindow } from '@/server/analytics/windows';
 import { computeDemand } from '@/server/analytics/demand';
-import { getBusiness, getDestination, getDestinations, getExperiences } from '@/server/data/repository';
+import {
+  getBusiness,
+  getDestination,
+  getDestinations,
+  getExperiences,
+  getPublishedLandingPages,
+} from '@/server/data/repository';
 import { businessesAcceptingBookings } from '@/server/bookings/ledger';
 import { CANCELLATION_POLICY, formatRupees, MAX_PARTY_SIZE, PAYMENT_WINDOW_HOURS } from '@/server/bookings/policy';
 import { requestBookingForm, sendEnquiryForm } from '@/server/actions/forms';
-import { askPlace, discoverChat, discoverPlaceOnline, getDestinationPreview, mapPlaceSnapshot } from '@/server/actions/tourist';
+import { askPlace, discoverChat, discoverPlaceOnline, getDestinationPreview, mapPlaceSnapshot, sendChatEnquiry } from '@/server/actions/tourist';
+import type { DiscoverFocus } from '@/server/ai/discover';
 import type { MapPlace } from '@/lib/map';
 import { DiscoverMap, type MapExperience } from '@/components/map/DiscoverMap';
 import { ViewToggle } from '@/components/map/ViewToggle';
 import { TourismMap } from '@/components/shared/TourismMap';
 import { Card, CardBody, CardHeader, EmptyState } from '@/components/ui/primitives';
-import { DestinationCard, ExperienceCard } from '@/components/shared/cards';
+import { DestinationCard, ExperienceCard, LandingPagePromoCard } from '@/components/shared/cards';
 import { DiscoverWorkspace } from '@/components/shared/DiscoverWorkspace';
 import { ActionForm, CheckboxRow, Field, TextArea, TextInput } from '@/components/shared/ActionForm';
 
@@ -87,6 +94,18 @@ export default async function DiscoverPage(props: {
     accepting.has(experience.businessId) &&
     getBusiness(experience.businessId)?.status === 'PARTICIPATING';
 
+  // What the visitor is already looking at, so opening the chat doesn't ask them to repeat it.
+  const spotlightPages = getPublishedLandingPages()
+    .sort((a, b) => (a.ownerType === b.ownerType ? 0 : a.ownerType === 'CAMPAIGN' ? -1 : 1))
+    .slice(0, 4);
+
+  const selectedExperienceId = experienceParam ?? bookParam;
+  const initialFocus: DiscoverFocus | undefined = selectedExperienceId
+    ? { experienceId: selectedExperienceId }
+    : destinationParam
+      ? { destinationId: destinationParam }
+      : undefined;
+
   return (
     <div className="space-y-5">
       <div>
@@ -113,6 +132,19 @@ export default async function DiscoverPage(props: {
         </p>
       </div>
 
+      {spotlightPages.length > 0 && view !== 'map' ? (
+        <div>
+          <h2 className="mb-2 text-[13px] font-semibold text-ink-800">Featured pages</h2>
+          <ul className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 lg:grid-cols-4">
+            {spotlightPages.map((page) => (
+              <li key={page.id} className="w-64 shrink-0 sm:w-auto">
+                <LandingPagePromoCard page={page} href={`/p/${page.slug}`} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       <DiscoverWorkspace
         destinations={allDestinations}
         experiences={allExperiences}
@@ -120,6 +152,8 @@ export default async function DiscoverPage(props: {
         lookUpOnline={discoverPlaceOnline}
         getPreview={getDestinationPreview}
         askPlace={askPlace}
+        submitEnquiry={sendChatEnquiry}
+        initialFocus={initialFocus}
       >
         {view === 'map' ? (
           <DiscoverMapView mode={mode} category={category} destinationFilter={destinationParam} bookable={bookable} />
@@ -509,6 +543,10 @@ function ExperiencesBrowse({
           {filtered.map((experience) => {
             const business = getBusiness(experience.businessId);
             const destination = getDestination(experience.destinationId);
+            const additionalDestinations = experience.additionalDestinationIds
+              .map((id) => getDestination(id))
+              .filter((place): place is NonNullable<typeof place> => Boolean(place))
+              .map((place) => ({ destination: place, href: `/explore/destinations/${place.id}` }));
             return (
               <li key={experience.id}>
                 <ExperienceCard
@@ -517,6 +555,7 @@ function ExperiencesBrowse({
                   businessName={business?.name ?? 'Local provider'}
                   destination={destination}
                   destinationHref={destination ? `/explore/destinations/${destination.id}` : undefined}
+                  additionalDestinations={additionalDestinations}
                   action={
                     experience.availabilityStatus === 'UNAVAILABLE' ? (
                       <p className="text-[12px] text-ink-500">Not bookable yet. This provider is still being onboarded.</p>

@@ -1,7 +1,7 @@
 import { narrate } from '@/lib/ai/provider';
 import { PROMPTS } from '@/lib/ai/prompts';
 import { formatDuration } from '@/lib/geo';
-import { EXPERIENCE_CATEGORY_LABEL, type Destination, type Experience } from '@/lib/types';
+import { BUSINESS_TYPE_LABEL, EXPERIENCE_CATEGORY_LABEL, type Destination, type Experience, type TourismBusiness } from '@/lib/types';
 import {
   getBusiness,
   getDestination,
@@ -10,6 +10,7 @@ import {
   getExperiences,
   getExperiencesFor,
   getFactsFor,
+  getStays,
 } from '@/server/data/repository';
 import { businessesAcceptingBookings } from '@/server/bookings/ledger';
 import { askAboutDestination } from '@/server/ai/storyteller';
@@ -37,20 +38,29 @@ import { askAboutDestination } from '@/server/ai/storyteller';
 
 export interface DiscoverAction {
   label: string;
-  /** 'ask' sends `value` as the next message; 'link' navigates to it; 'online' looks the place up on the web. */
-  kind: 'ask' | 'link' | 'online';
+  /**
+   * 'ask' sends `value` as the next message; 'link' navigates to it; 'online'
+   * looks the place up on the web; 'enquire' starts the chat's own guided
+   * enquiry (name, phone, message), addressed to `experienceId` or `businessId`.
+   */
+  kind: 'ask' | 'link' | 'online' | 'enquire';
+  /** For 'enquire': the human name of who receives it, used to open the guided prompt. */
   value: string;
   /** For 'online': the known place to look up, so only its name is ever sent. */
   destinationId?: string;
+  /** For 'enquire': who it reaches. */
+  experienceId?: string;
+  businessId?: string;
 }
 
 export interface DiscoverFocus {
   destinationId?: string;
   experienceId?: string;
+  businessId?: string;
 }
 
 export interface DiscoverChatAnswer {
-  kind: 'list' | 'place' | 'experiences' | 'experience' | 'practical' | 'online' | 'plan' | 'unmatched';
+  kind: 'list' | 'place' | 'experiences' | 'experience' | 'practical' | 'online' | 'plan' | 'unmatched' | 'contact' | 'business';
   text: string;
   provider: string;
   /** A destination whose artwork heads the reply; opens its full details. */
@@ -76,6 +86,7 @@ const RESULT_LIMIT = 6;
 
 const INTENTS = {
   online: /\b(photos?|pictures?|pics?|images?|videos?|youtube|online|internet|web|google|wikipedia)\b/,
+  contact: /\b(contact(?: details| info| number)?|phone number|call (?:them|the host|the provider)|whatsapp|website|web ?site|email address|get in touch|enquir(?:e|y))\b/,
   plan: /\b(plan|itinerary|schedule|trip)\b/,
   experiences: /\b(experiences?|activit(?:y|ies)|things to do|what (?:can|to|should) (?:i|we) do|do there|book(?:ing)?|workshops?|tours?|guides?|stay|homestays?)\b/,
   practical: /\b(best time|when (?:to|should)|season|weather|how long|how much time|access|accessible|reach|get there|getting there|how (?:to|do i) (?:go|get)|open(?:ing)? hours?|before i (?:go|visit))\b/,
@@ -86,7 +97,7 @@ type Intent = keyof typeof INTENTS | 'overview';
 function intentOf(message: string): Intent {
   const text = message.toLowerCase();
   // Practical before experiences: "how long should I stay" is about timing, not booking a stay.
-  for (const intent of ['online', 'plan', 'practical', 'experiences'] as const) {
+  for (const intent of ['online', 'contact', 'plan', 'practical', 'experiences'] as const) {
     if (INTENTS[intent].test(text)) return intent;
   }
   return 'overview';
@@ -132,6 +143,19 @@ function mentionedExperience(message: string): Experience | undefined {
   return best;
 }
 
+/** The longest known stay's name that appears in the message, if any. */
+function mentionedBusiness(message: string): TourismBusiness | undefined {
+  const haystack = ` ${normalize(message)} `;
+  let best: TourismBusiness | undefined;
+  for (const business of getStays()) {
+    const name = normalize(business.name);
+    if (name.length > 3 && haystack.includes(` ${name} `) && name.length > normalize(best?.name ?? '').length) {
+      best = business;
+    }
+  }
+  return best;
+}
+
 const FOLLOW_UP_HINTS = ['it', 'there', 'this place', 'that place', 'this one', 'that one', 'more', 'else', 'what about'];
 
 /** A short message, or one that leans on a pronoun, is read against the last focus rather than searched fresh. */
@@ -160,6 +184,34 @@ const onlineStep = (destination: Destination): DiscoverAction => ({
   value: destination.name,
   destinationId: destination.id,
 });
+
+/** Starts the chat's own guided enquiry (name, phone, message) for an experience or a stay. */
+function enquireStep(name: string, target: { experienceId?: string; businessId?: string }): DiscoverAction {
+  return { label: 'Send an enquiry', kind: 'enquire', value: name, ...target };
+}
+
+/**
+ * OneStop Manipur never publishes a host's phone number or website: an
+ * enquiry is how a visitor reaches them (docs/09 §10). Asked for contact
+ * details directly, the chat says so and offers the enquiry rather than
+ * inventing a number.
+ */
+function contactAnswer(
+  name: string,
+  target: { experienceId?: string; businessId?: string; destinationId?: string },
+): DiscoverChatAnswer {
+  const { destinationId, ...enquireTarget } = target;
+  return {
+    kind: 'contact',
+    text: `OneStop Manipur doesn't publish ${name}'s phone number or website directly. Send an enquiry with your name and number, and they'll get in touch with you.`,
+    provider: 'deterministic',
+    destinationIds: [],
+    experienceIds: [],
+    reasons: {},
+    focus: { ...enquireTarget, ...(destinationId ? { destinationId } : {}) },
+    actions: [enquireStep(name, enquireTarget)],
+  };
+}
 
 /** The ladder for a place: see it, what to do there, when to go, book, plan. The client drops steps already taken. */
 function placeSteps(destination: Destination, current: Intent): DiscoverAction[] {
@@ -190,7 +242,8 @@ async function experienceSteps(experience: Experience, destination: Destination 
   if (await bookable(experience)) {
     steps.push({ label: 'Request to book', kind: 'link', value: `/explore/discover?mode=experiences&book=${experience.id}` });
   } else if (experience.availabilityStatus !== 'UNAVAILABLE') {
-    steps.push({ label: 'Send an enquiry', kind: 'link', value: `/explore/discover?mode=experiences&experience=${experience.id}` });
+    const business = getBusiness(experience.businessId);
+    steps.push(enquireStep(business?.name ?? experience.title, { experienceId: experience.id }));
   }
   if (destination) {
     steps.push({ label: `What else is there at ${destination.name}?`, kind: 'ask', value: `What can I do at ${destination.name}?` });
@@ -458,6 +511,27 @@ function placeOnline(destination: Destination): DiscoverChatAnswer {
   };
 }
 
+/** A destination has no single host to contact: point towards the experiences that do. */
+function placeContact(destination: Destination): DiscoverChatAnswer {
+  const here = getExperiencesFor(destination.id);
+  return {
+    kind: 'contact',
+    text:
+      here.length > 0
+        ? `${destination.name} itself has no single contact number — each local host here has their own. Ask about one of its experiences and I can send an enquiry to them directly.`
+        : `No local host at ${destination.name} has joined OneStop Manipur yet, so there is nobody here to send an enquiry to.`,
+    provider: 'deterministic',
+    destinationIds: [],
+    experienceIds: here.slice(0, 3).map((experience) => experience.id),
+    reasons: {},
+    focus: { destinationId: destination.id },
+    actions:
+      here.length > 0
+        ? [{ label: 'See local experiences here', kind: 'link', value: experiencesHref(destination.id) }, onlineStep(destination)]
+        : [onlineStep(destination), planStep(destination)],
+  };
+}
+
 function placePlan(destination: Destination): DiscoverChatAnswer {
   const here = getExperiencesFor(destination.id).length;
   return {
@@ -475,6 +549,9 @@ function placePlan(destination: Destination): DiscoverChatAnswer {
 async function experienceReply(experience: Experience, question: string, repeat: boolean): Promise<DiscoverChatAnswer> {
   const destination = getDestination(experience.destinationId);
   const business = getBusiness(experience.businessId);
+  if (intentOf(question) === 'contact') {
+    return contactAnswer(business?.name ?? experience.title, { experienceId: experience.id, destinationId: destination?.id });
+  }
   const narration = await narrate({
     promptId: PROMPTS.discoverGuide.id,
     system: PROMPTS.discoverGuide.system,
@@ -508,10 +585,62 @@ async function experienceReply(experience: Experience, question: string, repeat:
   };
 }
 
+/** A stay's own overview, rate and how to reach it — the same shape of reply an experience gets. */
+async function businessReply(business: TourismBusiness, message: string): Promise<DiscoverChatAnswer> {
+  const destination = getDestination(business.destinationId);
+  if (intentOf(message) === 'contact') {
+    return contactAnswer(business.name, { businessId: business.id, destinationId: destination?.id });
+  }
+
+  const rate = business.rate
+    ? `₹${business.rate.amount.toLocaleString('en-IN')} per ${business.rate.covers.toLowerCase()}, per ${business.rate.unit.toLowerCase()}${business.rate.note ? ` (${business.rate.note})` : ''}.`
+    : 'The rate is on enquiry.';
+  const deterministicText = [
+    business.description ?? `${business.name} is a ${BUSINESS_TYPE_LABEL[business.businessType].toLowerCase()} in ${business.district}.`,
+    rate,
+  ].join(' ');
+
+  const narration = await narrate({
+    promptId: PROMPTS.discoverGuide.id,
+    system: PROMPTS.discoverGuide.system,
+    deterministicText,
+    evidence: {
+      question: message,
+      business: {
+        name: business.name,
+        type: BUSINESS_TYPE_LABEL[business.businessType],
+        district: business.district,
+        description: business.description,
+        rate,
+        verified: business.verified,
+        destination: destination?.name,
+      },
+    },
+    task: 'Answer the question about this place to stay using only the evidence given. Two or three short sentences.',
+    maxTokens: 220,
+  });
+
+  return {
+    kind: 'business',
+    text: narration.text,
+    provider: providerOf(narration),
+    destinationIds: [],
+    experienceIds: [],
+    reasons: {},
+    focus: { businessId: business.id, ...(destination ? { destinationId: destination.id } : {}) },
+    actions: [
+      enquireStep(business.name, { businessId: business.id }),
+      ...(destination ? [{ label: `What else is at ${destination.name}?`, kind: 'ask' as const, value: `What can I do at ${destination.name}?` }] : []),
+    ],
+  };
+}
+
 function placeReply(destination: Destination, message: string, repeat: boolean): Promise<DiscoverChatAnswer> | DiscoverChatAnswer {
   switch (intentOf(message)) {
     case 'online':
       return placeOnline(destination);
+    case 'contact':
+      return placeContact(destination);
     case 'plan':
       return placePlan(destination);
     case 'experiences':
@@ -534,12 +663,17 @@ export async function runDiscoverChat(message: string, focus?: DiscoverFocus): P
   const destination = mentionedDestination(message);
   if (destination) return placeReply(destination, message, focus?.destinationId === destination.id);
 
+  const business = mentionedBusiness(message);
+  if (business) return businessReply(business, message);
+
   if (focus && readsAsFollowUp(message)) {
     const focusedExperience = focus.experienceId ? getExperience(focus.experienceId) : undefined;
     const focusedDestination = focus.destinationId ? getDestination(focus.destinationId) : undefined;
+    const focusedBusiness = focus.businessId ? getBusiness(focus.businessId) : undefined;
     // "Photos of it" or "what else is there" after an experience are about its place.
     if (focusedExperience && intentOf(message) === 'overview') return experienceReply(focusedExperience, message, true);
     if (focusedDestination) return placeReply(focusedDestination, message, true);
+    if (focusedBusiness) return businessReply(focusedBusiness, message);
   }
 
   return listReply(message);

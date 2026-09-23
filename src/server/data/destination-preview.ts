@@ -2,6 +2,7 @@ import type { Destination } from '@/lib/types';
 import type { DestinationDetailsData } from '@/components/shared/DestinationDetails';
 import { DEFAULT_ASK_PROMPTS } from '@/server/ai/storyteller';
 import {
+  getArtisansFor,
   getBusiness,
   getDataSource,
   getDestinations,
@@ -9,6 +10,7 @@ import {
   getExperiencesFor,
   getFactsFor,
   getHeritageExperience,
+  getTransportFor,
 } from '@/server/data/repository';
 
 /**
@@ -32,6 +34,8 @@ export function buildDestinationPreview(destination: Destination): DestinationDe
       businessName: getBusiness(experience.businessId)?.name ?? 'Local provider',
     })),
     events: getEventsFor(destination.id),
+    shopping: getArtisansFor(destination.id),
+    transport: getTransportFor(destination.id),
     nearby: getDestinations()
       .filter((entry) => entry.id !== destination.id && entry.district === destination.district)
       .slice(0, 3),

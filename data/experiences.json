@@ -243,6 +243,7 @@
     "id": "exp-017",
     "businessId": "biz-017",
     "destinationId": "dest-imphal-war-cemetery",
+    "additionalDestinationIds": ["dest-moirang", "dest-khongjom"],
     "title": "Second World War circuit day tour",
     "category": "culture",
     "description": "A full day covering the Imphal cemetery, the Moirang memorial and connecting battlefield locations.",

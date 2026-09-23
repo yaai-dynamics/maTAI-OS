@@ -119,7 +119,7 @@ export const EVENT_CATEGORY_LABEL: Record<EventCategory, string> = {
 };
 
 /**
- * How to get in. REGISTRATION and TICKETED are the only ones maTAI handles;
+ * How to get in. REGISTRATION and TICKETED are the only ones this platform handles;
  * FREE means turn up, and the platform holds no place for anybody.
  */
 export const eventAdmissionSchema = z.enum(['FREE', 'REGISTRATION', 'TICKETED']);
@@ -137,12 +137,18 @@ export const eventSchema = z.object({
   /** Where within the destination, in the organiser's words. */
   venue: z.string().optional(),
   organiser: z.string().optional(),
+  /**
+   * The partner who runs it and answers a request for a place. Only an event
+   * with one can be booked here: a state or community festival has no host on
+   * the platform, and its entry terms are not ours to take money for.
+   */
+  organiserBusinessId: z.string().optional(),
   admission: eventAdmissionSchema.default('FREE'),
   /** Per person in INR. TICKETED only. */
   ticketPrice: z.number().int().nonnegative().optional(),
-  /** Places the organiser has opened through maTAI, where they have said. */
+  /** Places the organiser has opened here, where they have said. */
   capacity: z.number().int().positive().optional(),
-  /** The organiser's own page, for anything maTAI does not hold. */
+  /** The organiser's own page, for anything the platform does not hold. */
   officialUrl: z.string().optional(),
   /**
    * True when the dates follow the lunar calendar and are announced each year,

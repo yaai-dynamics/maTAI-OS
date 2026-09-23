@@ -38,7 +38,7 @@ import {
   type TravelWindow,
   type TripCondition,
 } from '@/server/ai/trip-planner';
-import { getDestination, getExperience } from '@/server/data/repository';
+import { getBusiness, getDestination, getExperience } from '@/server/data/repository';
 import { buildDestinationPreview } from '@/server/data/destination-preview';
 import type { DestinationDetailsData } from '@/components/shared/DestinationDetails';
 import { createEnquiry, forgetSessionSignals, nextId, submitFeedback } from '@/server/data/store';
@@ -478,6 +478,64 @@ export async function sendEnquiry(input: unknown): Promise<{ ok: boolean; error?
   });
 
   revalidatePath('/explore', 'layout');
+  revalidatePath('/gov', 'layout');
+  return { ok: true };
+}
+
+/** Digits, with an optional leading +; 10 to 15 of them. */
+const chatPhoneInput = z
+  .string()
+  .transform((value) => value.replace(/[\s()-]/g, ''))
+  .refine((value) => /^\+?\d{10,15}$/.test(value), 'Enter a phone number the host can call.');
+
+const chatEnquiryInput = z
+  .object({
+    experienceId: z.string().min(1).optional(),
+    businessId: z.string().min(1).optional(),
+    contactName: z.string().trim().min(2, 'Enter a name.').max(120),
+    contactPhone: chatPhoneInput,
+    message: z.string().trim().max(500).optional(),
+  })
+  .refine((data) => Boolean(data.experienceId || data.businessId), { message: 'Missing what this enquiry is about.' });
+
+/**
+ * The chat agent's enquiry: a plain conversation collects a name, a phone
+ * number and a message, rather than the party-size-and-date form. It can
+ * name an experience, or (for a stay with no experience of its own) the
+ * business directly.
+ */
+export async function sendChatEnquiry(input: unknown): Promise<{ ok: boolean; error?: string }> {
+  const parsed = chatEnquiryInput.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Check the details and try again.' };
+
+  const experience = parsed.data.experienceId ? getExperience(parsed.data.experienceId) : undefined;
+  if (parsed.data.experienceId && !experience) return { ok: false, error: 'That experience is no longer listed.' };
+
+  const business = experience ? getBusiness(experience.businessId) : getBusiness(parsed.data.businessId ?? '');
+  if (!business) return { ok: false, error: 'That listing is no longer available.' };
+
+  const visitor = await ensureVisitor();
+  await createEnquiry({
+    id: nextId('enq-live'),
+    ...(experience ? { experienceId: experience.id } : {}),
+    businessId: business.id,
+    anonymousSessionId: visitor.sessionId,
+    contactName: parsed.data.contactName,
+    contactPhone: parsed.data.contactPhone,
+    ...(parsed.data.message ? { message: parsed.data.message } : {}),
+    status: 'SUBMITTED',
+    createdAt: now().toISOString(),
+    provenance: 'PLATFORM_OBSERVED',
+  });
+
+  await ingest(visitor, {
+    type: 'BOOKING',
+    destinationId: experience?.destinationId ?? business.destinationId,
+    ...(experience ? { experienceId: experience.id } : {}),
+  });
+
+  revalidatePath('/explore', 'layout');
+  revalidatePath('/partner', 'layout');
   revalidatePath('/gov', 'layout');
   return { ok: true };
 }

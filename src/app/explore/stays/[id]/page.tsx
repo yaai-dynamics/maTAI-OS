@@ -6,7 +6,7 @@ import { ArrowLeft, BedDouble, MapPin, ShieldCheck } from 'lucide-react';
 import { now } from '@/lib/config';
 import { addDays, toIsoDate } from '@/lib/date';
 import { BUSINESS_TYPE_LABEL } from '@/lib/types';
-import { getDestination, getStay } from '@/server/data/repository';
+import { getDestination, getDestinations, getExperiences, getStay, getStays } from '@/server/data/repository';
 import { businessesAcceptingBookings } from '@/server/bookings/ledger';
 import {
   CANCELLATION_POLICY,
@@ -16,8 +16,10 @@ import {
   PAYMENT_WINDOW_HOURS,
 } from '@/server/bookings/policy';
 import { requestStayForm } from '@/server/actions/forms';
+import { askPlace, discoverChat, discoverPlaceOnline, getDestinationPreview, sendChatEnquiry } from '@/server/actions/tourist';
 import { ActionForm, CheckboxRow, Field, TextArea, TextInput } from '@/components/shared/ActionForm';
 import { DestinationVisual } from '@/components/shared/DestinationVisual';
+import { DiscoverWorkspace } from '@/components/shared/DiscoverWorkspace';
 import { Badge, Card, CardBody, CardHeader, DefinitionRow } from '@/components/ui/primitives';
 
 export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -39,16 +41,28 @@ export default async function StayPage(props: { params: Promise<{ id: string }> 
   const at = now();
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5">
-      <Link
-        href="/explore/stays"
-        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-600 hover:text-brand-700"
+    <div className="mx-auto max-w-3xl">
+      <DiscoverWorkspace
+        destinations={getDestinations()}
+        experiences={getExperiences()}
+        businesses={getStays()}
+        ask={discoverChat}
+        lookUpOnline={discoverPlaceOnline}
+        getPreview={getDestinationPreview}
+        askPlace={askPlace}
+        submitEnquiry={sendChatEnquiry}
+        initialFocus={{ businessId: stay.id }}
       >
-        <ArrowLeft aria-hidden size={15} />
-        All stays
-      </Link>
+        <div className="space-y-5">
+          <Link
+            href="/explore/stays"
+            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-600 hover:text-brand-700"
+          >
+            <ArrowLeft aria-hidden size={15} />
+            All stays
+          </Link>
 
-      {destination ? (
+          {destination ? (
         <div className="relative overflow-hidden rounded-2xl">
           <DestinationVisual destination={destination} height="lg" overlay />
           <div className="absolute inset-x-0 bottom-0 p-5">
@@ -206,24 +220,26 @@ export default async function StayPage(props: { params: Promise<{ id: string }> 
             </p>
           </CardBody>
         </Card>
-      ) : (
-        <Card tone="outline">
-          <CardHeader
-            title="Not bookable online yet"
-            subtitle={`${stay.name} is on the platform, but its host has not opened an account to answer booking requests. Rather than take a request nobody would read, maTAI says so.`}
-          />
-          {destination ? (
-            <CardBody>
-              <Link
-                href={`/explore/destinations/${destination.id}`}
-                className="text-[13px] font-medium text-brand-700 hover:underline"
-              >
-                Other places to stay and things to do around {destination.name} →
-              </Link>
-            </CardBody>
-          ) : null}
-        </Card>
-      )}
+          ) : (
+            <Card tone="outline">
+              <CardHeader
+                title="Not bookable online yet"
+                subtitle={`${stay.name} is on the platform, but its host has not opened an account to answer booking requests. Ask OneStop (bottom right) to send them an enquiry with your name and number instead — they'll get in touch directly.`}
+              />
+              {destination ? (
+                <CardBody>
+                  <Link
+                    href={`/explore/destinations/${destination.id}`}
+                    className="text-[13px] font-medium text-brand-700 hover:underline"
+                  >
+                    Other places to stay and things to do around {destination.name} →
+                  </Link>
+                </CardBody>
+              ) : null}
+            </Card>
+          )}
+        </div>
+      </DiscoverWorkspace>
     </div>
   );
 }

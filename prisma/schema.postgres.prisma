@@ -149,23 +149,49 @@ enum EventCategory {
   SEASONAL
 }
 
+/// How to get in. REGISTRATION and TICKETED are the only ones the platform
+/// handles; FREE means turn up, and no place is held for anybody.
+enum EventAdmission {
+  FREE
+  REGISTRATION
+  TICKETED
+}
+
 model Event {
-  id                 String        @id
+  id                 String          @id
   name               String
   destinationId      String
-  destination        Destination   @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  destination        Destination     @relation(fields: [destinationId], references: [id], onDelete: Cascade)
   startAt            DateTime
   endAt              DateTime
   category           EventCategory
   expectedAttendance Int?
   description        String
+  /// Where within the destination, in the organiser's words.
+  venue              String?
+  organiser          String?
+  /// The partner who runs it and answers a request for a place. Only an event
+  /// with one can be booked here.
+  organiserBusinessId String?
+  organiserBusiness   TourismBusiness? @relation(fields: [organiserBusinessId], references: [id])
+  admission          EventAdmission  @default(FREE)
+  /// Per person in INR. TICKETED only.
+  ticketPrice        Int?
+  /// Places the organiser has opened here, where they have said.
+  capacity           Int?
+  officialUrl        String?
+  /// The dates follow the lunar calendar and are announced each year, so the
+  /// interface shows them as expected rather than as fixed.
+  datesProvisional   Boolean         @default(false)
   sourceId           String
-  source             DataSource    @relation(fields: [sourceId], references: [id])
+  source             DataSource      @relation(fields: [sourceId], references: [id])
   provenance         Provenance
 
-  bookings Booking[]
+  bookings     Booking[]
+  landingPages LandingPage[]
 
   @@index([destinationId, startAt])
+  @@index([organiserBusinessId])
 }
 
 enum DataSourceType {
@@ -266,12 +292,16 @@ model TourismBusiness {
   reportedCapacity  Int?
   /// What the partner charges, for trip costing (lib/types businessRateSchema).
   rateJson          Json?
+  /// What an artisan or shop sells, in their own words (lib/types Dish's neighbour, not an inventory).
+  productsJson      Json?
   provenance        Provenance
 
   experiences            Experience[]
   accommodationSnapshots AccommodationSnapshot[]
   enquiries              Enquiry[]
   bookings               Booking[]
+  organisedEvents        Event[]
+  landingPages           LandingPage[]
   account                UserAccount?
 
   @@index([destinationId])
@@ -344,13 +374,18 @@ enum EnquiryStatus {
 
 model Enquiry {
   id                 String          @id
-  experienceId       String
-  experience         Experience      @relation(fields: [experienceId], references: [id])
+  /// Unset for an enquiry about a stay directly, rather than one of its experiences.
+  experienceId       String?
+  experience         Experience?     @relation(fields: [experienceId], references: [id])
   businessId         String
   business           TourismBusiness @relation(fields: [businessId], references: [id])
   anonymousSessionId String
-  partySize          Int
-  preferredDate      DateTime        @db.Date
+  partySize          Int?
+  preferredDate      DateTime?       @db.Date
+  /// Given with explicit consent, when the enquiry was sent through the chat agent rather than the form.
+  contactName        String?
+  contactPhone       String?
+  message            String?
   note               String?
   status             EnquiryStatus
   createdAt          DateTime        @default(now())
@@ -428,6 +463,7 @@ model CreatorCampaign {
   metrics      CampaignMetric[]
   payouts      Payout[]
   interactions TourismInteraction[]
+  landingPages LandingPage[]
 
   @@index([destinationId])
   @@index([status, startDate])
@@ -537,6 +573,64 @@ model Payout {
   provenance Provenance
 
   @@index([creatorId])
+}
+
+// ---------------------------------------------------------------------------
+// Landing pages
+// ---------------------------------------------------------------------------
+
+enum LandingPageOwnerType {
+  /// A partner's own one-page microsite.
+  BUSINESS
+  /// A page the department publishes for a campaign or festival.
+  CAMPAIGN
+}
+
+enum LandingPageStatus {
+  DRAFT
+  PUBLISHED
+}
+
+/// An AI-assisted one-page microsite: a partner's own page, or a page the
+/// department publishes for a creator campaign or a festival such as the
+/// Sangai Festival. Content is assembled deterministically from the owning
+/// business or the linked campaign/event; a model only rewrites the "about"
+/// paragraph (src/server/ai/landing-page.ts), the same discipline narrate()
+/// applies everywhere else.
+model LandingPage {
+  id           String               @id
+  ownerType    LandingPageOwnerType
+  /// BUSINESS only.
+  businessId   String?
+  business     TourismBusiness?     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  /// CAMPAIGN only, when linked to a creator campaign.
+  campaignId   String?
+  campaign     CreatorCampaign?     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  /// CAMPAIGN only, when linked to a festival or event.
+  eventId      String?
+  event        Event?               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  slug         String               @unique
+  title        String
+  tagline      String
+  /// Data URL of an AI-generated image, when generation succeeded.
+  heroImageUrl String?
+  /// Ordered sections and hashtags (lib/types landingPageSchema).
+  contentJson  Json
+  /// External or internal link for the "Book now" / "Plan your visit" CTA.
+  bookingUrl   String?
+  status       LandingPageStatus    @default(DRAFT)
+  viewCount    Int                  @default(0)
+  shareCount   Int                  @default(0)
+  generatedBy  String
+  generatedAt  DateTime
+  publishedAt  DateTime?
+  createdBy    String
+  provenance   Provenance
+
+  @@index([ownerType, status])
+  @@index([businessId])
+  @@index([campaignId])
+  @@index([eventId])
 }
 
 // ---------------------------------------------------------------------------

@@ -1,20 +1,26 @@
 import Link from 'next/link';
+import { MapPin } from 'lucide-react';
 
 import { formatLongDate, formatRelative } from '@/lib/date';
 import { formatDuration } from '@/lib/geo';
 import { now } from '@/lib/config';
 import {
+  DISH_CATEGORY_LABEL,
   EXPERIENCE_CATEGORY_LABEL,
   ISSUE_CATEGORY_LABEL,
   type Campaign,
   type Creator,
   type Destination,
+  type Dish,
   type Experience,
   type Feedback,
+  type FoodTrail,
+  type LandingPage,
 } from '@/lib/types';
 import { Badge, Card, cn } from '@/components/ui/primitives';
 import { ProvenanceBadge, StatusBadge, TrendChip } from '@/components/shared/badges';
 import { DestinationVisual } from '@/components/shared/DestinationVisual';
+import { GeneratedArt } from '@/components/shared/GeneratedArt';
 
 /**
  * Cards shared across the three interfaces.
@@ -53,7 +59,7 @@ export function DestinationCard({
   // contain another anchor.
   const linkedContent = (
     <>
-      {!compact ? <DestinationVisual destination={destination} height="md" /> : null}
+      {!compact ? <DestinationVisual destination={destination} height="lg" /> : null}
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -157,15 +163,18 @@ export function ExperienceCard({
   action,
   destination,
   destinationHref,
+  additionalDestinations,
 }: {
   experience: Experience;
   destinationName: string;
   businessName: string;
   action?: React.ReactNode;
-  /** Shown as a small swatch next to the destination name, when given. */
+  /** Shown as a thumbnail above the title, with its name captioned below it. */
   destination?: Pick<Destination, 'id' | 'name' | 'palette' | 'category'>;
   /** Makes the destination name a link, for the unified Discover screen. */
   destinationHref?: string;
+  /** Other places this experience also visits, for a route or circuit that isn't confined to one stop. */
+  additionalDestinations?: { destination: Pick<Destination, 'id' | 'name' | 'palette' | 'category'>; href?: string }[];
 }) {
   const availability = {
     AVAILABLE: { tone: 'good' as const, label: 'Available' },
@@ -174,56 +183,166 @@ export function ExperienceCard({
   }[experience.availabilityStatus];
 
   return (
+    <Card as="article" className="flex h-full flex-col overflow-hidden">
+      {destination ? <DestinationVisual destination={destination} height="sm" /> : null}
+
+      <div className="flex flex-1 flex-col p-4">
+        {destination ? (
+          <p className="mb-2 flex items-center gap-1 text-[12px] text-ink-500">
+            <MapPin aria-hidden size={12} className="shrink-0" />
+            {destinationHref ? (
+              <Link href={destinationHref} className="min-w-0 truncate font-medium text-ink-700 hover:text-brand-700 hover:underline">
+                {destinationName}
+              </Link>
+            ) : (
+              <span className="min-w-0 truncate">{destinationName}</span>
+            )}
+          </p>
+        ) : null}
+
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-[15px] font-semibold text-ink-900">{experience.title}</h3>
+            <p className="mt-0.5 truncate text-[12px] text-ink-500">{businessName}</p>
+          </div>
+          <Badge tone="neutral">{EXPERIENCE_CATEGORY_LABEL[experience.category]}</Badge>
+        </div>
+
+        {additionalDestinations && additionalDestinations.length > 0 ? (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] text-ink-500">Also visits</span>
+            {additionalDestinations.map(({ destination: place, href }) =>
+              href ? (
+                <Link
+                  key={place.id}
+                  href={href}
+                  className="rounded-full border border-line-strong bg-surface px-2 py-0.5 text-[11px] font-medium text-ink-700 hover:border-brand-500 hover:text-brand-700"
+                >
+                  {place.name}
+                </Link>
+              ) : (
+                <span key={place.id} className="rounded-full border border-line-strong bg-surface px-2 py-0.5 text-[11px] font-medium text-ink-700">
+                  {place.name}
+                </span>
+              ),
+            )}
+          </div>
+        ) : null}
+
+        <p className="mt-2 text-[13px] text-ink-700">{experience.description}</p>
+
+        <dl className="mt-3 grid grid-cols-3 gap-2 text-[12px]">
+          <div>
+            <dt className="text-ink-500">Duration</dt>
+            <dd className="num font-medium text-ink-900">{formatDuration(experience.durationMinutes)}</dd>
+          </div>
+          <div>
+            <dt className="text-ink-500">From</dt>
+            <dd className="num font-medium text-ink-900">₹{experience.price.toLocaleString('en-IN')}</dd>
+          </div>
+          <div>
+            <dt className="text-ink-500">Effort</dt>
+            <dd className="font-medium text-ink-900">{experience.accessibility.toLowerCase()}</dd>
+          </div>
+        </dl>
+
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <Badge tone={availability.tone}>{availability.label}</Badge>
+          {experience.verified ? (
+            <Badge tone="lake" title="Checked by the platform before listing">
+              ✓ Verified provider
+            </Badge>
+          ) : (
+            <Badge tone="warn">Not yet verified</Badge>
+          )}
+        </div>
+
+        {action ? <div className="mt-auto pt-4">{action}</div> : null}
+      </div>
+    </Card>
+  );
+}
+
+export function DishCard({
+  dish,
+  destinationName,
+  destinationHref,
+  businessName,
+  action,
+}: {
+  dish: Dish;
+  destinationName: string;
+  destinationHref?: string;
+  /** Set only where a partner actually serves it. */
+  businessName?: string;
+  action?: React.ReactNode;
+}) {
+  return (
     <Card as="article" className="flex h-full flex-col p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-[15px] font-semibold text-ink-900">{experience.title}</h3>
-          <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-ink-500">
-            {destination ? (
-              <DestinationVisual destination={destination} height="sm" className="h-5 w-5 shrink-0 rounded" />
-            ) : null}
-            <span className="min-w-0 truncate">
-              {businessName} ·{' '}
-              {destinationHref ? (
-                <Link href={destinationHref} className="font-medium text-ink-700 hover:text-brand-700 hover:underline">
-                  {destinationName}
-                </Link>
-              ) : (
-                destinationName
-              )}
-            </span>
-          </div>
+          <h3 className="text-[15px] font-semibold text-ink-900">{dish.name}</h3>
+          {dish.localName && dish.localName !== dish.name ? (
+            <p className="text-[12px] text-ink-500">{dish.localName}</p>
+          ) : null}
         </div>
-        <Badge tone="neutral">{EXPERIENCE_CATEGORY_LABEL[experience.category]}</Badge>
+        <Badge tone="neutral">{DISH_CATEGORY_LABEL[dish.category]}</Badge>
       </div>
 
-      <p className="mt-2 text-[13px] text-ink-700">{experience.description}</p>
+      <p className="mt-1 flex items-center gap-1 text-[12px] text-ink-500">
+        <MapPin aria-hidden size={12} className="shrink-0" />
+        {destinationHref ? (
+          <Link href={destinationHref} className="min-w-0 truncate font-medium text-ink-700 hover:text-brand-700 hover:underline">
+            {destinationName}
+          </Link>
+        ) : (
+          <span className="min-w-0 truncate">{destinationName}</span>
+        )}
+      </p>
 
-      <dl className="mt-3 grid grid-cols-3 gap-2 text-[12px]">
-        <div>
-          <dt className="text-ink-500">Duration</dt>
-          <dd className="num font-medium text-ink-900">{formatDuration(experience.durationMinutes)}</dd>
-        </div>
-        <div>
-          <dt className="text-ink-500">From</dt>
-          <dd className="num font-medium text-ink-900">₹{experience.price.toLocaleString('en-IN')}</dd>
-        </div>
-        <div>
-          <dt className="text-ink-500">Effort</dt>
-          <dd className="font-medium text-ink-900">{experience.accessibility.toLowerCase()}</dd>
-        </div>
-      </dl>
+      <p className="mt-2 line-clamp-3 text-[13px] text-ink-700">{dish.description}</p>
 
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        <Badge tone={availability.tone}>{availability.label}</Badge>
-        {experience.verified ? (
-          <Badge tone="lake" title="Checked by the platform before listing">
-            ✓ Verified provider
-          </Badge>
+        <Badge tone={dish.vegetarian ? 'good' : 'neutral'}>{dish.vegetarian ? 'Vegetarian' : 'Non-vegetarian'}</Badge>
+        {dish.spiceLevel ? <Badge tone="warn">{dish.spiceLevel.toLowerCase()} spice</Badge> : null}
+        {businessName ? (
+          <Badge tone="lake">{businessName}</Badge>
         ) : (
-          <Badge tone="warn">Not yet verified</Badge>
+          <Badge tone="neutral">No partner serving it yet</Badge>
         )}
       </div>
+
+      {action ? <div className="mt-auto pt-4">{action}</div> : null}
+    </Card>
+  );
+}
+
+export function FoodTrailCard({
+  trail,
+  destinationName,
+  stopCount,
+  action,
+}: {
+  trail: FoodTrail;
+  destinationName: string;
+  stopCount: number;
+  action?: React.ReactNode;
+}) {
+  return (
+    <Card as="article" className="flex h-full flex-col p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-[15px] font-semibold text-ink-900">{trail.name}</h3>
+          <p className="mt-0.5 text-[12px] text-ink-500">{destinationName}</p>
+        </div>
+        <Badge tone="lily">
+          {stopCount} stop{stopCount === 1 ? '' : 's'}
+        </Badge>
+      </div>
+
+      <p className="mt-2 text-[13px] text-ink-700">{trail.description}</p>
+
+      <p className="mt-3 text-[12px] text-ink-500">{trail.durationHint}</p>
 
       {action ? <div className="mt-auto pt-4">{action}</div> : null}
     </Card>
@@ -409,6 +528,39 @@ export function FeedbackCard({
         ) : null}
       </div>
     </Card>
+  );
+}
+
+/**
+ * Promotional spotlight for a published landing page — a partner's own page,
+ * or a campaign/festival page — on the Discover screen and on the
+ * partner/admin dashboards that link to it.
+ */
+export function LandingPagePromoCard({ page, href }: { page: LandingPage; href?: string }) {
+  const inner = (
+    <Card as="article" className="flex h-full flex-col overflow-hidden">
+      <GeneratedArt seed={page.slug} label={page.title} imageUrl={page.heroImageUrl} height="md" overlay />
+      <div className="flex flex-1 flex-col p-4">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="truncate text-[15px] font-semibold text-ink-900">{page.title}</h3>
+          <Badge tone={page.ownerType === 'CAMPAIGN' ? 'brand' : 'lake'}>
+            {page.ownerType === 'CAMPAIGN' ? 'Campaign' : 'Partner page'}
+          </Badge>
+        </div>
+        <p className="mt-1 line-clamp-2 text-[13px] text-ink-700">{page.tagline}</p>
+        <div className="mt-auto pt-3">
+          <span className="text-[12px] font-medium text-brand-700">View page →</span>
+        </div>
+      </div>
+    </Card>
+  );
+
+  return href ? (
+    <Link href={href} className="block h-full rounded-lg">
+      {inner}
+    </Link>
+  ) : (
+    inner
   );
 }
 

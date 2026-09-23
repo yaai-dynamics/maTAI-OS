@@ -3,7 +3,7 @@ import type { HeritageExperience } from '@/server/data/seed';
 import { formatDuration } from '@/lib/geo';
 import { formatLongDate } from '@/lib/date';
 import { FACT_TYPE_LABEL, FACT_TYPE_NOTE } from '@/lib/fact-types';
-import type { DataSource, Destination, Experience, TourismEvent, VerifiedFact } from '@/lib/types';
+import type { DataSource, Destination, Experience, TourismBusiness, TourismEvent, VerifiedFact } from '@/lib/types';
 import type { GroundedAnswer } from '@/server/ai/storyteller';
 import { Badge, Card, CardBody, CardHeader } from '@/components/ui/primitives';
 import { Disclosure } from '@/components/ui/disclosure';
@@ -26,6 +26,10 @@ export interface DestinationDetailsData {
   heritage?: HeritageExperience;
   experiences: { experience: Experience; businessName: string }[];
   events: TourismEvent[];
+  /** Artisans and craft stalls based here, participating and verified as such. */
+  shopping: TourismBusiness[];
+  /** Transport operators based here, participating and verified as such. */
+  transport: TourismBusiness[];
   nearby: Destination[];
   prompts: readonly string[];
 }
@@ -35,6 +39,7 @@ export function DestinationDetails({
   ask,
   heritageHref,
   destinationHref,
+  hideAskPanel = false,
 }: {
   data: DestinationDetailsData;
   ask: (
@@ -44,8 +49,11 @@ export function DestinationDetails({
   /** Where "Open the experience" and nearby links lead. Defaults to the real pages. */
   heritageHref?: (id: string) => string;
   destinationHref?: (id: string) => string;
+  /** Hide the inline "Ask the place" card, when the page around it offers the floating Ask OneStop chat instead. */
+  hideAskPanel?: boolean;
 }) {
-  const { destination, narrative, practical, source, heritage, experiences, events, nearby, prompts } = data;
+  const { destination, narrative, practical, source, heritage, experiences, events, shopping, transport, nearby, prompts } =
+    data;
   const toHeritage = heritageHref ?? ((id: string) => `/explore/destinations/${id}/heritage`);
   const toDestination = destinationHref ?? ((id: string) => `/explore/destinations/${id}`);
 
@@ -89,20 +97,22 @@ export function DestinationDetails({
             </CardBody>
           </Card>
 
-          <Card>
-            <CardHeader
-              title="Ask the place"
-              subtitle="Answers come from the curated knowledge base, not from general model memory."
-            />
-            <CardBody>
-              <AskPlacePanel
-                destinationId={destination.id}
-                destinationName={destination.name}
-                prompts={prompts}
-                ask={ask}
+          {!hideAskPanel ? (
+            <Card>
+              <CardHeader
+                title="Ask the place"
+                subtitle="Answers come from the curated knowledge base, not from general model memory."
               />
-            </CardBody>
-          </Card>
+              <CardBody>
+                <AskPlacePanel
+                  destinationId={destination.id}
+                  destinationName={destination.name}
+                  prompts={prompts}
+                  ask={ask}
+                />
+              </CardBody>
+            </Card>
+          ) : null}
 
           {heritage ? (
             <Card className="overflow-hidden">
@@ -180,6 +190,34 @@ export function DestinationDetails({
               </CardBody>
             </Card>
           ) : null}
+
+          {shopping.length > 0 ? (
+            <Card>
+              <CardHeader
+                title="Shop & craft"
+                subtitle="Artisans and cooperatives based here. Buying directly keeps the spend with the household making it."
+              />
+              <CardBody>
+                <ul className="grid gap-3 sm:grid-cols-2">
+                  {shopping.map((business) => (
+                    <li key={business.id} className="rounded-md border border-line bg-surface p-3">
+                      <p className="text-[13px] font-semibold text-ink-900">{business.name}</p>
+                      <p className="mt-1 text-[12px] text-ink-700">{business.description}</p>
+                      {business.products && business.products.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {business.products.map((product) => (
+                            <Badge key={product} tone="neutral">
+                              {product}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </CardBody>
+            </Card>
+          ) : null}
         </div>
 
         <aside className="space-y-5">
@@ -236,6 +274,28 @@ export function DestinationDetails({
               ) : null}
             </CardBody>
           </Card>
+
+          {transport.length > 0 ? (
+            <Card>
+              <CardHeader title="Getting there" />
+              <CardBody>
+                <ul className="space-y-2">
+                  {transport.map((business) => (
+                    <li key={business.id} className="rounded-md border border-line bg-surface p-2.5">
+                      <p className="text-[13px] font-medium text-ink-900">{business.name}</p>
+                      <p className="mt-0.5 text-[12px] text-ink-700">{business.description}</p>
+                      {business.rate ? (
+                        <p className="mt-1 text-[12px] text-ink-600">
+                          ₹{business.rate.amount.toLocaleString('en-IN')} per {business.rate.unit.toLowerCase()}
+                          {business.rate.note ? ` · ${business.rate.note}` : ''}
+                        </p>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </CardBody>
+            </Card>
+          ) : null}
 
           {events.length > 0 ? (
             <Card>

@@ -86,6 +86,19 @@ export const PROMPTS = {
       'Write in the creator voice, but never overstate. No superlatives that the facts do not support.',
     ].join('\n'),
   },
+
+  landingPageCopy: {
+    id: 'landing-page-copy',
+    version: PROMPT_VERSION,
+    system: [
+      SHARED_RULES,
+      '',
+      'You are writing the "about" paragraph of a one-page microsite: a partner\'s own page, or a page the Department of Tourism publishes for a campaign or festival.',
+      'Every fact must come from the structured evidence. Do not invent amenities, prices, dates or a history the evidence does not state.',
+      'Write to the visitor deciding whether to go, in a warm but plain voice. No superlatives the evidence does not support, no marketing clichés.',
+      'Two to three sentences. No headings, no bullet points, no call to action — that is handled separately.',
+    ].join('\n'),
+  },
 } as const;
 
 export type PromptId = (typeof PROMPTS)[keyof typeof PROMPTS]['id'];

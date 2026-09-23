@@ -1815,3 +1815,229 @@ prefix on purpose — CSS classes (`matai-pin`), map source ids (`matai-dem`)
 and browser storage keys (`matai-planner-chat-v2`) — because renaming the
 storage keys would drop visitors' saved planner threads for no visible gain.
 The repository is still called maTAI-OS.
+
+## 31. Holding a place at an event
+
+Finishes workstream D of docs/10. The ledger already took an `EVENT` booking
+(§30); this gives it an organiser, a capacity and a form.
+
+### 31.1 Only an event with a host can be booked
+
+`Event` gains `organiserBusinessId`. Without one, no place can be held — and
+that is the point. A state or community festival has no partner on the
+platform and its entry terms are not ours to take money for, so Sangai,
+Ningol Chakouba and Khongjom Day stay "open to all, turn up".
+
+Four events name a partner: the Imphal heritage walk (Battlefield Routes
+Manipur), the Ima Keithel food trail (Meitei Kitchen Table), the Loktak dawn
+photography meet (Sendra Sunrise Boats) and a Tangkhul village evening
+(`biz-013`, the seeded demo partner — so the whole request → accept → pay path
+can be walked with the demo account).
+
+The event page shows the form only when the organiser is a participating
+partner **with an account to answer with**; otherwise it says the organiser
+does not take bookings here, and once the event has begun it says that
+instead.
+
+### 31.2 Capacity
+
+`placesTaken(eventId)` sums `partySize` over every booking still alive,
+including requests the organiser has not answered. An event can therefore read
+as full while some of those are later declined — the safer way round for a room
+of twelve, and the places come back the moment a request is declined, which is
+covered by a test.
+
+Expiry is scoped with a new `{ eventId }` `ExpiryScope` rather than `'ALL'`:
+a count at one event must never close another traveller's booking elsewhere.
+
+### 31.3 A free place is confirmed, not checked out
+
+A `REGISTRATION` event costs nothing, so its booking has `amountPaise: 0`.
+`createBookingRequest` allows a zero price for an `EVENT` only, and
+`respondToBooking` confirms a zero-amount booking outright on acceptance
+rather than moving it to `AWAITING_PAYMENT` — there is no checkout worth
+sending someone to for nothing. Ticketed places still go through Razorpay
+unchanged.
+
+### 31.4 Two bugs found while wiring it up
+
+- **The `Event` table was missing every field added in §29.** The interface
+  reads events from the JSON seed, so the pages were right, but the database
+  copy — which the foreign key and the department views use — still had only
+  name, time and place. Added, with a migration.
+- **Seeding would have failed.** `event.createMany` ran before
+  `tourismBusiness.createMany`, so the new organiser foreign key had nothing
+  to point at. Events now seed after businesses, and are truncated before
+  them.
+
+### 31.5 Getting the rows in without losing data
+
+`npm run db:seed` truncates bookings, trips, sessions and interactions — it is
+a destructive development operation, as its own comment says. Rather than run
+it, the new and changed event rows were upserted into the `Event` table alone,
+leaving every booking and browser-made trip in place. Worth remembering: after
+changing a file in `data/`, the database copy needs syncing, and a full seed is
+not the only way.
+
+### 31.6 Not done
+
+- No "add to my trip" from an event, and no reminders: reminders need a
+  delivery channel the platform still does not have.
+- The organiser sees an event booking in the partner inbox through the shared
+  `bookingSubject()`, but there is no per-event view of who is coming.
+- Not on the `/m` mobile app: this pass is desktop-only.
+
+## 32. Taste of Manipur
+
+Workstream C of docs/10. Two new entities, `Dish` and `FoodTrail`, live in
+`src/lib/types/food.ts` — JSON seed data (`data/dishes.json`,
+`data/food-trails.json`), no Prisma model and no migration, because nothing
+about a dish needs to be written to: it is read-only reference knowledge, the
+same shape as an emergency contact or a safety facility (§28), not supply like
+a `Booking`.
+
+### 32.1 A dish is knowledge first, a listing second
+
+`Dish.businessId` is optional, and left unset on most of the eleven seeded
+dishes: Nga Thongba (Loktak) and the two Ukhrul hill dishes are real food
+worth knowing about before a visitor gets there, even though no partner on
+the platform serves them yet. The dish page says so plainly — "No partner
+serves this here yet — ask locally" — rather than inventing a host or hiding
+the dish until one signs up. Only four dishes carry a `businessId`, all
+pointing at the two food-adjacent partners that already existed in the seed:
+Meitei Kitchen Table (`biz-012`, a restaurant at Ima Keithel) and Moirang
+Local Food Trails (`biz-005`, home kitchens). This is the same honesty
+convention as the safety facilities' missing phone numbers (§28) and an
+event's "does not take bookings through this platform" (§31.1) — a gap shown
+is more trustworthy than a gap papered over.
+
+### 32.2 A trail is an order, not a booking
+
+`FoodTrail.dishIds` is an ordered list; each dish keeps its own
+`destinationId`, so a trail can span more than one place (`trail-003`, the
+Ukhrul hill trail, and in principle a trail could cross Loktak and Andro)
+without the trail entity needing a second, redundant list of stops. This
+mirrors `Experience.additionalDestinationIds` (§27's "also visits" chips),
+which is the only existing precedent for a multi-stop thing in this schema —
+but a trail is a loose, walkable order a visitor follows themselves, not a
+guided tour with a time. Three trails are seeded: a market morning in Ima
+Keithel, a home-kitchen half-day in Moirang, and the Ukhrul hill trail.
+
+There is no structured itinerary-template entity anywhere in the codebase —
+`prisma/schema.prisma`'s `ItineraryItem` is a trip's own saved stop, not a
+reusable template, and grepping the whole repo for "template" turns up
+nothing else. So "drops into the planner" (docs/10 §3.C) is done the same way
+an event or a destination already does it: `planHref` builds a freeform
+"A trip that includes …" query string that the Gemini-backed planner
+(`src/server/ai/trip-planner.ts`) reads like any other request. Building a
+structured template that the planner assembles mechanically, rather than
+reads as a sentence, is future work, not something this pass claims.
+
+### 32.3 Provenance
+
+Every dish and trail row is `provenance: 'DEMO_SYNTHETIC'`, `sourceId:
+'src-demo-seed'` — the same as every event, including the real festivals
+(Sangai, Ningol Chakouba) already in the seed. That is a deliberate match to
+the existing convention rather than a new one: in this codebase `provenance`
+tracks how a seed row entered the pipeline, not whether the underlying fact
+is real, and `factType` (`DOCUMENTED` / `ORAL_TRADITION` / `INTERPRETATION` /
+`PRACTICAL`, used on `VerifiedFact`) is the field that exists for cultural
+authenticity — not a distinction this pass needed to add to `Dish`.
+
+### 32.4 Not done
+
+- No dish photography — dishes render on their destination's generated scene
+  via `DestinationVisual`, the same fallback every destination without a
+  curated photo already uses.
+- No allergy filtering beyond the `vegetarian` flag and free-text ingredients.
+- Not on the `/m` mobile app: this pass is desktop-only.
+
+## 33. Transport and shopping
+
+Workstream F of docs/10. `TRANSPORT` had one business in the whole seed and
+`ARTISAN` three, so both read as an afterthought on a platform that claims to
+be a "one-stop" guide (PS1, PS8). This pass thickens both rather than
+building either a fare marketplace or a shopping cart — no new `BusinessType`
+values, no new booking kind, no rate shape beyond the existing per-day
+`VEHICLE` rate.
+
+### 33.1 What changed
+
+- Seven new businesses: three `ARTISAN` (handloom stalls at Ima Keithel, a
+  weavers' cooperative at Ukhrul, a border bazaar at Moreh) and four
+  `TRANSPORT` (Imphal to Moirang/Loktak, Imphal to Moreh, Imphal to
+  Tamenglong, Imphal to the Dzukou trailhead). `TourismBusiness` is now 33
+  rows, up from 26.
+- `TourismBusiness` gains an optional `products: string[]` — "what an artisan
+  or shop sells, in their own words", not an inventory, nothing here is
+  stock-checked. Added to the three pre-existing `ARTISAN` rows too.
+- `DestinationDetails` gains two sections, both conditional on having
+  something to show: "Shop & craft" (main column, near the experiences card)
+  lists an artisan's own description and product chips; "Getting there"
+  (aside, near "Before you go") lists a transport operator's description and
+  reported rate. New `getArtisansFor` / `getTransportFor` in repository.ts,
+  filtered to `PARTICIPATING` the same way `getBusinessesFor` already is for
+  stays. Both flow through `buildDestinationPreview`, so they show wherever
+  that does — the destination page, the trip's "Explore" popup, and the
+  Discover chat's place card — without any of those three needing to know
+  the section exists.
+- The border businesses (Moreh) stay `PENDING_VERIFICATION` with an explicit
+  "subject to current access advisories" note in their description, matching
+  the existing seeded `Moreh Market Food Walk` (§ pre-existing) rather than
+  presenting a sensitive border town as an ordinary shopping trip.
+
+### 33.2 No live-service fare quoting
+
+The plan (docs/10 §3.F) says "indicative fares on the routes the planner
+already computes." `src/server/geo/road-route.ts` can compute a live
+distance/duration between two points via OSRM, but `buildDestinationPreview`
+is synchronous and read by three call sites; making it async to fetch a route
+on every destination-page render would be a wider change than this workstream
+warrants, for a number that would usually come back from cache anyway. What
+ships instead is exactly what a stay or a guide already shows: the operator's
+own reported day rate and their own description of the route in their words
+("Imphal to Moreh road"). A live per-km fare estimate is future work, not
+something this pass claims.
+
+### 33.3 A day working alongside a second session on the same database
+
+This pass landed while another Claude session was concurrently adding a
+`LandingPage` feature to the same repository and the same dev MySQL database
+— a genuinely shared, hard-to-reverse resource, unlike everything else this
+prototype touches. Two things followed from that:
+
+- `prisma migrate dev --create-only` diffs `schema.prisma` against the live
+  database, not against "my change since I last looked." With the other
+  session's `LandingPage` model already sitting in `schema.prisma` but not
+  yet migrated, the generated migration bundled both changes into one file.
+  Filing an unrelated feature's table under this workstream's migration name
+  would have been wrong regardless of whose code it was, so the generated
+  `migration.sql` was hand-trimmed to just
+  `ALTER TABLE tourismbusiness ADD COLUMN productsJson JSON NULL` and applied
+  with `prisma migrate deploy`, which applies a migration file as written
+  without re-diffing. Confirmed clean with `prisma migrate status` before and
+  after.
+- The new/changed business rows were synced into MySQL the same way §31.5
+  synced events — a one-off script upserting through `persistBusiness`, not
+  `db:seed`, which truncates bookings and trips.
+- Live verification in a browser is the one piece not done in this pass. The
+  running dev server's in-memory cache predates these rows and only refreshes
+  on process restart; restarting right now would hit the other session's own
+  in-progress `landingPage.findMany()` query against a table that does not
+  exist yet (confirmed by running `tests/integration/persistence.test.ts` in
+  isolation), so it would take the shared server down for both sessions
+  before their migration lands. Everything short of that is checked: the
+  migration is applied, all 33 business rows are confirmed upserted, and
+  `tsc`/`eslint` are clean. The Ukhrul destination page's "Getting there"
+  card was confirmed rendering correctly against the pre-existing transport
+  row before this session's edits began, which is the same code path the new
+  rows go through.
+
+### 33.4 Not done
+
+- No live browser check of the new rows (§33.3) — pending a shared dev server
+  restart.
+- No live fare quoting (§33.2).
+- No shared-seat or per-kilometre rate shape — every transport row quotes a
+  private day hire, same as the one that existed before this pass.
+- Not on the `/m` mobile app: this pass is desktop-only.

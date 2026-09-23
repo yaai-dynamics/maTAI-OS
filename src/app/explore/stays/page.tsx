@@ -3,8 +3,10 @@ import type { Metadata } from 'next';
 import { BedDouble, MapPin, ShieldCheck } from 'lucide-react';
 
 import { BUSINESS_TYPE_LABEL, type TourismBusiness } from '@/lib/types';
-import { getDestination, getStays } from '@/server/data/repository';
+import { getDestination, getDestinations, getExperiences, getStays } from '@/server/data/repository';
 import { businessesAcceptingBookings } from '@/server/bookings/ledger';
+import { askPlace, discoverChat, discoverPlaceOnline, getDestinationPreview, sendChatEnquiry } from '@/server/actions/tourist';
+import { DiscoverWorkspace } from '@/components/shared/DiscoverWorkspace';
 import { Badge, Card, CardBody, EmptyState } from '@/components/ui/primitives';
 
 export const metadata: Metadata = {
@@ -56,55 +58,68 @@ export default async function StaysPage(props: { searchParams: Promise<{ distric
         </p>
       </div>
 
-      <div className="space-y-2">
-        <nav aria-label="Kind" className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-0.5 text-[12px] font-medium text-ink-500">Kind</span>
-          <Chip href={href({ type: 'all' })} active={!activeType}>
-            All
-          </Chip>
-          <Chip href={href({ type: 'HOMESTAY' })} active={activeType === 'HOMESTAY'}>
-            Homestays
-          </Chip>
-          <Chip href={href({ type: 'HOTEL' })} active={activeType === 'HOTEL'}>
-            Hotels
-          </Chip>
-        </nav>
-        <nav aria-label="District" className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-0.5 text-[12px] font-medium text-ink-500">District</span>
-          <Chip href={href({ district: 'all' })} active={!activeDistrict}>
-            Everywhere
-          </Chip>
-          {districts.map((value) => (
-            <Chip key={value} href={href({ district: value })} active={activeDistrict === value}>
-              {value}
-            </Chip>
-          ))}
-        </nav>
-      </div>
+      <DiscoverWorkspace
+        destinations={getDestinations()}
+        experiences={getExperiences()}
+        businesses={getStays()}
+        ask={discoverChat}
+        lookUpOnline={discoverPlaceOnline}
+        getPreview={getDestinationPreview}
+        askPlace={askPlace}
+        submitEnquiry={sendChatEnquiry}
+      >
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <nav aria-label="Kind" className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-0.5 text-[12px] font-medium text-ink-500">Kind</span>
+              <Chip href={href({ type: 'all' })} active={!activeType}>
+                All
+              </Chip>
+              <Chip href={href({ type: 'HOMESTAY' })} active={activeType === 'HOMESTAY'}>
+                Homestays
+              </Chip>
+              <Chip href={href({ type: 'HOTEL' })} active={activeType === 'HOTEL'}>
+                Hotels
+              </Chip>
+            </nav>
+            <nav aria-label="District" className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-0.5 text-[12px] font-medium text-ink-500">District</span>
+              <Chip href={href({ district: 'all' })} active={!activeDistrict}>
+                Everywhere
+              </Chip>
+              {districts.map((value) => (
+                <Chip key={value} href={href({ district: value })} active={activeDistrict === value}>
+                  {value}
+                </Chip>
+              ))}
+            </nav>
+          </div>
 
-      {shown.length === 0 ? (
-        <EmptyState
-          title="No stays match those filters"
-          description="Try another district, or look at both homestays and hotels."
-        />
-      ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {shown.map(({ stay, destination }) => (
-            <li key={stay.id}>
-              <StayCard
-                stay={stay}
-                destinationName={destination?.name}
-                online={bookable.has(stay.id)}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+          {shown.length === 0 ? (
+            <EmptyState
+              title="No stays match those filters"
+              description="Try another district, or look at both homestays and hotels."
+            />
+          ) : (
+            <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {shown.map(({ stay, destination }) => (
+                <li key={stay.id}>
+                  <StayCard
+                    stay={stay}
+                    destinationName={destination?.name}
+                    online={bookable.has(stay.id)}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
 
-      <p className="text-[12px] text-ink-500">
-        Rates are what each host reported to the platform, per room per night, and are confirmed when the host
-        accepts. Prototype partner data.
-      </p>
+          <p className="text-[12px] text-ink-500">
+            Rates are what each host reported to the platform, per room per night, and are confirmed when the host
+            accepts. Prototype partner data.
+          </p>
+        </div>
+      </DiscoverWorkspace>
     </div>
   );
 }

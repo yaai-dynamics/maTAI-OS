@@ -87,9 +87,9 @@ export default async function EnquiriesPage() {
       <Card tone="outline">
         <CardBody className="pt-4">
           <p className="text-[12px] text-ink-600">
-            Enquiries carry a party size and a preferred date and nothing else. There is no name, no
-            phone number and no email, because the prototype does not collect them. A pilot would add
-            a contact channel with the traveller&rsquo;s explicit consent, not by default.
+            An enquiry sent through the form carries a party size and a preferred date, and nothing to
+            reach the traveller by. One sent through the chat agent instead carries a name and a phone
+            number, given with their explicit consent so you can call them back directly.
           </p>
         </CardBody>
       </Card>
@@ -98,18 +98,21 @@ export default async function EnquiriesPage() {
 }
 
 function EnquiryRow({ enquiry, actionable = false }: { enquiry: Enquiry; actionable?: boolean }) {
-  const experience = getExperience(enquiry.experienceId);
+  const experience = enquiry.experienceId ? getExperience(enquiry.experienceId) : undefined;
+  const details = [
+    enquiry.partySize ? `party of ${enquiry.partySize}` : '',
+    enquiry.preferredDate ? `preferred ${formatLongDate(enquiry.preferredDate)}` : '',
+  ].filter(Boolean);
 
   return (
     <div className="rounded-md border border-line bg-surface p-3.5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-[13px] font-semibold text-ink-900">
-            {experience?.title ?? enquiry.experienceId}
+            {experience?.title ?? (enquiry.experienceId ? enquiry.experienceId : 'A stay, direct')}
           </p>
           <p className="text-[11px] text-ink-500">
-            {formatRelative(enquiry.createdAt, now())} · party of {enquiry.partySize} · preferred{' '}
-            {formatLongDate(enquiry.preferredDate)}
+            {[formatRelative(enquiry.createdAt, now()), ...details].join(' · ')}
           </p>
         </div>
         <div className="flex items-center gap-1.5">
@@ -118,9 +121,17 @@ function EnquiryRow({ enquiry, actionable = false }: { enquiry: Enquiry; actiona
         </div>
       </div>
 
-      {enquiry.note ? (
+      {enquiry.contactName || enquiry.contactPhone ? (
+        <p className="mt-2 text-[12px] text-ink-700">
+          <span className="font-medium text-ink-900">{enquiry.contactName ?? 'No name given'}</span>
+          {enquiry.contactPhone ? ` · ${enquiry.contactPhone}` : ''}
+          <span className="ml-1.5 text-[11px] text-ink-500">shared with their consent, from the chat</span>
+        </p>
+      ) : null}
+
+      {enquiry.message ?? enquiry.note ? (
         <p className="mt-2 rounded-md bg-surface-2 px-2.5 py-2 text-[12px] text-ink-700">
-          {enquiry.note}
+          {enquiry.message ?? enquiry.note}
         </p>
       ) : null}
 

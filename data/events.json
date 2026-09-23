@@ -1,6 +1,6 @@
 [
   {
-    "_comment": "Manipur's real festivals are listed with the caveat their own organisers give: most follow the traditional lunar calendar and are confirmed each year, so datesProvisional is true and the interface shows them as expected rather than fixed. No ticket price is attached to a real state or community festival — maTAI does not sell entry to Sangai or to Ningol Chakouba. Admission prices appear only on the clearly synthetic, platform-run walks and workshops, which is where the registration and payment flow is demonstrated.",
+    "_comment": "Manipur's real festivals are listed with the caveat their own organisers give: most follow the traditional lunar calendar and are confirmed each year, so datesProvisional is true and the interface shows them as expected rather than fixed. No ticket price is attached to a real state or community festival — the platform does not sell entry to Sangai or to Ningol Chakouba. Only an event with an organiserBusinessId can be booked here, because only a partner on the platform can answer a request for a place. Admission prices appear only on the clearly synthetic, platform-run walks and workshops, which is where the registration and payment flow is demonstrated.",
     "id": "_schema"
   },
   {
@@ -41,7 +41,8 @@
     "expectedAttendance": 800,
     "description": "Guided walks across the Second World War circuit and central Imphal heritage sites. Small groups, led by a licensed guide; a place must be held in advance.",
     "venue": "Imphal War Cemetery, then the central Imphal circuit",
-    "organiser": "maTAI partner guides",
+    "organiser": "Battlefield Routes Manipur",
+    "organiserBusinessId": "biz-017",
     "admission": "REGISTRATION",
     "capacity": 40,
     "sourceId": "src-demo-seed",
@@ -70,7 +71,8 @@
     "category": "CULTURAL",
     "description": "Three hours through the market's food rows with a local host: eromba, singju, chak-hao and the stalls that make them. Ends with a shared meal. Twenty places.",
     "venue": "Ima Keithel, Imphal West",
-    "organiser": "maTAI partner hosts",
+    "organiser": "Meitei Kitchen Table",
+    "organiserBusinessId": "biz-012",
     "admission": "TICKETED",
     "ticketPrice": 600,
     "capacity": 20,
@@ -86,10 +88,28 @@
     "category": "SEASONAL",
     "description": "On the water before first light for the phumdi rings and the fishers setting out. Boats are shared, four to a boat. Bring your own equipment.",
     "venue": "Sendra jetty, Bishnupur",
-    "organiser": "maTAI partner hosts",
+    "organiser": "Sendra Sunrise Boats",
+    "organiserBusinessId": "biz-007",
     "admission": "TICKETED",
     "ticketPrice": 1200,
     "capacity": 16,
+    "sourceId": "src-demo-seed",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "ev-014",
+    "name": "Tangkhul village evening, Ukhrul",
+    "destinationId": "dest-ukhrul",
+    "startAt": "2026-10-24T11:00:00Z",
+    "endAt": "2026-10-24T15:00:00Z",
+    "category": "CULTURAL",
+    "description": "An evening in a Tangkhul village with the homestay families: weaving at the loom, the songs sung at Luira Phanit, and dinner cooked on the hearth. Twelve places, in homes rather than a hall.",
+    "venue": "Village homes around Ukhrul town",
+    "organiser": "Tangkhul Village Homestay Network",
+    "organiserBusinessId": "biz-013",
+    "admission": "TICKETED",
+    "ticketPrice": 900,
+    "capacity": 12,
     "sourceId": "src-demo-seed",
     "provenance": "DEMO_SYNTHETIC"
   },

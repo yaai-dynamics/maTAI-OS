@@ -53,6 +53,7 @@ export const PERMISSIONS = [
   'briefing:export',
   'payout:approve',
   'account:manage',
+  'landingpage:publish',
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -65,6 +66,7 @@ const GRANTS: Record<GovernmentRole, readonly Permission[]> = {
     'content:review',
     'partner:verify',
     'creator:verify',
+    'landingpage:publish',
   ],
   ADMINISTRATOR: [...PERMISSIONS],
 };
@@ -86,6 +88,7 @@ export const PERMISSION_LABEL: Record<Permission, string> = {
   'briefing:export': 'Export briefings',
   'payout:approve': 'Approve creator payouts',
   'account:manage': 'Manage accounts',
+  'landingpage:publish': 'Publish campaign landing pages',
 };
 
 /** The message shown when an action is refused. Says who can do it, not just no. */

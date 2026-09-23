@@ -120,7 +120,7 @@ export default async function EventsPage(props: {
 
       <p className="text-[12px] text-ink-500">
         Prototype calendar. Dates, venues and any entry charge for a state or community festival are set by its
-        organiser, not by maTAI — check the organiser before travelling for one.
+        organiser, not by this platform — check with them before travelling for one.
       </p>
     </div>
   );

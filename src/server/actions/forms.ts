@@ -22,7 +22,7 @@ import {
   sendEnquiry,
   submitTouristFeedback,
 } from '@/server/actions/tourist';
-import { cancelMyBooking, requestBooking, requestStay } from '@/server/actions/bookings';
+import { cancelMyBooking, requestBooking, requestEventPlace, requestStay } from '@/server/actions/bookings';
 import { answerBookingRequest, cancelBookingAsHost, markBookingCompleted } from '@/server/actions/partner-bookings';
 import {
   changeMyPassword,
@@ -32,6 +32,13 @@ import {
   setDisabled,
   unlock,
 } from '@/server/actions/accounts';
+import {
+  createCampaignLandingPage,
+  generateBusinessLandingPage,
+  publishBusinessLandingPage,
+  publishCampaignLandingPage,
+  updateBusinessLandingPage,
+} from '@/server/actions/landing-pages';
 import { formatIndiaDateTime } from '@/lib/date';
 import type { SocialPlatform } from '@/lib/types';
 import type { FormState } from '@/lib/form-state';
@@ -287,6 +294,20 @@ export async function requestBookingForm(_prev: FormState, data: FormData): Prom
   redirect(`/explore/bookings/${result.reference}?key=${encodeURIComponent(result.accessKey)}&new=1`);
 }
 
+export async function requestEventPlaceForm(_prev: FormState, data: FormData): Promise<FormState> {
+  const result = await requestEventPlace({
+    eventId: text(data, 'eventId'),
+    partySize: text(data, 'partySize'),
+    guestName: text(data, 'guestName'),
+    guestPhone: text(data, 'guestPhone'),
+    guestEmail: text(data, 'guestEmail'),
+    note: text(data, 'note') || undefined,
+    consent: data.get('consent') === 'on',
+  });
+  if (!result.ok) return { status: 'error', message: result.error };
+  redirect(`/explore/bookings/${result.reference}?key=${encodeURIComponent(result.accessKey)}&new=1`);
+}
+
 export async function requestStayForm(_prev: FormState, data: FormData): Promise<FormState> {
   const result = await requestStay({
     businessId: text(data, 'businessId'),
@@ -386,6 +407,69 @@ export async function deleteMyJourneysForm(): Promise<FormState> {
         ? 'There were no trips to delete.'
         : `Done. ${removed} ${removed === 1 ? 'trip was' : 'trips were'} deleted.`,
   };
+}
+
+/* ----------------------------- Landing pages ------------------------------- */
+
+export async function generateBusinessLandingPageForm(): Promise<FormState> {
+  const result = await generateBusinessLandingPage();
+  return result.ok
+    ? { status: 'ok', message: `Draft generated for ${result.page?.title}. Review it, then publish when it's ready.` }
+    : { status: 'error', message: result.error ?? 'Could not generate a page.' };
+}
+
+export async function updateBusinessLandingPageForm(_prev: FormState, data: FormData): Promise<FormState> {
+  const result = await updateBusinessLandingPage({
+    title: text(data, 'title'),
+    tagline: text(data, 'tagline'),
+    about: text(data, 'about'),
+    highlights: text(data, 'highlights') || undefined,
+    practical: text(data, 'practical') || undefined,
+    bookingUrl: text(data, 'bookingUrl') || undefined,
+  });
+  return result.ok
+    ? { status: 'ok', message: 'Saved.' }
+    : { status: 'error', message: result.error ?? 'Could not save these changes.' };
+}
+
+export async function publishBusinessLandingPageForm(_prev: FormState, data: FormData): Promise<FormState> {
+  const published = text(data, 'published') === 'true';
+  const result = await publishBusinessLandingPage(published);
+  return result.ok
+    ? {
+        status: 'ok',
+        message: published
+          ? 'Published. Anyone with the link can see it now.'
+          : 'Unpublished. The link no longer shows this page.',
+      }
+    : { status: 'error', message: result.error ?? 'Could not update the page.' };
+}
+
+export async function createCampaignLandingPageForm(_prev: FormState, data: FormData): Promise<FormState> {
+  const linkTo = text(data, 'linkTo');
+  const [kind, id] = linkTo.split(':');
+  const result = await createCampaignLandingPage({
+    campaignId: kind === 'campaign' ? id : undefined,
+    eventId: kind === 'event' ? id : undefined,
+    title: text(data, 'title') || undefined,
+    bookingUrl: text(data, 'bookingUrl') || undefined,
+  });
+  return result.ok
+    ? { status: 'ok', message: `Draft generated: ${result.page?.title}. Review it, then publish when it's ready.` }
+    : { status: 'error', message: result.error ?? 'Could not generate a page.' };
+}
+
+export async function publishCampaignLandingPageForm(_prev: FormState, data: FormData): Promise<FormState> {
+  const published = text(data, 'published') === 'true';
+  const result = await publishCampaignLandingPage(text(data, 'landingPageId'), published);
+  return result.ok
+    ? {
+        status: 'ok',
+        message: published
+          ? 'Published. Anyone with the link can see it now.'
+          : 'Unpublished. The link no longer shows this page.',
+      }
+    : { status: 'error', message: result.error ?? 'Could not update the page.' };
 }
 
 /* -------------------------------- Accounts -------------------------------- */

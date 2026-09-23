@@ -1,0 +1,39 @@
+[
+  {
+    "_comment": "Curated dish sequences. Each dish keeps its own destinationId, so a trail can span more than one place without the trail entity needing to say so twice.",
+    "id": "_schema"
+  },
+  {
+    "id": "trail-001",
+    "name": "Ima Keithel Morning Food Trail",
+    "destinationId": "dest-ima-keithel",
+    "description": "A walk through the women's market before the midday crowds, stopping for a savoury snack, a condiment worth tasting in small amounts, and a sweet finish.",
+    "dishIds": ["dish-008", "dish-003", "dish-006", "dish-002"],
+    "durationHint": "2–3 hours, on foot around the market",
+    "bestTimeOfDay": "MORNING",
+    "sourceId": "src-demo-seed",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "trail-002",
+    "name": "Moirang Home-Kitchen Trail",
+    "destinationId": "dest-moirang",
+    "description": "A full Manipuri home meal built across a household kitchen visit: a light stew, the valley's everyday comfort dish, and a squash dessert to close.",
+    "dishIds": ["dish-004", "dish-001", "dish-009"],
+    "durationHint": "Half a day, by arrangement with a household kitchen",
+    "bestTimeOfDay": "AFTERNOON",
+    "sourceId": "src-demo-seed",
+    "provenance": "DEMO_SYNTHETIC"
+  },
+  {
+    "id": "trail-003",
+    "name": "Ukhrul Hill Kitchen Trail",
+    "destinationId": "dest-ukhrul",
+    "description": "The hill cooking of the Tangkhul households around Ukhrul, built on smoke and bamboo shoot rather than the valley's fish and rice.",
+    "dishIds": ["dish-010", "dish-011"],
+    "durationHint": "A day around Ukhrul town",
+    "bestTimeOfDay": "ANY",
+    "sourceId": "src-demo-seed",
+    "provenance": "DEMO_SYNTHETIC"
+  }
+]

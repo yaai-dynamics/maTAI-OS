@@ -7,13 +7,16 @@ import type {
   CreatorApplication,
   DataSource,
   Destination,
+  Dish,
   District,
   EmergencyContact,
   Enquiry,
   Experience,
   Feedback,
+  FoodTrail,
   InteractionType,
   KnowledgeDocument,
+  LandingPage,
   Payout,
   SafetyFacility,
   TourismBusiness,
@@ -94,6 +97,24 @@ export const getSafetyFacilities = (): SafetyFacility[] => seed.safetyFacilities
 export const getSafetyFacilitiesIn = (districtId: string): SafetyFacility[] =>
   seed.safetyFacilities.filter((facility) => facility.districtId === districtId);
 
+/* ---------------------------------- Food ----------------------------------- */
+
+export const getDishes = (): Dish[] => seed.dishes;
+
+export const getDish = (id: string): Dish | undefined => seed.dishes.find((dish) => dish.id === id);
+
+export const getDishesFor = (destinationId: string): Dish[] =>
+  seed.dishes.filter((dish) => dish.destinationId === destinationId);
+
+export const getFoodTrails = (): FoodTrail[] => seed.foodTrails;
+
+export const getFoodTrail = (id: string): FoodTrail | undefined =>
+  seed.foodTrails.find((trail) => trail.id === id);
+
+/** Trails that include a given dish as one of their stops. */
+export const getFoodTrailsFor = (dishId: string): FoodTrail[] =>
+  seed.foodTrails.filter((trail) => trail.dishIds.includes(dishId));
+
 /* --------------------------------- Supply --------------------------------- */
 
 export const getBusinesses = (): TourismBusiness[] => getState().businesses;
@@ -103,6 +124,16 @@ export const getBusiness = (id: string): TourismBusiness | undefined =>
 
 export const getBusinessesFor = (destinationId: string): TourismBusiness[] =>
   getState().businesses.filter((b) => b.destinationId === destinationId);
+
+export const getArtisansFor = (destinationId: string): TourismBusiness[] =>
+  getState().businesses.filter(
+    (b) => b.destinationId === destinationId && b.businessType === 'ARTISAN' && b.status === 'PARTICIPATING',
+  );
+
+export const getTransportFor = (destinationId: string): TourismBusiness[] =>
+  getState().businesses.filter(
+    (b) => b.destinationId === destinationId && b.businessType === 'TRANSPORT' && b.status === 'PARTICIPATING',
+  );
 
 /**
  * A place to sleep that quotes a room rate. A guide or a tour operator also
@@ -200,6 +231,22 @@ export function getCampaignContent(filter?: {
 
 export const getSeededCampaignMetrics = (campaignId?: string): CampaignMetric[] =>
   seed.campaignMetrics.filter((m) => !campaignId || m.campaignId === campaignId);
+
+/* ------------------------------ Landing pages ------------------------------ */
+
+export const getLandingPages = (): LandingPage[] => getState().landingPages;
+
+export const getLandingPage = (id: string): LandingPage | undefined =>
+  getState().landingPages.find((p) => p.id === id);
+
+export const getLandingPageBySlug = (slug: string): LandingPage | undefined =>
+  getState().landingPages.find((p) => p.slug === slug);
+
+export const getLandingPagesForBusiness = (businessId: string): LandingPage[] =>
+  getState().landingPages.filter((p) => p.businessId === businessId);
+
+export const getPublishedLandingPages = (): LandingPage[] =>
+  getState().landingPages.filter((p) => p.status === 'PUBLISHED');
 
 export const getPayouts = (creatorId?: string): Payout[] =>
   getState().payouts.filter((p) => !creatorId || p.creatorId === creatorId);

@@ -6,6 +6,7 @@ import type {
   CreatorApplication,
   Enquiry,
   Feedback,
+  LandingPage,
   TourismBusiness,
   TourismInteraction,
 } from '@/lib/types';
@@ -146,11 +147,14 @@ export async function persistContent(content: CampaignContent): Promise<void> {
 
 export async function persistEnquiry(enquiry: Enquiry): Promise<void> {
   const data = {
-    experienceId: enquiry.experienceId,
+    experienceId: enquiry.experienceId ?? null,
     businessId: enquiry.businessId,
     anonymousSessionId: enquiry.anonymousSessionId,
-    partySize: enquiry.partySize,
-    preferredDate: new Date(enquiry.preferredDate),
+    partySize: enquiry.partySize ?? null,
+    preferredDate: enquiry.preferredDate ? new Date(enquiry.preferredDate) : null,
+    contactName: enquiry.contactName ?? null,
+    contactPhone: enquiry.contactPhone ?? null,
+    message: enquiry.message ?? null,
     note: enquiry.note ?? null,
     status: enquiry.status,
     createdAt: new Date(enquiry.createdAt),
@@ -175,6 +179,7 @@ export async function persistBusiness(business: TourismBusiness): Promise<void> 
     verified: business.verified,
     reportedCapacity: business.reportedCapacity ?? null,
     rateJson: business.rate ?? Prisma.DbNull,
+    productsJson: business.products ?? Prisma.DbNull,
     provenance: business.provenance,
   };
   await prisma.tourismBusiness.upsert({
@@ -224,6 +229,34 @@ export async function persistAvailability(snapshot: AccommodationSnapshot): Prom
   await prisma.accommodationSnapshot.upsert({
     where: { businessId_date: { businessId: snapshot.businessId, date: new Date(snapshot.date) } },
     create: { id: snapshot.id, ...data },
+    update: data,
+  });
+}
+
+export async function persistLandingPage(page: LandingPage): Promise<void> {
+  const data = {
+    ownerType: page.ownerType,
+    businessId: page.businessId ?? null,
+    campaignId: page.campaignId ?? null,
+    eventId: page.eventId ?? null,
+    slug: page.slug,
+    title: page.title,
+    tagline: page.tagline,
+    heroImageUrl: page.heroImageUrl ?? null,
+    contentJson: { sections: page.sections, hashtags: page.hashtags },
+    bookingUrl: page.bookingUrl ?? null,
+    status: page.status,
+    viewCount: page.viewCount,
+    shareCount: page.shareCount,
+    generatedBy: page.generatedBy,
+    generatedAt: new Date(page.generatedAt),
+    publishedAt: page.publishedAt ? new Date(page.publishedAt) : null,
+    createdBy: page.createdBy,
+    provenance: page.provenance,
+  };
+  await prisma.landingPage.upsert({
+    where: { id: page.id },
+    create: { id: page.id, ...data },
     update: data,
   });
 }

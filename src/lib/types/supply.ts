@@ -61,6 +61,8 @@ export const tourismBusinessSchema = z.object({
   /** Rooms or seats offered, where the partner has reported it. */
   reportedCapacity: z.number().int().nonnegative().optional(),
   rate: businessRateSchema.optional(),
+  /** What an artisan or shop sells, in their own words. Not an inventory — nothing here is stock-checked. */
+  products: z.array(z.string()).optional(),
   provenance: provenanceSchema,
 });
 export type TourismBusiness = z.infer<typeof tourismBusinessSchema>;
@@ -90,6 +92,8 @@ export const experienceSchema = z.object({
   id: z.string(),
   businessId: z.string(),
   destinationId: z.string(),
+  /** Other destinations this experience also visits, for a route or circuit that isn't confined to one place. */
+  additionalDestinationIds: z.array(z.string()).default([]),
   title: z.string(),
   category: experienceCategorySchema,
   description: z.string(),
@@ -123,11 +127,16 @@ export type AccommodationSnapshot = z.infer<typeof accommodationSnapshotSchema>;
 
 export const enquirySchema = z.object({
   id: z.string(),
-  experienceId: z.string(),
+  /** Unset for an enquiry about a stay directly, rather than one of its experiences. */
+  experienceId: z.string().optional(),
   businessId: z.string(),
   anonymousSessionId: z.string(),
-  partySize: z.number().int().positive(),
-  preferredDate: z.string(),
+  partySize: z.number().int().positive().optional(),
+  preferredDate: z.string().optional(),
+  /** Given with explicit consent, when the enquiry was sent through the chat agent rather than the form. */
+  contactName: z.string().optional(),
+  contactPhone: z.string().optional(),
+  message: z.string().optional(),
   note: z.string().optional(),
   status: z.enum(['SUBMITTED', 'ACKNOWLEDGED', 'CONFIRMED', 'DECLINED']),
   createdAt: z.string(),

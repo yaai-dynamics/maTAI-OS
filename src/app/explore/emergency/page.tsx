@@ -128,7 +128,7 @@ export default function EmergencyPage() {
 
       <p className="text-[12px] text-ink-500">
         Numbers are India&rsquo;s published national emergency short codes. Facilities are real public institutions;
-        maTAI holds their position only to district level, so &ldquo;Directions&rdquo; searches for the building by
+        this platform holds their position only to district level, so &ldquo;Directions&rdquo; searches for the building by
         name rather than sending you to a point on a map. No individual facility telephone number is listed, because
         none could be verified — 112 reaches all of them.
       </p>

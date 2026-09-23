@@ -55,18 +55,23 @@ distance, share-my-location, full district list. Server-rendered so it works
 without JavaScript. No invented telephone numbers; positions honest to
 district level. Remaining gap: no offline cache (needs a service worker).
 
-### C. Taste of Manipur — PS6
+### C. Taste of Manipur — PS6 — **done, §32**
 
 `Dish` and `FoodTrail` entities tied to destinations and businesses:
-traditional dishes with ingredients and story, home kitchens as hosts, and a
-food trail that drops into the planner as an itinerary template.
+traditional dishes with ingredients and story, and a trail that orders a few
+of them into a walk. `/explore/food` lists both; a dish says plainly when no
+partner serves it yet rather than inventing one. Remaining gap: no structured
+itinerary template — a trail reaches the planner the same freeform way an
+event or destination does.
 
-### D. Events and festivals — PS7 — **discovery done, §29**
+### D. Events and festivals — PS7 — **done, §29 and §31**
 
 `/explore/events` is a filterable calendar and `/explore/events/[id]` an event,
-with venue, organiser, admission and provisional dates. Still to do: holding a
-place, now that the ledger takes an `EVENT` booking; "add to my trip";
-reminders, which need a delivery channel the platform does not have.
+with venue, organiser, admission and provisional dates. A place at an event
+run by a partner can be held: free registrations confirm outright, ticketed
+ones go through the existing Razorpay path, and capacity is counted against
+live bookings. Still open: "add to my trip", and reminders, which need a
+delivery channel the platform does not have.
 
 ### E. Multilingual and voice — PS3
 
@@ -75,11 +80,13 @@ on-demand Gemini translation for generated content, Web Speech API for voice
 in and out on the Discover chat. Carries the etiquette and phrasebook content
 the statement asks for.
 
-### F. Transport and shopping — PS1, PS8
+### F. Transport and shopping — PS1, PS8 — **done, §33**
 
-Thicken the two thinnest `BusinessType`s: transport options with indicative
-fares on the routes the planner already computes, and artisan/shopping
-listings tied to the handloom and craft experiences.
+Thickened `TRANSPORT` (1 → 5 businesses) and `ARTISAN` (3 → 6), each with a
+new section on the destination page: "Getting there" and "Shop & craft".
+Remaining gap: fares and rates are what the operator reports, not a live
+per-route quote — the planner's own OSRM distance call was judged too heavy
+to wire into a synchronous, three-consumer preview builder for this pass.
 
 ## 4. Order
 

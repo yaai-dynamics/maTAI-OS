@@ -21,6 +21,7 @@ const SECTIONS: NavItem[] = [
   { href: '/explore/discover', label: 'Discover', icon: 'Compass', tone: 'lily', also: ['/explore/destinations', '/explore/experiences'] },
   { href: '/explore/stays', label: 'Stays', icon: 'BedDouble', tone: 'brand' },
   { href: '/explore/events', label: 'Events', icon: 'CalendarCheck', tone: 'warn' },
+  { href: '/explore/food', label: 'Food', icon: 'UtensilsCrossed', tone: 'lily' },
   { href: '/explore/trip', label: 'Live trip', icon: 'Navigation', tone: 'good' },
   { href: '/explore/bookings', label: 'Bookings', icon: 'Ticket', tone: 'info' },
   { href: '/explore/emergency', label: 'Emergency help', icon: 'ShieldAlert', tone: 'risk' },

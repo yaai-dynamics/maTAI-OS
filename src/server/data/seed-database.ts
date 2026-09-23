@@ -39,6 +39,8 @@ const TRUNCATION_ORDER = [
   'itineraryItem',
   'trip',
   'touristSession',
+  // References a business, a campaign or an event, so it goes before all three.
+  'landingPage',
   'payout',
   'campaignMetric',
   'campaignContent',
@@ -48,9 +50,10 @@ const TRUNCATION_ORDER = [
   'enquiry',
   'accommodationSnapshot',
   'experience',
+  // Before the businesses: an event names the partner that runs it.
+  'event',
   'tourismBusiness',
   'knowledgeDocument',
-  'event',
   'verifiedFact',
   'attraction',
   'destination',
@@ -228,21 +231,6 @@ export async function seedDatabase(prisma: PrismaClient): Promise<Record<string,
     })),
   });
 
-  await prisma.event.createMany({
-    data: seed.events.map((e) => ({
-      id: e.id,
-      name: e.name,
-      destinationId: e.destinationId,
-      startAt: date(e.startAt)!,
-      endAt: date(e.endAt)!,
-      category: e.category,
-      expectedAttendance: e.expectedAttendance,
-      description: e.description,
-      sourceId: e.sourceId,
-      provenance: e.provenance,
-    })),
-  });
-
   await prisma.knowledgeDocument.createMany({
     data: seed.knowledgeDocuments.map((k) => ({
       id: k.id,
@@ -273,6 +261,30 @@ export async function seedDatabase(prisma: PrismaClient): Promise<Record<string,
       reportedCapacity: b.reportedCapacity,
       ...(b.rate ? { rateJson: b.rate } : {}),
       provenance: b.provenance,
+    })),
+  });
+
+  // After the businesses: an event names the partner that runs it.
+  await prisma.event.createMany({
+    data: seed.events.map((e) => ({
+      id: e.id,
+      name: e.name,
+      destinationId: e.destinationId,
+      startAt: date(e.startAt)!,
+      endAt: date(e.endAt)!,
+      category: e.category,
+      expectedAttendance: e.expectedAttendance,
+      description: e.description,
+      venue: e.venue,
+      organiser: e.organiser,
+      organiserBusinessId: e.organiserBusinessId,
+      admission: e.admission,
+      ticketPrice: e.ticketPrice,
+      capacity: e.capacity,
+      officialUrl: e.officialUrl,
+      datesProvisional: e.datesProvisional,
+      sourceId: e.sourceId,
+      provenance: e.provenance,
     })),
   });
 
@@ -314,7 +326,10 @@ export async function seedDatabase(prisma: PrismaClient): Promise<Record<string,
       businessId: e.businessId,
       anonymousSessionId: e.anonymousSessionId,
       partySize: e.partySize,
-      preferredDate: new Date(e.preferredDate),
+      preferredDate: date(e.preferredDate),
+      contactName: e.contactName,
+      contactPhone: e.contactPhone,
+      message: e.message,
       note: e.note,
       status: e.status,
       createdAt: date(e.createdAt)!,
@@ -362,6 +377,30 @@ export async function seedDatabase(prisma: PrismaClient): Promise<Record<string,
       createdBy: c.createdBy,
       createdAt: date(c.createdAt)!,
       provenance: c.provenance,
+    })),
+  });
+
+  await prisma.landingPage.createMany({
+    data: seed.landingPages.map((p) => ({
+      id: p.id,
+      ownerType: p.ownerType,
+      businessId: p.businessId,
+      campaignId: p.campaignId,
+      eventId: p.eventId,
+      slug: p.slug,
+      title: p.title,
+      tagline: p.tagline,
+      heroImageUrl: p.heroImageUrl,
+      contentJson: { sections: p.sections, hashtags: p.hashtags },
+      bookingUrl: p.bookingUrl,
+      status: p.status,
+      viewCount: p.viewCount,
+      shareCount: p.shareCount,
+      generatedBy: p.generatedBy,
+      generatedAt: date(p.generatedAt)!,
+      publishedAt: date(p.publishedAt),
+      createdBy: p.createdBy,
+      provenance: p.provenance,
     })),
   });
 
@@ -473,6 +512,7 @@ export async function seedDatabase(prisma: PrismaClient): Promise<Record<string,
     enquiries: await prisma.enquiry.count(),
     creators: await prisma.creator.count(),
     campaigns: await prisma.creatorCampaign.count(),
+    landingPages: await prisma.landingPage.count(),
     applications: await prisma.creatorApplication.count(),
     campaignContent: await prisma.campaignContent.count(),
     campaignMetrics: await prisma.campaignMetric.count(),

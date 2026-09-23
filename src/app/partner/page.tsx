@@ -13,6 +13,7 @@ import {
   getDestination,
   getEnquiriesForBusiness,
   getExperiences,
+  getLandingPagesForBusiness,
 } from '@/server/data/repository';
 import { Badge, Card, CardBody, CardHeader, EmptyState, Meter } from '@/components/ui/primitives';
 import { ProvenanceBadge, TrendChip } from '@/components/shared/badges';
@@ -53,6 +54,7 @@ export default async function PartnerDashboardPage() {
   const enquiries = getEnquiriesForBusiness(business.id);
   const openEnquiries = enquiries.filter((entry) => entry.status === 'SUBMITTED');
   const listings = getExperiences().filter((entry) => entry.businessId === business.id);
+  const landingPage = getLandingPagesForBusiness(business.id)[0];
 
   const window = currentWindow();
   const demand = computeDemand(window).find((row) => row.destinationId === business.destinationId);
@@ -227,6 +229,55 @@ export default async function PartnerDashboardPage() {
         </Card>
 
         <div className="space-y-5">
+          <Card>
+            <CardHeader
+              title="Your landing page"
+              subtitle="An AI-generated one-page site for your business, with a link you can share."
+              action={
+                landingPage ? (
+                  <Badge tone={landingPage.status === 'PUBLISHED' ? 'good' : 'neutral'}>
+                    {landingPage.status === 'PUBLISHED' ? 'Published' : 'Draft'}
+                  </Badge>
+                ) : undefined
+              }
+            />
+            <CardBody className="flex flex-wrap items-center gap-2">
+              {landingPage ? (
+                <>
+                  <Link
+                    href="/partner/landing-page"
+                    className="inline-block rounded-md bg-brand-700 px-3 py-1.5 text-[13px] font-medium text-white hover:bg-brand-600"
+                  >
+                    Edit page
+                  </Link>
+                  {landingPage.status === 'PUBLISHED' ? (
+                    <Link
+                      href={`/p/${landingPage.slug}`}
+                      target="_blank"
+                      className="text-[12px] font-medium text-brand-700 underline"
+                    >
+                      View public page ↗
+                    </Link>
+                  ) : (
+                    <span className="text-[12px] text-ink-500">Not published yet</span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/partner/landing-page"
+                    className="inline-block rounded-md bg-brand-700 px-3 py-1.5 text-[13px] font-medium text-white hover:bg-brand-600"
+                  >
+                    Generate with AI
+                  </Link>
+                  <span className="text-[12px] text-ink-500">
+                    Content and a hero image, drafted from your listing.
+                  </span>
+                </>
+              )}
+            </CardBody>
+          </Card>
+
           <Card>
             <CardHeader title="Your listings" eyebrow={`${listings.length} on the platform`} />
             <CardBody>

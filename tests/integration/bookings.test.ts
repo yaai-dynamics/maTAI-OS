@@ -10,6 +10,7 @@ import {
   getBookingForGuest,
   listBookingsForBusiness,
   MAX_OPEN_REQUESTS,
+  placesTaken,
   reconcileBooking,
   respondToBooking,
   settlePayment,
@@ -149,6 +150,82 @@ describe.skipIf(!configured)('booking ledger', () => {
       const checkout = await startPayment(created.value.booking.reference, access, AT, gateway);
       if (!checkout.ok) throw new Error(checkout.error);
       expect(checkout.value.amountPaise).toBe(140_000 * 3 * 2);
+    });
+  });
+
+  describe('a place at an event', () => {
+    const EVENT = 'ev-014';
+
+    async function holdPlaces(
+      ownerHash = newOwner(),
+      overrides: Partial<{ partySize: number; unitPricePaise: number }> = {},
+    ) {
+      const created = await createBookingRequest(
+        {
+          kind: 'EVENT',
+          eventId: EVENT,
+          businessId: HOST,
+          destinationId: 'dest-ukhrul',
+          anonymousSessionId: 'sess-integration',
+          ownerHash,
+          guestName: 'Integration Test',
+          guestPhone: '+919800000000',
+          partySize: overrides.partySize ?? 2,
+          date: DAY,
+          unitPricePaise: overrides.unitPricePaise ?? 90_000,
+        },
+        AT,
+      );
+      return { created, access: { ownerHash } satisfies GuestAccess };
+    }
+
+    it('prices per person and points at the event, not an experience', async () => {
+      const { created } = await holdPlaces();
+      if (!created.ok) throw new Error(created.error);
+      const { booking } = created.value;
+      expect(booking.kind).toBe('EVENT');
+      expect(booking.eventId).toBe(EVENT);
+      expect(booking.experienceId).toBeNull();
+      expect(booking.amountPaise).toBe(90_000 * 2);
+    });
+
+    it('counts the places every live booking holds, answered or not', async () => {
+      const before = await placesTaken(EVENT, AT);
+      const { created } = await holdPlaces(newOwner(), { partySize: 3 });
+      if (!created.ok) throw new Error(created.error);
+      expect(await placesTaken(EVENT, AT)).toBe(before + 3);
+    });
+
+    it('gives the places back when the organiser declines', async () => {
+      const { created } = await holdPlaces(newOwner(), { partySize: 4 });
+      if (!created.ok) throw new Error(created.error);
+      const taken = await placesTaken(EVENT, AT);
+      const declined = await respondToBooking(HOST, created.value.booking.id, 'DECLINE', undefined, AT);
+      expect(declined.ok).toBe(true);
+      expect(await placesTaken(EVENT, AT)).toBe(taken - 4);
+    });
+
+    it('confirms a free place outright, with no checkout to send anyone to', async () => {
+      const { created } = await holdPlaces(newOwner(), { unitPricePaise: 0 });
+      if (!created.ok) throw new Error(created.error);
+      expect(created.value.booking.amountPaise).toBe(0);
+
+      const accepted = await respondToBooking(HOST, created.value.booking.id, 'ACCEPT', undefined, AT);
+      if (!accepted.ok) throw new Error(accepted.error);
+      expect(accepted.value.status).toBe('CONFIRMED');
+      expect(accepted.value.paymentDueAt).toBeNull();
+    });
+
+    it('still takes payment for a ticketed place', async () => {
+      const { created, access } = await holdPlaces();
+      if (!created.ok) throw new Error(created.error);
+      const accepted = await respondToBooking(HOST, created.value.booking.id, 'ACCEPT', undefined, AT);
+      if (!accepted.ok) throw new Error(accepted.error);
+      expect(accepted.value.status).toBe('AWAITING_PAYMENT');
+
+      const checkout = await startPayment(created.value.booking.reference, access, AT, gateway);
+      if (!checkout.ok) throw new Error(checkout.error);
+      expect(checkout.value.amountPaise).toBe(180_000);
     });
   });
 

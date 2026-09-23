@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
-import { getBusiness, getExperience, getStay } from '@/server/data/repository';
+import { getBusiness, getEvent, getExperience, getStay } from '@/server/data/repository';
 import { activeCampaignFor } from '@/server/data/attribution';
 import { ensureVisitor } from '@/server/telemetry/visitor';
 import { ingest } from '@/server/telemetry/ingest';
@@ -13,11 +13,12 @@ import {
   cancelByGuest,
   confirmCheckout,
   createBookingRequest,
+  placesTaken,
   startPayment,
   type CheckoutSession,
   type SettleResult,
 } from '@/server/bookings/ledger';
-import { MAX_PARTY_SIZE, MAX_ROOMS, priceFor, stayPriceFor } from '@/server/bookings/policy';
+import { indiaDate, MAX_PARTY_SIZE, MAX_ROOMS, priceFor, stayPriceFor } from '@/server/bookings/policy';
 
 /**
  * Tourist-side booking actions.
@@ -193,6 +194,89 @@ export async function requestStay(input: unknown): Promise<RequestResult> {
   });
 
   revalidatePath('/explore/bookings');
+  revalidatePath('/partner', 'layout');
+  revalidatePath('/gov', 'layout');
+  return { ok: true, reference: created.value.booking.reference, accessKey: created.value.accessKey };
+}
+
+/* --------------------------------- Events --------------------------------- */
+
+const eventPlaceInput = z.object({
+  eventId: z.string().min(1),
+  partySize: z.coerce.number().int().min(1).max(MAX_PARTY_SIZE),
+  ...guestDetails,
+});
+
+/**
+ * A place at an event the organiser runs. The date is the event's own first
+ * day, not a day the visitor picks, and the price is the organiser's ticket
+ * price — neither is read from the form.
+ *
+ * A free event takes no booking: there is nothing to hold and nobody to
+ * answer, and saying "turn up" is more honest than issuing a ticket for it.
+ */
+export async function requestEventPlace(input: unknown): Promise<RequestResult> {
+  const parsed = eventPlaceInput.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Check the details and try again.' };
+  }
+
+  const event = getEvent(parsed.data.eventId);
+  if (!event || event.admission === 'FREE' || !event.organiserBusinessId) {
+    return { ok: false, error: 'This event does not take bookings.' };
+  }
+  const host = getBusiness(event.organiserBusinessId);
+  if (!host || host.status !== 'PARTICIPATING') {
+    return { ok: false, error: 'This event does not take bookings.' };
+  }
+  if (!(await businessesAcceptingBookings()).has(host.id)) {
+    return { ok: false, error: 'The organiser does not take bookings online yet.' };
+  }
+
+  if (event.capacity !== undefined) {
+    const taken = await placesTaken(event.id);
+    if (taken + parsed.data.partySize > event.capacity) {
+      const left = Math.max(0, event.capacity - taken);
+      return {
+        ok: false,
+        error: left === 0 ? 'This event is full.' : `Only ${left} ${left === 1 ? 'place is' : 'places are'} left.`,
+      };
+    }
+  }
+
+  const ownerHash = await ensureGuestOwner();
+  const visitor = await ensureVisitor();
+  const campaignId = activeCampaignFor(event.destinationId);
+
+  const created = await createBookingRequest({
+    kind: 'EVENT',
+    eventId: event.id,
+    businessId: host.id,
+    destinationId: event.destinationId,
+    anonymousSessionId: visitor.sessionId,
+    ownerHash,
+    guestName: parsed.data.guestName,
+    guestPhone: parsed.data.guestPhone,
+    partySize: parsed.data.partySize,
+    date: indiaDate(new Date(event.startAt)),
+    // A registration is free; only a ticketed event is charged for.
+    unitPricePaise: event.admission === 'TICKETED' ? Math.round((event.ticketPrice ?? 0) * 100) : 0,
+    ...(parsed.data.guestEmail ? { guestEmail: parsed.data.guestEmail } : {}),
+    ...(parsed.data.note ? { note: parsed.data.note } : {}),
+    ...(campaignId ? { campaignId } : {}),
+  });
+  if (!created.ok) return created;
+
+  await ingest(visitor, {
+    type: 'BOOKING',
+    destinationId: event.destinationId,
+    metadata: { request: true, partySize: parsed.data.partySize, event: event.id },
+    attribution: 'none',
+    ...(campaignId ? { campaignId } : {}),
+  });
+
+  revalidatePath('/explore/bookings');
+  revalidatePath(`/explore/events/${event.id}`);
   revalidatePath('/partner', 'layout');
   revalidatePath('/gov', 'layout');
   return { ok: true, reference: created.value.booking.reference, accessKey: created.value.accessKey };

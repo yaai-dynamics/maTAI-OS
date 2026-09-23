@@ -157,7 +157,13 @@ function toView(row: BookingRow): BookingView {
 /* -------------------------------------------------------------------------- */
 
 /** Which bookings an expiry pass may touch: only the ones about to be read. */
-export type ExpiryScope = { reference: string } | { id: string } | { ownerHash: string } | { businessId: string } | 'ALL';
+export type ExpiryScope =
+  | { reference: string }
+  | { id: string }
+  | { ownerHash: string }
+  | { businessId: string }
+  | { eventId: string }
+  | 'ALL';
 
 /**
  * Closes requests nobody answered before the day, and acceptances nobody paid
@@ -231,7 +237,11 @@ export async function createBookingRequest(
   if (!Number.isInteger(input.partySize) || input.partySize < 1 || input.partySize > MAX_PARTY_SIZE) {
     return fail(`Choose between 1 and ${MAX_PARTY_SIZE} people.`);
   }
-  if (!Number.isInteger(input.unitPricePaise) || input.unitPricePaise < 100) {
+  // Zero is allowed, and means a free place at an event: it is held and then
+  // confirmed outright, never sent to a checkout. Anything above zero must
+  // still be at least a rupee, so a fraction of one cannot be charged.
+  const free = input.unitPricePaise === 0 && kind === 'EVENT';
+  if (!Number.isInteger(input.unitPricePaise) || (!free && input.unitPricePaise < 100)) {
     return fail('This cannot be booked online.');
   }
 
@@ -393,6 +403,11 @@ export async function respondToBooking(
   let data: Prisma.BookingUpdateManyMutationInput;
   if (decision === 'DECLINE') {
     data = { status: 'DECLINED', respondedAt: at, closedAt: at, hostMessage: message ?? null };
+  } else if (row.amountPaise === 0) {
+    // A free place — a registration at an event. There is nothing to pay, so
+    // accepting confirms it rather than sending the visitor to a checkout
+    // that would ask them for nothing.
+    data = { status: 'CONFIRMED', respondedAt: at, confirmedAt: at, hostMessage: message ?? null };
   } else {
     const due = paymentDueAt(fromDbDate(row.date), at);
     if (!due) return fail('The day of this request has already begun.');
@@ -926,6 +941,29 @@ export async function bookingSummaryByDestination(at: Date = now()): Promise<Des
     byDestination.set(row.destinationId, entry);
   }
   return [...byDestination.values()].sort((a, b) => b.requests - a.requests);
+}
+
+/**
+ * Places already spoken for at an event: everything still alive, including
+ * requests the organiser has not answered yet.
+ *
+ * Counting the unanswered ones means an event can be shown as full while some
+ * of those requests are later declined. That is the safer way round for a room
+ * of twelve — the alternative oversells it — and the places come back as soon
+ * as the organiser declines.
+ */
+export async function placesTaken(eventId: string, at: Date = now()): Promise<number> {
+  // Scoped to this event, so a count here never closes another traveller's
+  // booking elsewhere.
+  await expireStale({ eventId }, at);
+  const rows = await prisma.booking.aggregate({
+    where: {
+      eventId,
+      status: { in: ['REQUESTED', 'AWAITING_PAYMENT', 'CONFIRMED', 'COMPLETED'] },
+    },
+    _sum: { partySize: true },
+  });
+  return rows._sum.partySize ?? 0;
 }
 
 /** Businesses that can answer a request on the platform: they have a partner account. */

@@ -9,6 +9,7 @@ import type {
   Enquiry,
   Feedback,
   Creator,
+  LandingPage,
   Payout,
   TourismBusiness,
   TourismInteraction,
@@ -27,6 +28,7 @@ import {
   persistEnquiry,
   persistFeedback,
   persistInteraction,
+  persistLandingPage,
 } from '@/server/data/persist';
 import { seed } from '@/server/data/seed';
 
@@ -57,6 +59,8 @@ export interface MutableState {
   businesses: TourismBusiness[];
   /** Mutable from Phase 3: creators onboard themselves and are then verified. */
   creators: Creator[];
+  /** AI-generated microsites, for a partner's own business or a campaign/festival. */
+  landingPages: LandingPage[];
   /**
    * Trips when there is no database (the unit suite). With MySQL they are
    * read and written by src/server/data/trips.ts directly and this stays empty.
@@ -87,6 +91,7 @@ function buildState(): MutableState {
     campaigns: seed.campaigns.map((campaign) => ({ ...campaign })),
     applications: seed.applications.map((application) => ({ ...application })),
     campaignContent: seed.campaignContent.map((content) => ({ ...content })),
+    landingPages: seed.landingPages.map((page) => ({ ...page })),
     trips: [],
     sessionRecordIds: new Set<string>(),
     persistent: false,
@@ -101,7 +106,7 @@ function buildState(): MutableState {
  * to leave a stale object in place across a reload, and the new field read as
  * undefined. Bumping it discards state whose shape no longer matches.
  */
-const STATE_VERSION = 4;
+const STATE_VERSION = 5;
 
 const globalForStore = globalThis as unknown as {
   __manipurState?: MutableState;
@@ -392,6 +397,47 @@ export async function recordAvailability(snapshot: AccommodationSnapshot): Promi
   markSession(snapshot.id);
   if (state.persistent) await persistAvailability(snapshot);
   return snapshot;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Landing pages                                                              */
+/* -------------------------------------------------------------------------- */
+
+export async function createLandingPage(page: LandingPage): Promise<LandingPage> {
+  const state = getState();
+  state.landingPages.push(page);
+  markSession(page.id);
+  if (state.persistent) await persistLandingPage(page);
+  return page;
+}
+
+export async function updateLandingPage(
+  id: string,
+  patch: Partial<LandingPage>,
+): Promise<LandingPage | undefined> {
+  const state = getState();
+  const index = state.landingPages.findIndex((p) => p.id === id);
+  if (index < 0) return undefined;
+  const updated = { ...state.landingPages[index]!, ...patch };
+  state.landingPages[index] = updated;
+  markSession(id);
+  if (state.persistent) await persistLandingPage(updated);
+  return updated;
+}
+
+/** Counts are a display figure, not a tourism signal, so they skip TourismInteraction. */
+export async function recordLandingPageView(id: string): Promise<void> {
+  const state = getState();
+  const page = state.landingPages.find((p) => p.id === id);
+  if (!page) return;
+  await updateLandingPage(id, { viewCount: page.viewCount + 1 });
+}
+
+export async function recordLandingPageShare(id: string): Promise<void> {
+  const state = getState();
+  const page = state.landingPages.find((p) => p.id === id);
+  if (!page) return;
+  await updateLandingPage(id, { shareCount: page.shareCount + 1 });
 }
 
 /**

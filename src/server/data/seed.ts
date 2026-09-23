@@ -15,10 +15,13 @@ import feedbackJson from '@data/feedback.json';
 import signalProfilesJson from '@data/tourism-signals.json';
 import dataSourcesJson from '@data/data-sources.json';
 import knowledgeDocumentsJson from '@data/knowledge-documents.json';
+import landingPagesJson from '@data/landing-pages.json';
 import heritageJson from '@data/heritage-experiences.json';
 import officialStatisticsJson from '@data/official-statistics.json';
 import emergencyContactsJson from '@data/emergency-contacts.json';
 import safetyFacilitiesJson from '@data/safety-facilities.json';
+import dishesJson from '@data/dishes.json';
+import foodTrailsJson from '@data/food-trails.json';
 
 import {
   campaignContentSchema,
@@ -28,12 +31,15 @@ import {
   creatorSchema,
   dataSourceSchema,
   destinationSchema,
+  dishSchema,
   districtSchema,
   emergencyContactSchema,
   eventSchema,
   experienceSchema,
   feedbackSchema,
+  foodTrailSchema,
   knowledgeDocumentSchema,
+  landingPageSchema,
   safetyFacilitySchema,
   tourismBusinessSchema,
   verifiedFactSchema,
@@ -151,9 +157,12 @@ export const seed = {
   signalProfiles: parseList(signalProfileSchema, signalProfilesJson, 'signal profiles'),
   dataSources: parseList(dataSourceSchema, dataSourcesJson, 'data sources'),
   knowledgeDocuments: parseList(knowledgeDocumentSchema, knowledgeDocumentsJson, 'knowledge documents'),
+  landingPages: parseList(landingPageSchema, landingPagesJson, 'landing pages'),
   heritageExperiences: parseList(heritageExperienceSchema, heritageJson, 'heritage experiences'),
   emergencyContacts: parseList(emergencyContactSchema, emergencyContactsJson, 'emergency contacts'),
   safetyFacilities: parseList(safetyFacilitySchema, safetyFacilitiesJson, 'safety facilities'),
+  dishes: parseList(dishSchema, dishesJson, 'dishes'),
+  foodTrails: parseList(foodTrailSchema, foodTrailsJson, 'food trails'),
   officialStatistics: officialStatisticsSchema.parse(officialStatisticsJson),
 } as const;
 
