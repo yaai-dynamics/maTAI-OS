@@ -10,6 +10,10 @@ import {
   SlidersHorizontal,
   Users,
   X,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Fragment, useCallback, useRef, useState, useSyncExternalStore, useTransition } from 'react';
@@ -184,6 +188,61 @@ export function JourneyPlanner({
   const [, startTransition] = useTransition();
   const end = useRef<HTMLDivElement>(null);
 
+  const [isPlayingId, setIsPlayingId] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  const startRecording = useCallback(() => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Speech recognition is not supported in this browser.');
+      return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = navigator.language || 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setRequest(prev => (prev ? prev + ' ' : '') + transcript);
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+    
+    recognitionRef.current = recognition;
+    recognition.start();
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+  }, []);
+
+  const speakAnswer = (text: string, id: string) => {
+    if (isPlayingId === id) {
+      window.speechSynthesis.cancel();
+      setIsPlayingId(null);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    if (/[\u0900-\u097F]/.test(text)) {
+      utterance.lang = 'hi-IN';
+    } else {
+      utterance.lang = 'en-IN';
+    }
+    
+    utterance.onend = () => setIsPlayingId(null);
+    utterance.onerror = () => setIsPlayingId(null);
+    setIsPlayingId(id);
+    window.speechSynthesis.speak(utterance);
+  };
+
   const budgetAmount = Number(budgetText.replace(/[^\d]/g, '')) || undefined;
   const datesSet = Boolean(startDate && endDate);
   const refinements =
@@ -333,7 +392,10 @@ export function JourneyPlanner({
       </div>
 
       <div className="mt-5 flex-1 space-y-4" aria-live="polite">
-        <Assistant>
+        <Assistant
+          onSpeak={() => speakAnswer('Tell me what you enjoy and how you like to travel. Add your dates, who is coming and a budget if you know them. I will plan two or three options, with stays, transport, guides and local experiences, and you choose the one to keep.', 'intro')}
+          isPlaying={isPlayingId === 'intro'}
+        >
           Tell me what you enjoy and how you like to travel. Add your dates, who is coming and a budget
           if you know them. I will plan two or three options, with stays, transport, guides and local
           experiences, and you choose the one to keep.
@@ -342,7 +404,10 @@ export function JourneyPlanner({
         {thread.map((exchange, index) => (
           <Fragment key={exchange.groupId}>
             <Visitor>{exchange.request}</Visitor>
-            <Assistant>
+            <Assistant
+              onSpeak={exchange.introduction ? () => speakAnswer(exchange.introduction, exchange.groupId) : undefined}
+              isPlaying={isPlayingId === exchange.groupId}
+            >
               <Reply
                 exchange={exchange}
                 stored={index === thread.length - 1 ? withLatest(stored, exchange) : stored}
@@ -600,9 +665,27 @@ export function JourneyPlanner({
             className="block w-full resize-none bg-transparent px-4 pt-3 text-[15px] text-white placeholder:text-white/45 focus:outline-none"
           />
           <div className="flex items-center justify-between gap-3 px-3 pb-2.5 pt-1">
-            <span className="hidden text-[11px] text-white/45 sm:inline">
-              Enter to plan · Shift + Enter for a new line
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={isListening ? stopRecording : startRecording}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[12px] font-medium transition-colors",
+                  isListening
+                    ? "bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                    : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
+                )}
+              >
+                {isListening ? (
+                  <><MicOff size={14} /> Stop</>
+                ) : (
+                  <><Mic size={14} /> Voice</>
+                )}
+              </button>
+              <span className="hidden text-[11px] text-white/45 sm:inline">
+                Enter to plan · Shift + Enter for a new line
+              </span>
+            </div>
             <Button type="submit" variant="inverse" size="sm" disabled={asking !== null} className="ml-auto rounded-lg">
               {asking ? 'Planning…' : 'Plan my trip'}
               <ArrowUp aria-hidden size={16} />
@@ -631,7 +714,7 @@ function withLatest(stored: Map<string, string>, exchange: Exchange): Map<string
 
 /* ------------------------------- Messages --------------------------------- */
 
-function Assistant({ children }: { children: React.ReactNode }) {
+function Assistant({ children, onSpeak, isPlaying }: { children: React.ReactNode, onSpeak?: () => void, isPlaying?: boolean }) {
   return (
     <div className="flex items-start gap-2.5">
       <span
@@ -642,7 +725,23 @@ function Assistant({ children }: { children: React.ReactNode }) {
       </span>
       <div className="min-w-0 max-w-[94%] flex-1 rounded-2xl rounded-tl-sm border border-white/10 bg-white/[0.07] px-4 py-3 text-[14px] leading-relaxed text-white/85">
         <span className="sr-only">OneStop Manipur: </span>
-        {children}
+        <div className="flex justify-between items-start gap-2">
+          <div className="flex-1 space-y-4">{children}</div>
+          {onSpeak && (
+            <button
+              onClick={onSpeak}
+              className={cn(
+                "shrink-0 rounded-full p-1.5 transition-colors mt-0.5",
+                isPlaying 
+                  ? "bg-white/20 text-white" 
+                  : "text-white/45 hover:bg-white/10 hover:text-white"
+              )}
+              title="Read aloud"
+            >
+              {isPlaying ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

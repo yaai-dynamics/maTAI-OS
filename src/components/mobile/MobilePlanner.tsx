@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState, useTransition } from 'react';
-import { ArrowUp, Check, ChevronRight, Globe, SlidersHorizontal, Sparkles, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { ArrowUp, Check, ChevronRight, Globe, SlidersHorizontal, Sparkles, X, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 
 import { formatRupees } from '@/lib/money';
 import type { OnlineSearchResult, PlanOptionView, PlanResult } from '@/server/actions/tourist';
@@ -83,6 +83,61 @@ export function MobilePlanner({
   const [choosing, setChoosing] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const end = useRef<HTMLDivElement>(null);
+
+  const [isPlayingId, setIsPlayingId] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  const startRecording = useCallback(() => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Speech recognition is not supported in this browser.');
+      return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = navigator.language || 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setRequest(prev => (prev ? prev + ' ' : '') + transcript);
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+    
+    recognitionRef.current = recognition;
+    recognition.start();
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+  }, []);
+
+  const speakAnswer = (text: string, id: string) => {
+    if (isPlayingId === id) {
+      window.speechSynthesis.cancel();
+      setIsPlayingId(null);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    if (/[\u0900-\u097F]/.test(text)) {
+      utterance.lang = 'hi-IN';
+    } else {
+      utterance.lang = 'en-IN';
+    }
+    
+    utterance.onend = () => setIsPlayingId(null);
+    utterance.onerror = () => setIsPlayingId(null);
+    setIsPlayingId(id);
+    window.speechSynthesis.speak(utterance);
+  };
 
   useEffect(() => {
     // Read after mount: sessionStorage does not exist during server rendering.
@@ -214,9 +269,21 @@ export function MobilePlanner({
               <UserBubble text={exchange.request} />
               <div className="space-y-3">
                 {exchange.introduction ? (
-                  <p className="rounded-2xl rounded-tl-md bg-surface p-3.5 text-[14px] leading-relaxed text-ink-800 shadow-card">
+                  <div className="group relative rounded-2xl rounded-tl-md bg-surface p-3.5 pr-10 text-[14px] leading-relaxed text-ink-800 shadow-card">
                     {exchange.introduction}
-                  </p>
+                    <button
+                      onClick={() => speakAnswer(exchange.introduction!, exchange.groupId)}
+                      className={cn(
+                        "absolute right-2 top-2 rounded-full p-1.5 transition-colors",
+                        isPlayingId === exchange.groupId 
+                          ? "bg-brand-50 text-brand-700" 
+                          : "text-ink-400 hover:bg-surface-2 hover:text-ink-600"
+                      )}
+                      title="Read aloud"
+                    >
+                      {isPlayingId === exchange.groupId ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                    </button>
+                  </div>
                 ) : null}
                 {exchange.planFor ? <p className="text-[12px] text-ink-500">For {exchange.planFor}</p> : null}
                 {exchange.options.map((option) => (
@@ -297,6 +364,17 @@ export function MobilePlanner({
                 {refinements}
               </span>
             ) : null}
+          </button>
+          <button
+            type="button"
+            onClick={isListening ? stopRecording : startRecording}
+            aria-label="Voice input"
+            className={cn(
+              'grid h-10 w-10 shrink-0 place-items-center rounded-full transition-colors',
+              isListening ? 'bg-red-50 text-red-600' : 'text-ink-600 hover:bg-surface-2',
+            )}
+          >
+            {isListening ? <MicOff aria-hidden size={19} /> : <Mic aria-hidden size={19} />}
           </button>
           <label htmlFor="m-plan-request" className="sr-only">
             Describe your trip
