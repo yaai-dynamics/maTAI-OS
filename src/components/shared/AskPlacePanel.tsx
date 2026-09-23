@@ -71,6 +71,14 @@ export function AskPlacePanel({
     }
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Adapt accent based on script or default to Indian English for better pronunciation of local places and Hinglish
+    if (/[\u0900-\u097F]/.test(text)) {
+      utterance.lang = 'hi-IN';
+    } else {
+      utterance.lang = 'en-IN';
+    }
+    
     utterance.onend = () => setIsPlayingId(null);
     utterance.onerror = () => setIsPlayingId(null);
     setIsPlayingId(id);
