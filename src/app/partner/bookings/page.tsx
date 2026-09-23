@@ -2,10 +2,11 @@ import type { Metadata } from 'next';
 
 import { now } from '@/lib/config';
 import { formatIndiaDateTime, formatLongDate } from '@/lib/date';
-import { getBusiness, getExperience } from '@/server/data/repository';
+import { getBusiness } from '@/server/data/repository';
 import { requirePartner } from '@/server/auth/session';
 import { listBookingsForBusiness, type BookingView } from '@/server/bookings/ledger';
 import { formatRupees, indiaDate } from '@/server/bookings/policy';
+import { bookingSubject } from '@/server/bookings/subject';
 import { gatewayStatus } from '@/server/payments/gateway';
 import { answerBookingForm, cancelBookingAsHostForm, completeBookingForm } from '@/server/actions/forms';
 import { ActionForm, Field, TextInput } from '@/components/shared/ActionForm';
@@ -197,7 +198,7 @@ export default async function PartnerBookingsPage() {
 }
 
 function BookingRow({ booking, children }: { booking: BookingView; children?: React.ReactNode }) {
-  const experience = getExperience(booking.experienceId);
+  const subject = bookingSubject(booking);
   return (
     <div className="rounded-md border border-line bg-surface p-3.5">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -206,7 +207,7 @@ function BookingRow({ booking, children }: { booking: BookingView; children?: Re
             {formatLongDate(booking.date)} · {booking.partySize} {booking.partySize === 1 ? 'person' : 'people'} ·{' '}
             {formatRupees(booking.amountPaise)}
           </p>
-          <p className="text-[12px] text-ink-600">{experience?.title ?? booking.experienceId}</p>
+          <p className="text-[12px] text-ink-600">{subject.title}</p>
           <p className="mt-1 text-[12px] text-ink-800">
             {booking.guestName} ·{' '}
             <a href={`tel:${booking.guestPhone}`} className="font-medium text-brand-700 hover:underline">

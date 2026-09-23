@@ -21,7 +21,9 @@ import { prisma } from '@/server/data/client';
  */
 
 const configured = Boolean(process.env.DATABASE_URL);
-const officer = DEMO_ACCOUNTS.find((account) => account.governmentRole === 'OFFICER')!;
+// The only government role that is seeded. VIEWER and OFFICER exist in
+// lib/roles.ts and are covered by the permission tests, which need no account.
+const administrator = DEMO_ACCOUNTS.find((account) => account.governmentRole === 'ADMINISTRATOR')!;
 
 describe.skipIf(!configured)('accounts and sessions', () => {
   const tokens: string[] = [];
@@ -37,36 +39,36 @@ describe.skipIf(!configured)('accounts and sessions', () => {
   });
 
   it('signs a seeded account in and resolves the session to the same person', async () => {
-    const result = await authenticate(officer.email, DEMO_PASSWORD);
+    const result = await authenticate(administrator.email, DEMO_PASSWORD);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     tokens.push(result.token);
 
     const user = await findSessionUser(result.token);
-    expect(user?.email).toBe(officer.email);
+    expect(user?.email).toBe(administrator.email);
     expect(user?.kind).toBe('GOVERNMENT');
-    expect(user?.governmentRole).toBe('OFFICER');
+    expect(user?.governmentRole).toBe('ADMINISTRATOR');
   });
 
   it('matches email case-insensitively, as people type it', async () => {
-    const result = await authenticate(`  ${officer.email.toUpperCase()} `, DEMO_PASSWORD);
+    const result = await authenticate(`  ${administrator.email.toUpperCase()} `, DEMO_PASSWORD);
     expect(result.ok).toBe(true);
     if (result.ok) tokens.push(result.token);
   });
 
   it('gives the same answer for a wrong password and an unknown email', async () => {
-    const wrongPassword = await authenticate(officer.email, 'not the password');
+    const wrongPassword = await authenticate(administrator.email, 'not the password');
     const unknownEmail = await authenticate('nobody@integration.test', 'not the password');
 
     expect(wrongPassword).toEqual({ ok: false, error: INVALID_CREDENTIALS });
     expect(unknownEmail).toEqual({ ok: false, error: INVALID_CREDENTIALS });
 
     // Reset the failure count that attempt added to the shared demo account.
-    await prisma.userAccount.update({ where: { email: officer.email }, data: { failedLoginCount: 0 } });
+    await prisma.userAccount.update({ where: { email: administrator.email }, data: { failedLoginCount: 0 } });
   });
 
   it('stores only a hash of the session token', async () => {
-    const result = await authenticate(officer.email, DEMO_PASSWORD);
+    const result = await authenticate(administrator.email, DEMO_PASSWORD);
     if (!result.ok) throw new Error('sign in failed');
     tokens.push(result.token);
 
@@ -75,7 +77,7 @@ describe.skipIf(!configured)('accounts and sessions', () => {
   });
 
   it('ends a session everywhere once it is revoked', async () => {
-    const result = await authenticate(officer.email, DEMO_PASSWORD);
+    const result = await authenticate(administrator.email, DEMO_PASSWORD);
     if (!result.ok) throw new Error('sign in failed');
 
     await revokeSession(result.token);
@@ -83,7 +85,7 @@ describe.skipIf(!configured)('accounts and sessions', () => {
   });
 
   it('refuses an expired session and removes it', async () => {
-    const result = await authenticate(officer.email, DEMO_PASSWORD);
+    const result = await authenticate(administrator.email, DEMO_PASSWORD);
     if (!result.ok) throw new Error('sign in failed');
 
     await prisma.authSession.update({

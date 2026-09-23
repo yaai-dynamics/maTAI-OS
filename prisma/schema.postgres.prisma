@@ -163,6 +163,8 @@ model Event {
   source             DataSource    @relation(fields: [sourceId], references: [id])
   provenance         Provenance
 
+  bookings Booking[]
+
   @@index([destinationId, startAt])
 }
 
@@ -864,6 +866,17 @@ model AuthSession {
 // update, so two processes (or a browser and a webhook) racing on the same
 // booking cannot both win.
 
+/// What is being booked. The three share one ledger, one reference series and
+/// one payment path; they differ only in what the price is per.
+enum BookingKind {
+  /// A dated activity with a host. Priced per person.
+  EXPERIENCE
+  /// Nights at a homestay or hotel. Priced per room per night.
+  STAY
+  /// A place at an event. Priced per person.
+  EVENT
+}
+
 enum BookingStatus {
   /// Sent by the traveller; the host has not answered.
   REQUESTED
@@ -871,7 +884,7 @@ enum BookingStatus {
   AWAITING_PAYMENT
   /// Paid in full.
   CONFIRMED
-  /// The experience took place.
+  /// The experience, stay or event took place.
   COMPLETED
   DECLINED
   /// Not answered, or not paid, in time.
@@ -889,8 +902,14 @@ model Booking {
   id                 String          @id
   /// Short, human readable, quoted on the phone: MT-7K3Q9D.
   reference          String          @unique
-  experienceId       String
-  experience         Experience      @relation(fields: [experienceId], references: [id])
+  kind               BookingKind     @default(EXPERIENCE)
+  /// EXPERIENCE only.
+  experienceId       String?
+  experience         Experience?     @relation(fields: [experienceId], references: [id])
+  /// EVENT only.
+  eventId            String?
+  event              Event?          @relation(fields: [eventId], references: [id])
+  /// The host: the experience's provider, the property, or the event organiser.
   businessId         String
   business           TourismBusiness @relation(fields: [businessId], references: [id])
   destinationId      String
@@ -906,10 +925,17 @@ model Booking {
   guestName          String
   guestPhone         String
   guestEmail         String?
+  /// People coming, whatever the kind.
   partySize          Int
+  /// The day for an experience or an event; the arrival day for a stay.
   date               DateTime        @db.Date
+  /// STAY only: the departure day. Nights are date to endDate, exclusive.
+  endDate            DateTime?       @db.Date
+  /// STAY only: rooms held.
+  rooms              Int?
   note               String?
-  /// Price per person when the request was made, in paise.
+  /// What was quoted when the request was made, in paise: per person for an
+  /// experience or an event, per room per night for a stay.
   unitPricePaise     Int
   amountPaise        Int
   currency           String          @default("INR")

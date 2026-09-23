@@ -1,6 +1,7 @@
 import {
   Activity,
   BadgeCheck,
+  BedDouble,
   CalendarCheck,
   ChartColumn,
   Compass,
@@ -16,6 +17,7 @@ import {
   Megaphone,
   Navigation,
   Route,
+  ShieldAlert,
   ShieldCheck,
   Sparkles,
   Store,
@@ -38,6 +40,7 @@ import {
 export const NAV_ICONS = {
   Activity,
   BadgeCheck,
+  BedDouble,
   CalendarCheck,
   ChartColumn,
   Compass,
@@ -53,6 +56,7 @@ export const NAV_ICONS = {
   Megaphone,
   Navigation,
   Route,
+  ShieldAlert,
   ShieldCheck,
   Sparkles,
   Store,

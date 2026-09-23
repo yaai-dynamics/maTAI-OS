@@ -2,7 +2,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 import { formatLongDate } from '@/lib/date';
-import { getBusiness, getExperience } from '@/server/data/repository';
+import { getBusiness } from '@/server/data/repository';
+import { bookingSubject } from '@/server/bookings/subject';
 import { readGuestOwner } from '@/server/bookings/guest';
 import { listBookingsForOwner } from '@/server/bookings/ledger';
 import { formatRupees } from '@/server/bookings/policy';
@@ -45,12 +46,11 @@ export default async function BookingsPage() {
                     >
                       <span className="min-w-0">
                         <span className="block text-[14px] font-semibold text-ink-900 hover:underline">
-                          {getExperience(booking.experienceId)?.title ?? 'Experience'}
+                          {bookingSubject(booking).title}
                         </span>
                         <span className="block text-[12px] text-ink-600">
                           {getBusiness(booking.businessId)?.name ?? 'Local host'} · {formatLongDate(booking.date)} ·{' '}
-                          {booking.partySize} {booking.partySize === 1 ? 'person' : 'people'} ·{' '}
-                          {formatRupees(booking.amountPaise)}
+                          {bookingSubject(booking).quantity} · {formatRupees(booking.amountPaise)}
                         </span>
                         <span className="mt-0.5 block font-mono text-[11px] text-ink-500">{booking.reference}</span>
                       </span>

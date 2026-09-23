@@ -117,5 +117,13 @@ export function dayWaypoints(map: TripMapData): { day: number; points: LatLng[] 
 export const directionsHref = (latitude: number, longitude: number): string =>
   `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
 
+/**
+ * Directions to a place by name. For a building we hold only to district
+ * precision, the visitor's map finds the entrance; a centroid would send them
+ * to a field outside town.
+ */
+export const directionsToPlaceHref = (query: string): string =>
+  `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}`;
+
 export const planHref = (name: string): string =>
   `/explore?plan=${encodeURIComponent(`A trip that includes ${name}`)}`;

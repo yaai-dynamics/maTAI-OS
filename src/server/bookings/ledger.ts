@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 
-import type { BookingStatus, Prisma } from '@prisma/client';
+import type { BookingKind, BookingStatus, Prisma } from '@prisma/client';
 
 import { now } from '@/lib/config';
 import { prisma } from '@/server/data/client';
@@ -8,9 +8,12 @@ import { ingest } from '@/server/telemetry/ingest';
 import { analyticsAllowedFor } from '@/server/telemetry/visitor';
 import { hashToken, newSessionToken } from '@/server/auth/tokens';
 import {
+  checkOutProblem,
   dateProblem,
   indiaDate,
   MAX_PARTY_SIZE,
+  MAX_ROOMS,
+  nightsBetween,
   paymentDueAt,
   refundFor,
   type CancelledBy,
@@ -30,7 +33,7 @@ import { GatewayError, getGateway, type GatewayPayment, type PaymentGateway } fr
  * or a booking being refunded twice.
  */
 
-export type { BookingStatus };
+export type { BookingKind, BookingStatus };
 
 export interface RefundView {
   amountPaise: number;
@@ -43,14 +46,25 @@ export interface RefundView {
 export interface BookingView {
   id: string;
   reference: string;
-  experienceId: string;
+  kind: BookingKind;
+  /** EXPERIENCE only. */
+  experienceId: string | null;
+  /** EVENT only. */
+  eventId: string | null;
   businessId: string;
   destinationId: string;
   guestName: string;
   guestPhone: string;
   guestEmail: string | null;
   partySize: number;
+  /** The day, or the arrival day for a stay. */
   date: string;
+  /** STAY only: the departure day. */
+  endDate: string | null;
+  /** STAY only: rooms held. */
+  rooms: number | null;
+  /** STAY only: nights from arrival to departure. */
+  nights: number | null;
   note: string | null;
   unitPricePaise: number;
   amountPaise: number;
@@ -94,17 +108,24 @@ const iso = (date: Date | null): string | null => (date ? date.toISOString() : n
 function toView(row: BookingRow): BookingView {
   const captured = row.payments.filter((payment) => payment.status === 'CAPTURED');
   const refunds = row.payments.flatMap((payment) => payment.refunds);
+  const endDate = row.endDate ? fromDbDate(row.endDate) : null;
+  const date = fromDbDate(row.date);
   return {
     id: row.id,
     reference: row.reference,
+    kind: row.kind,
     experienceId: row.experienceId,
+    eventId: row.eventId,
     businessId: row.businessId,
     destinationId: row.destinationId,
     guestName: row.guestName,
     guestPhone: row.guestPhone,
     guestEmail: row.guestEmail,
     partySize: row.partySize,
-    date: fromDbDate(row.date),
+    date,
+    endDate,
+    rooms: row.rooms,
+    nights: endDate ? nightsBetween(date, endDate) : null,
     note: row.note,
     unitPricePaise: row.unitPricePaise,
     amountPaise: row.amountPaise,
@@ -172,8 +193,7 @@ function newReference(): string {
   return out;
 }
 
-export interface NewBookingRequest {
-  experienceId: string;
+interface CommonBookingRequest {
   businessId: string;
   destinationId: string;
   campaignId?: string;
@@ -183,33 +203,71 @@ export interface NewBookingRequest {
   guestPhone: string;
   guestEmail?: string;
   partySize: number;
+  /** The day, or the arrival day for a stay. */
   date: string;
   note?: string;
+  /** Per person, or per room per night for a stay. */
   unitPricePaise: number;
 }
+
+/**
+ * The three kinds differ only in what they point at and what the price
+ * multiplies by, so they are one union rather than three functions.
+ */
+export type NewBookingRequest = CommonBookingRequest &
+  (
+    | { kind?: 'EXPERIENCE'; experienceId: string }
+    | { kind: 'EVENT'; eventId: string }
+    | { kind: 'STAY'; endDate: string; rooms: number }
+  );
 
 export async function createBookingRequest(
   input: NewBookingRequest,
   at: Date = now(),
 ): Promise<Outcome<{ booking: BookingView; accessKey: string }>> {
+  const kind: BookingKind = input.kind ?? 'EXPERIENCE';
   const problem = dateProblem(input.date, at);
   if (problem) return fail(problem);
   if (!Number.isInteger(input.partySize) || input.partySize < 1 || input.partySize > MAX_PARTY_SIZE) {
     return fail(`Choose between 1 and ${MAX_PARTY_SIZE} people.`);
   }
   if (!Number.isInteger(input.unitPricePaise) || input.unitPricePaise < 100) {
-    return fail('This experience cannot be booked online.');
+    return fail('This cannot be booked online.');
   }
+
+  // A stay is the only kind that spans days and holds rooms.
+  let nights = 0;
+  if ('endDate' in input) {
+    const stayProblem = checkOutProblem(input.date, input.endDate);
+    if (stayProblem) return fail(stayProblem);
+    if (!Number.isInteger(input.rooms) || input.rooms < 1 || input.rooms > MAX_ROOMS) {
+      return fail(`Choose between 1 and ${MAX_ROOMS} rooms.`);
+    }
+    nights = nightsBetween(input.date, input.endDate);
+  }
+
+  const amountPaise =
+    kind === 'STAY'
+      ? input.unitPricePaise * nights * ('rooms' in input ? input.rooms : 1)
+      : input.unitPricePaise * input.partySize;
 
   await expireStale({ ownerHash: input.ownerHash }, at);
 
   const open = await prisma.booking.findMany({
     where: { ownerHash: input.ownerHash, status: { in: ['REQUESTED', 'AWAITING_PAYMENT'] } },
-    select: { experienceId: true, date: true, reference: true },
+    select: { kind: true, experienceId: true, eventId: true, businessId: true, date: true, reference: true },
   });
-  const duplicate = open.find(
-    (row) => row.experienceId === input.experienceId && fromDbDate(row.date) === input.date,
-  );
+  // The same thing, on the same day, twice. For a stay the property is the
+  // subject: two rooms are one request, not two.
+  const subject = (row: { kind: BookingKind; experienceId: string | null; eventId: string | null; businessId: string }) =>
+    row.kind === 'STAY' ? `b:${row.businessId}` : row.kind === 'EVENT' ? `e:${row.eventId}` : `x:${row.experienceId}`;
+  const mine = subject({
+    kind,
+    experienceId: 'experienceId' in input ? input.experienceId : null,
+    eventId: 'eventId' in input ? input.eventId : null,
+    businessId: input.businessId,
+  });
+  const duplicate = open.find((row) => subject(row) === mine && fromDbDate(row.date) === input.date);
   if (duplicate) {
     return fail(`You already have a request open for that day (${duplicate.reference}).`);
   }
@@ -224,7 +282,9 @@ export async function createBookingRequest(
         data: {
           id: `bkg-${randomUUID()}`,
           reference: newReference(),
-          experienceId: input.experienceId,
+          kind,
+          experienceId: 'experienceId' in input ? input.experienceId : null,
+          eventId: 'eventId' in input ? input.eventId : null,
           businessId: input.businessId,
           destinationId: input.destinationId,
           campaignId: input.campaignId ?? null,
@@ -236,9 +296,11 @@ export async function createBookingRequest(
           guestEmail: input.guestEmail ?? null,
           partySize: input.partySize,
           date: toDbDate(input.date),
+          endDate: 'endDate' in input ? toDbDate(input.endDate) : null,
+          rooms: 'rooms' in input ? input.rooms : null,
           note: input.note ?? null,
           unitPricePaise: input.unitPricePaise,
-          amountPaise: input.unitPricePaise * input.partySize,
+          amountPaise,
           currency: 'INR',
           status: 'REQUESTED',
           createdAt: at,
@@ -543,7 +605,7 @@ export async function settlePayment(
     {
       type: 'BOOKING_CONFIRMED',
       destinationId: booking.destinationId,
-      experienceId: booking.experienceId,
+      ...(booking.experienceId ? { experienceId: booking.experienceId } : {}),
       metadata: { partySize: booking.partySize, date },
       attribution: 'none',
       ...(booking.campaignId ? { campaignId: booking.campaignId } : {}),
@@ -680,7 +742,7 @@ async function cancel(
       {
         type: 'BOOKING_CANCELLED',
         destinationId: row.destinationId,
-        experienceId: row.experienceId,
+        ...(row.experienceId ? { experienceId: row.experienceId } : {}),
         metadata: { by, refunded: refundPaise > 0 },
         attribution: 'none',
         ...(row.campaignId ? { campaignId: row.campaignId } : {}),

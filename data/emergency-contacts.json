@@ -1,0 +1,93 @@
+[
+  {
+    "_comment": "India's national emergency short codes. Every number here is a published, nationally routed code that reaches a real control room; none is invented for the prototype. Manipur has no separate published tourist helpline, so the Ministry of Tourism's national line is listed instead of a made-up state number. Short codes are reachable from any handset, including one with no SIM or no balance."
+  },
+  {
+    "id": "emg-112",
+    "service": "ALL",
+    "name": "Emergency response (any emergency)",
+    "number": "112",
+    "description": "One number for police, ambulance and fire across India. Use this first if you are not sure who you need, or cannot speak the local language.",
+    "scope": "NATIONAL",
+    "primary": true,
+    "languages": ["English", "Hindi"],
+    "provenance": "OFFICIAL"
+  },
+  {
+    "id": "emg-108",
+    "service": "MEDICAL",
+    "name": "Ambulance",
+    "number": "108",
+    "description": "Free emergency ambulance. Give the district and the nearest landmark; road names are often not enough outside Imphal.",
+    "scope": "NATIONAL",
+    "primary": true,
+    "languages": ["English", "Hindi", "Meiteilon"],
+    "provenance": "OFFICIAL"
+  },
+  {
+    "id": "emg-100",
+    "service": "POLICE",
+    "name": "Police",
+    "number": "100",
+    "description": "Police control room. 112 reaches the same responders and is the number the state now promotes.",
+    "scope": "NATIONAL",
+    "primary": true,
+    "languages": ["English", "Hindi", "Meiteilon"],
+    "provenance": "OFFICIAL"
+  },
+  {
+    "id": "emg-101",
+    "service": "FIRE",
+    "name": "Fire and rescue",
+    "number": "101",
+    "description": "Fire services, including rescue from water and road accidents.",
+    "scope": "NATIONAL",
+    "primary": false,
+    "languages": ["English", "Hindi"],
+    "provenance": "OFFICIAL"
+  },
+  {
+    "id": "emg-1363",
+    "service": "TOURIST",
+    "name": "Tourist helpline (Ministry of Tourism)",
+    "number": "1363",
+    "description": "24x7 national tourist helpline for lost documents, guidance and complaints. Also reachable on 1800-11-1363. Not an emergency line: call 112 if someone is in danger.",
+    "scope": "NATIONAL",
+    "primary": false,
+    "languages": ["English", "Hindi"],
+    "provenance": "OFFICIAL"
+  },
+  {
+    "id": "emg-1091",
+    "service": "WOMEN",
+    "name": "Women's helpline",
+    "number": "1091",
+    "description": "Help for a woman in distress, including harassment and assault.",
+    "scope": "NATIONAL",
+    "primary": false,
+    "languages": ["English", "Hindi"],
+    "provenance": "OFFICIAL"
+  },
+  {
+    "id": "emg-1098",
+    "service": "CHILD",
+    "name": "Childline",
+    "number": "1098",
+    "description": "Help for a child in danger or in need of care.",
+    "scope": "NATIONAL",
+    "primary": false,
+    "languages": ["English", "Hindi"],
+    "provenance": "OFFICIAL"
+  },
+  {
+    "id": "emg-1077",
+    "service": "DISASTER",
+    "name": "District disaster control room",
+    "number": "1077",
+    "description": "District emergency operations centre: flooding, landslides and blocked roads. The state control room is 1070.",
+    "scope": "NATIONAL",
+    "primary": false,
+    "languages": ["English", "Hindi"],
+    "provenance": "OFFICIAL"
+  }
+]

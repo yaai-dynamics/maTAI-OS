@@ -3,13 +3,16 @@ import { createHmac } from 'node:crypto';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+  checkOutProblem,
   dateProblem,
   formatRupees,
   freeCancellationUntil,
   indiaDate,
+  nightsBetween,
   paymentDueAt,
   priceFor,
   refundFor,
+  stayPriceFor,
 } from '@/server/bookings/policy';
 import { gatewayStatus, hmacMatches, setGatewayForTests } from '@/server/payments/gateway';
 
@@ -42,6 +45,34 @@ describe('which days can be requested', () => {
     // Well formed but impossible: JavaScript would silently read these as March and December.
     expect(dateProblem('2027-02-30', AT)).toBe('Choose a date.');
     expect(dateProblem('2026-11-31', AT)).toBe('Choose a date.');
+  });
+});
+
+describe('a stay, which spans nights rather than falling on one day', () => {
+  it('counts nights from arrival to departure, not days touched', () => {
+    expect(nightsBetween('2026-09-17', '2026-09-18')).toBe(1);
+    expect(nightsBetween('2026-09-17', '2026-09-20')).toBe(3);
+    // Across a month end, and across the end of October, when India has no
+    // daylight saving but the UTC offset arithmetic could still slip.
+    expect(nightsBetween('2026-10-30', '2026-11-02')).toBe(3);
+  });
+
+  it('refuses a departure that is not after the arrival', () => {
+    expect(checkOutProblem('2026-09-17', '2026-09-17')).toMatch(/at least one night/);
+    expect(checkOutProblem('2026-09-17', '2026-09-16')).toMatch(/at least one night/);
+    expect(checkOutProblem('2026-09-17', '2026-09-18')).toBeNull();
+  });
+
+  it('refuses a stay longer than a month, and anything that is not a date', () => {
+    expect(checkOutProblem('2026-09-17', '2026-10-17')).toBeNull();
+    expect(checkOutProblem('2026-09-17', '2026-10-18')).toMatch(/30 nights/);
+    expect(checkOutProblem('2026-09-17', 'next week')).toBe('Choose a day to leave.');
+    expect(checkOutProblem('2026-09-17', '2027-02-30')).toBe('Choose a day to leave.');
+  });
+
+  it('is priced per room per night, so both multiply', () => {
+    expect(stayPriceFor(1500, 3, 2)).toEqual({ unitPricePaise: 150_000, amountPaise: 900_000 });
+    expect(stayPriceFor(1500, 1, 1)).toEqual({ unitPricePaise: 150_000, amountPaise: 150_000 });
   });
 });
 

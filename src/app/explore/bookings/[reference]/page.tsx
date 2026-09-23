@@ -3,7 +3,8 @@ import type { Metadata } from 'next';
 
 import { BASE_URL, now } from '@/lib/config';
 import { formatIndiaDateTime, formatLongDate } from '@/lib/date';
-import { getBusiness, getDestination, getExperience } from '@/server/data/repository';
+import { getBusiness, getDestination } from '@/server/data/repository';
+import { bookingSubject } from '@/server/bookings/subject';
 import { readGuestOwner } from '@/server/bookings/guest';
 import { getBookingForGuest, reconcileBooking, type BookingView } from '@/server/bookings/ledger';
 import {
@@ -64,7 +65,7 @@ export default async function BookingPage(props: {
     booking = (await getBookingForGuest(reference, access)) ?? booking;
   }
 
-  const experience = getExperience(booking.experienceId);
+  const subject = bookingSubject(booking);
   const business = getBusiness(booking.businessId);
   const destination = getDestination(booking.destinationId);
   const status = BOOKING_STATUS[booking.status];
@@ -85,7 +86,7 @@ export default async function BookingPage(props: {
           ← Your bookings
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <h1 className="text-[22px] font-semibold tracking-tight text-ink-900">{experience?.title ?? 'Booking'}</h1>
+          <h1 className="text-[22px] font-semibold tracking-tight text-ink-900">{subject.title}</h1>
           <Badge tone={status.tone}>{status.label}</Badge>
           {payments.configured && payments.gateway.testMode ? (
             <Badge tone="warn" title="Razorpay test mode: no real money moves.">
@@ -116,9 +117,17 @@ export default async function BookingPage(props: {
           <dl className="divide-y divide-line">
             <DefinitionRow term="Host">{business?.name ?? 'Local host'}</DefinitionRow>
             <DefinitionRow term="Where">{destination?.name ?? booking.destinationId}</DefinitionRow>
-            <DefinitionRow term="Day">{formatLongDate(booking.date)}</DefinitionRow>
-            <DefinitionRow term="People">{String(booking.partySize)}</DefinitionRow>
-            <DefinitionRow term="Price">{`${formatRupees(booking.amountPaise)} (${formatRupees(booking.unitPricePaise)} × ${booking.partySize})`}</DefinitionRow>
+            {booking.kind === 'STAY' && booking.endDate ? (
+              <DefinitionRow term="Nights">
+                {`${formatLongDate(booking.date)} to ${formatLongDate(booking.endDate)}`}
+              </DefinitionRow>
+            ) : (
+              <DefinitionRow term="Day">{formatLongDate(booking.date)}</DefinitionRow>
+            )}
+            <DefinitionRow term="For">{subject.quantity}</DefinitionRow>
+            <DefinitionRow term="Price">
+              {`${formatRupees(booking.amountPaise)} (${formatRupees(booking.unitPricePaise)} ${subject.unitLabel})`}
+            </DefinitionRow>
             {booking.paidPaise > 0 ? <DefinitionRow term="Paid">{formatRupees(booking.paidPaise)}</DefinitionRow> : null}
             {booking.refundedPaise > 0 ? (
               <DefinitionRow term="Refunded">{formatRupees(booking.refundedPaise)}</DefinitionRow>
@@ -149,7 +158,7 @@ export default async function BookingPage(props: {
                   reference={booking.reference}
                   {...(key ? { accessKey: key } : {})}
                   label={`Pay ${formatRupees(booking.amountPaise)}`}
-                  description={`${experience?.title ?? 'Experience'} · ${booking.reference}`}
+                  description={`${subject.title} · ${booking.reference}`}
                 />
                 <p className="text-[12px] text-ink-600">
                   Paid through Razorpay. Card, UPI and bank details go to Razorpay and never to this platform.

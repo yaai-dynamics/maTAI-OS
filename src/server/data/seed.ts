@@ -17,6 +17,8 @@ import dataSourcesJson from '@data/data-sources.json';
 import knowledgeDocumentsJson from '@data/knowledge-documents.json';
 import heritageJson from '@data/heritage-experiences.json';
 import officialStatisticsJson from '@data/official-statistics.json';
+import emergencyContactsJson from '@data/emergency-contacts.json';
+import safetyFacilitiesJson from '@data/safety-facilities.json';
 
 import {
   campaignContentSchema,
@@ -27,10 +29,12 @@ import {
   dataSourceSchema,
   destinationSchema,
   districtSchema,
+  emergencyContactSchema,
   eventSchema,
   experienceSchema,
   feedbackSchema,
   knowledgeDocumentSchema,
+  safetyFacilitySchema,
   tourismBusinessSchema,
   verifiedFactSchema,
 } from '@/lib/types';
@@ -148,6 +152,8 @@ export const seed = {
   dataSources: parseList(dataSourceSchema, dataSourcesJson, 'data sources'),
   knowledgeDocuments: parseList(knowledgeDocumentSchema, knowledgeDocumentsJson, 'knowledge documents'),
   heritageExperiences: parseList(heritageExperienceSchema, heritageJson, 'heritage experiences'),
+  emergencyContacts: parseList(emergencyContactSchema, emergencyContactsJson, 'emergency contacts'),
+  safetyFacilities: parseList(safetyFacilitySchema, safetyFacilitiesJson, 'safety facilities'),
   officialStatistics: officialStatisticsSchema.parse(officialStatisticsJson),
 } as const;
 

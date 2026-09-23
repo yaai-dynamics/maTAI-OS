@@ -8,12 +8,14 @@ import type {
   DataSource,
   Destination,
   District,
+  EmergencyContact,
   Enquiry,
   Experience,
   Feedback,
   InteractionType,
   KnowledgeDocument,
   Payout,
+  SafetyFacility,
   TourismBusiness,
   TourismEvent,
   TourismInteraction,
@@ -71,6 +73,27 @@ export function getEventsFor(destinationId: string, from?: Date, to?: Date): Tou
   });
 }
 
+export const getEvent = (id: string): TourismEvent | undefined =>
+  seed.events.find((event) => event.id === id);
+
+/** Anything not yet finished, soonest first. An event running today counts. */
+export function getUpcomingEvents(at: Date): TourismEvent[] {
+  return seed.events
+    .filter((event) => new Date(event.endAt) >= at)
+    .sort((a, b) => a.startAt.localeCompare(b.startAt));
+}
+
+/* --------------------------------- Safety --------------------------------- */
+
+/** Primary numbers first, then the rest in the order the seed lists them. */
+export const getEmergencyContacts = (): EmergencyContact[] =>
+  [...seed.emergencyContacts].sort((a, b) => Number(b.primary) - Number(a.primary));
+
+export const getSafetyFacilities = (): SafetyFacility[] => seed.safetyFacilities;
+
+export const getSafetyFacilitiesIn = (districtId: string): SafetyFacility[] =>
+  seed.safetyFacilities.filter((facility) => facility.districtId === districtId);
+
 /* --------------------------------- Supply --------------------------------- */
 
 export const getBusinesses = (): TourismBusiness[] => getState().businesses;
@@ -80,6 +103,23 @@ export const getBusiness = (id: string): TourismBusiness | undefined =>
 
 export const getBusinessesFor = (destinationId: string): TourismBusiness[] =>
   getState().businesses.filter((b) => b.destinationId === destinationId);
+
+/**
+ * A place to sleep that quotes a room rate. A guide or a tour operator also
+ * has a rate, but it buys a person's time, not a room for the night, so only
+ * a rate that covers a ROOM by the NIGHT can be turned into a stay booking.
+ */
+export const isStay = (business: TourismBusiness): boolean =>
+  (business.businessType === 'HOMESTAY' || business.businessType === 'HOTEL') &&
+  business.rate?.covers === 'ROOM' &&
+  business.rate.unit === 'NIGHT';
+
+export const getStays = (): TourismBusiness[] => getState().businesses.filter(isStay);
+
+export const getStay = (id: string): TourismBusiness | undefined => {
+  const business = getBusiness(id);
+  return business && isStay(business) ? business : undefined;
+};
 
 export const getEnquiriesForBusiness = (businessId: string): Enquiry[] =>
   getState()

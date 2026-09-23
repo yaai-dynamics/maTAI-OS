@@ -1,0 +1,183 @@
+[
+  {
+    "_comment": "Real public institutions in the districts this platform covers. Coordinates are the district centroid from districts.json, not a surveyed position: enough to sort by rough proximity and to open directions by name, and labelled DISTRICT_CENTRE everywhere so the UI never implies a precision it does not have. No telephone numbers are listed for individual facilities because none could be verified; the page routes the visitor to 112 instead of to a number nobody answers."
+  },
+  {
+    "id": "fac-rims-imphal",
+    "kind": "HOSPITAL",
+    "name": "RIMS (Regional Institute of Medical Sciences)",
+    "districtId": "dist-imphal-west",
+    "latitude": 24.8074,
+    "longitude": 93.9384,
+    "precision": "DISTRICT_CENTRE",
+    "note": "Lamphelpat, Imphal West. Referral hospital with a 24-hour casualty department.",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-jnims-imphal",
+    "kind": "HOSPITAL",
+    "name": "JNIMS (Jawaharlal Nehru Institute of Medical Sciences)",
+    "districtId": "dist-imphal-east",
+    "latitude": 24.8205,
+    "longitude": 93.9805,
+    "precision": "DISTRICT_CENTRE",
+    "note": "Porompat, Imphal East. Referral hospital with a 24-hour casualty department.",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-hosp-bishnupur",
+    "kind": "HOSPITAL",
+    "name": "District Hospital, Bishnupur",
+    "districtId": "dist-bishnupur",
+    "latitude": 24.6333,
+    "longitude": 93.7667,
+    "precision": "DISTRICT_CENTRE",
+    "note": "Nearest district hospital for Loktak, Sendra and Moirang.",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-hosp-thoubal",
+    "kind": "HOSPITAL",
+    "name": "District Hospital, Thoubal",
+    "districtId": "dist-thoubal",
+    "latitude": 24.6333,
+    "longitude": 94.0167,
+    "precision": "DISTRICT_CENTRE",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-hosp-ukhrul",
+    "kind": "HOSPITAL",
+    "name": "District Hospital, Ukhrul",
+    "districtId": "dist-ukhrul",
+    "latitude": 25.05,
+    "longitude": 94.3667,
+    "precision": "DISTRICT_CENTRE",
+    "note": "Nearest district hospital for Shirui and the Ukhrul hills.",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-hosp-senapati",
+    "kind": "HOSPITAL",
+    "name": "District Hospital, Senapati",
+    "districtId": "dist-senapati",
+    "latitude": 25.2667,
+    "longitude": 94.0333,
+    "precision": "DISTRICT_CENTRE",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-hosp-tamenglong",
+    "kind": "HOSPITAL",
+    "name": "District Hospital, Tamenglong",
+    "districtId": "dist-tamenglong",
+    "latitude": 24.9833,
+    "longitude": 93.5,
+    "precision": "DISTRICT_CENTRE",
+    "note": "Mobile coverage is patchy on the approach roads; ask at the last village with signal.",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-hosp-tengnoupal",
+    "kind": "HOSPITAL",
+    "name": "District Hospital, Tengnoupal",
+    "districtId": "dist-tengnoupal",
+    "latitude": 24.4,
+    "longitude": 94.1333,
+    "precision": "DISTRICT_CENTRE",
+    "note": "Nearest district hospital for Moreh and the border road.",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-police-imphal-west",
+    "kind": "POLICE",
+    "name": "District Police Control Room, Imphal West",
+    "districtId": "dist-imphal-west",
+    "latitude": 24.8074,
+    "longitude": 93.9384,
+    "precision": "DISTRICT_CENTRE",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-police-imphal-east",
+    "kind": "POLICE",
+    "name": "District Police Control Room, Imphal East",
+    "districtId": "dist-imphal-east",
+    "latitude": 24.8205,
+    "longitude": 93.9805,
+    "precision": "DISTRICT_CENTRE",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-police-bishnupur",
+    "kind": "POLICE",
+    "name": "District Police Control Room, Bishnupur",
+    "districtId": "dist-bishnupur",
+    "latitude": 24.6333,
+    "longitude": 93.7667,
+    "precision": "DISTRICT_CENTRE",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-police-thoubal",
+    "kind": "POLICE",
+    "name": "District Police Control Room, Thoubal",
+    "districtId": "dist-thoubal",
+    "latitude": 24.6333,
+    "longitude": 94.0167,
+    "precision": "DISTRICT_CENTRE",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-police-ukhrul",
+    "kind": "POLICE",
+    "name": "District Police Control Room, Ukhrul",
+    "districtId": "dist-ukhrul",
+    "latitude": 25.05,
+    "longitude": 94.3667,
+    "precision": "DISTRICT_CENTRE",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-police-senapati",
+    "kind": "POLICE",
+    "name": "District Police Control Room, Senapati",
+    "districtId": "dist-senapati",
+    "latitude": 25.2667,
+    "longitude": 94.0333,
+    "precision": "DISTRICT_CENTRE",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-police-tamenglong",
+    "kind": "POLICE",
+    "name": "District Police Control Room, Tamenglong",
+    "districtId": "dist-tamenglong",
+    "latitude": 24.9833,
+    "longitude": 93.5,
+    "precision": "DISTRICT_CENTRE",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-police-tengnoupal",
+    "kind": "POLICE",
+    "name": "District Police Control Room, Tengnoupal",
+    "districtId": "dist-tengnoupal",
+    "latitude": 24.4,
+    "longitude": 94.1333,
+    "precision": "DISTRICT_CENTRE",
+    "note": "Moreh is a border town: carry photo identification on the approach road.",
+    "provenance": "PUBLIC_EXTERNAL"
+  },
+  {
+    "id": "fac-tourism-directorate",
+    "kind": "TOURIST_OFFICE",
+    "name": "Directorate of Tourism, Government of Manipur",
+    "districtId": "dist-imphal-west",
+    "latitude": 24.8074,
+    "longitude": 93.9384,
+    "precision": "DISTRICT_CENTRE",
+    "note": "Imphal. Office hours only. For lost documents and formal complaints, the national tourist helpline on 1363 answers at any hour.",
+    "provenance": "PUBLIC_EXTERNAL"
+  }
+]

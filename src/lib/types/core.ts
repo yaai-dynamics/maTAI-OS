@@ -101,15 +101,54 @@ export const verifiedFactSchema = z.object({
 });
 export type VerifiedFact = z.infer<typeof verifiedFactSchema>;
 
+export const eventCategorySchema = z.enum([
+  'FESTIVAL',
+  'CULTURAL',
+  'SPORT',
+  'EXHIBITION',
+  'SEASONAL',
+]);
+export type EventCategory = z.infer<typeof eventCategorySchema>;
+
+export const EVENT_CATEGORY_LABEL: Record<EventCategory, string> = {
+  FESTIVAL: 'Festival',
+  CULTURAL: 'Cultural',
+  SPORT: 'Sport',
+  EXHIBITION: 'Exhibition',
+  SEASONAL: 'Seasonal',
+};
+
+/**
+ * How to get in. REGISTRATION and TICKETED are the only ones maTAI handles;
+ * FREE means turn up, and the platform holds no place for anybody.
+ */
+export const eventAdmissionSchema = z.enum(['FREE', 'REGISTRATION', 'TICKETED']);
+export type EventAdmission = z.infer<typeof eventAdmissionSchema>;
+
 export const eventSchema = z.object({
   id: z.string(),
   name: z.string(),
   destinationId: z.string(),
   startAt: z.string(),
   endAt: z.string(),
-  category: z.enum(['FESTIVAL', 'CULTURAL', 'SPORT', 'EXHIBITION', 'SEASONAL']),
+  category: eventCategorySchema,
   expectedAttendance: z.number().int().nonnegative().optional(),
   description: z.string(),
+  /** Where within the destination, in the organiser's words. */
+  venue: z.string().optional(),
+  organiser: z.string().optional(),
+  admission: eventAdmissionSchema.default('FREE'),
+  /** Per person in INR. TICKETED only. */
+  ticketPrice: z.number().int().nonnegative().optional(),
+  /** Places the organiser has opened through maTAI, where they have said. */
+  capacity: z.number().int().positive().optional(),
+  /** The organiser's own page, for anything maTAI does not hold. */
+  officialUrl: z.string().optional(),
+  /**
+   * True when the dates follow the lunar calendar and are announced each year,
+   * so the UI can show them as expected rather than as fixed.
+   */
+  datesProvisional: z.boolean().default(false),
   sourceId: z.string(),
   provenance: provenanceSchema,
 });

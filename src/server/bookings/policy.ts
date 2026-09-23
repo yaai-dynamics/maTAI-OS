@@ -10,6 +10,10 @@
  */
 
 export const MAX_PARTY_SIZE = 20;
+/** Nights one stay request may cover. */
+export const MAX_NIGHTS = 30;
+/** Rooms one stay request may hold. */
+export const MAX_ROOMS = 6;
 /** How far ahead a request may be made. */
 export const MAX_ADVANCE_DAYS = 180;
 /** After the host accepts, the traveller has this long to pay. */
@@ -32,6 +36,16 @@ export const priceFor = (unitPriceRupees: number, partySize: number) => {
   return { unitPricePaise, amountPaise: unitPricePaise * partySize };
 };
 
+/** A stay is quoted per room per night, so the room nights are what multiply. */
+export const stayPriceFor = (ratePerNightRupees: number, nights: number, rooms: number) => {
+  const unitPricePaise = Math.round(ratePerNightRupees * 100);
+  return { unitPricePaise, amountPaise: unitPricePaise * nights * rooms };
+};
+
+/** Nights from arrival to departure: the departure day is not one. */
+export const nightsBetween = (checkIn: string, checkOut: string): number =>
+  Math.round((dayStartsAt(checkOut).getTime() - dayStartsAt(checkIn).getTime()) / DAY_MS);
+
 /** Why a date cannot be requested, or null when it can. */
 export function dateProblem(date: string, at: Date): string | null {
   // JavaScript reads 30 February as 2 March; a real date survives the round trip.
@@ -42,6 +56,21 @@ export function dateProblem(date: string, at: Date): string | null {
   if (dayStartsAt(date).getTime() - dayStartsAt(today).getTime() > MAX_ADVANCE_DAYS * DAY_MS) {
     return `Requests can be made up to ${MAX_ADVANCE_DAYS} days ahead.`;
   }
+  return null;
+}
+
+/**
+ * Why a stay's departure day cannot be requested, or null when it can. The
+ * arrival day goes through dateProblem first, like any other booking.
+ */
+export function checkOutProblem(checkIn: string, checkOut: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(checkOut) || Number.isNaN(dayStartsAt(checkOut).getTime())) {
+    return 'Choose a day to leave.';
+  }
+  if (indiaDate(dayStartsAt(checkOut)) !== checkOut) return 'Choose a day to leave.';
+  const nights = nightsBetween(checkIn, checkOut);
+  if (nights < 1) return 'Leave at least one night after you arrive.';
+  if (nights > MAX_NIGHTS) return `Stays can be booked for up to ${MAX_NIGHTS} nights at a time.`;
   return null;
 }
 

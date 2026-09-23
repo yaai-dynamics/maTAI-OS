@@ -88,6 +88,70 @@ describe.skipIf(!configured)('booking ledger', () => {
     await prisma.$disconnect();
   });
 
+  describe('a stay, which spans nights and holds rooms', () => {
+    async function requestStayNights(
+      ownerHash = newOwner(),
+      overrides: Partial<{ checkIn: string; checkOut: string; rooms: number }> = {},
+    ) {
+      const created = await createBookingRequest(
+        {
+          kind: 'STAY',
+          businessId: HOST,
+          destinationId: 'dest-ukhrul',
+          anonymousSessionId: 'sess-integration',
+          ownerHash,
+          guestName: 'Integration Test',
+          guestPhone: '+919800000000',
+          partySize: 3,
+          date: overrides.checkIn ?? DAY,
+          endDate: overrides.checkOut ?? '2026-09-28',
+          rooms: overrides.rooms ?? 2,
+          unitPricePaise: 140_000,
+        },
+        AT,
+      );
+      return { created, access: { ownerHash } satisfies GuestAccess };
+    }
+
+    it('prices the room nights, not the party', async () => {
+      const { created } = await requestStayNights();
+      if (!created.ok) throw new Error(created.error);
+      const { booking } = created.value;
+      expect(booking.kind).toBe('STAY');
+      expect(booking.nights).toBe(3);
+      expect(booking.rooms).toBe(2);
+      // Three nights in two rooms at 1,400 a night, with three guests who do
+      // not multiply anything.
+      expect(booking.amountPaise).toBe(140_000 * 3 * 2);
+      expect(booking.experienceId).toBeNull();
+    });
+
+    it('refuses a departure that is not after the arrival', async () => {
+      const { created } = await requestStayNights(newOwner(), { checkOut: DAY });
+      expect(created.ok).toBe(false);
+      if (!created.ok) expect(created.error).toMatch(/at least one night/);
+    });
+
+    it('treats a second request for the same property and arrival as a duplicate', async () => {
+      const owner = newOwner();
+      const first = await requestStayNights(owner);
+      expect(first.created.ok).toBe(true);
+      const second = await requestStayNights(owner);
+      expect(second.created.ok).toBe(false);
+      if (!second.created.ok) expect(second.created.error).toMatch(/already have a request open/);
+    });
+
+    it('goes through the same acceptance and payment path as an experience', async () => {
+      const { created, access } = await requestStayNights();
+      if (!created.ok) throw new Error(created.error);
+      const accepted = await respondToBooking(HOST, created.value.booking.id, 'ACCEPT', undefined, AT);
+      expect(accepted.ok).toBe(true);
+      const checkout = await startPayment(created.value.booking.reference, access, AT, gateway);
+      if (!checkout.ok) throw new Error(checkout.error);
+      expect(checkout.value.amountPaise).toBe(140_000 * 3 * 2);
+    });
+  });
+
   it('takes a booking from request to paid, and records the sale once', async () => {
     const { booking, access, orderId } = await readyToPay();
     expect(booking.status).toBe('REQUESTED');

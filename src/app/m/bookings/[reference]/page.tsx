@@ -3,8 +3,9 @@ import { Ticket } from 'lucide-react';
 
 import { BASE_URL, now } from '@/lib/config';
 import { formatIndiaDateTime, formatLongDate } from '@/lib/date';
-import { getBusiness, getDestination, getExperience } from '@/server/data/repository';
+import { getBusiness, getDestination } from '@/server/data/repository';
 import { readGuestOwner } from '@/server/bookings/guest';
+import { bookingSubject } from '@/server/bookings/subject';
 import { getBookingForGuest, reconcileBooking, type BookingView } from '@/server/bookings/ledger';
 import { CANCELLATION_POLICY, formatRupees, freeCancellationUntil, refundFor } from '@/server/bookings/policy';
 import { gatewayStatus } from '@/server/payments/gateway';
@@ -60,7 +61,7 @@ export default async function MobileBookingPage(props: {
     booking = (await getBookingForGuest(reference, access)) ?? booking;
   }
 
-  const experience = getExperience(booking.experienceId);
+  const subject = bookingSubject(booking);
   const business = getBusiness(booking.businessId);
   const destination = getDestination(booking.destinationId);
   const status = BOOKING_STATUS[booking.status];
@@ -86,7 +87,7 @@ export default async function MobileBookingPage(props: {
 
   return (
     <div>
-      <MobileHeader title={experience?.title ?? 'Booking'} subtitle={booking.reference} backHref="/m/bookings" />
+      <MobileHeader title={subject.title} subtitle={booking.reference} backHref="/m/bookings" />
 
       <div className="rounded-2xl bg-surface p-4 shadow-card">
         <div className="flex flex-wrap items-center gap-2">
@@ -134,7 +135,7 @@ export default async function MobileBookingPage(props: {
                   reference={booking.reference}
                   {...(key ? { accessKey: key } : {})}
                   label={`Pay ${formatRupees(booking.amountPaise)}`}
-                  description={`${experience?.title ?? 'Experience'} · ${booking.reference}`}
+                  description={`${subject.title} · ${booking.reference}`}
                 />
                 <p className="text-[12px] text-ink-500">Paid through Razorpay. Card, UPI and bank details never reach this platform.</p>
                 {payments.gateway.testMode ? (

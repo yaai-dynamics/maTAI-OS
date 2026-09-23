@@ -3,8 +3,9 @@ import type { Metadata } from 'next';
 import { ChevronRight, Ticket } from 'lucide-react';
 
 import { formatLongDate } from '@/lib/date';
-import { getBusiness, getExperience } from '@/server/data/repository';
+import { getBusiness } from '@/server/data/repository';
 import { readGuestOwner } from '@/server/bookings/guest';
+import { bookingSubject } from '@/server/bookings/subject';
 import { listBookingsForOwner } from '@/server/bookings/ledger';
 import { formatRupees } from '@/server/bookings/policy';
 import { BOOKING_STATUS } from '@/components/bookings/status';
@@ -41,7 +42,7 @@ export default async function MobileBookingsPage() {
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[15px] font-semibold text-ink-900">
-                      {getExperience(booking.experienceId)?.title ?? 'Experience'}
+                      {bookingSubject(booking).title}
                     </span>
                     <span className="block truncate text-[12px] text-ink-500">
                       {getBusiness(booking.businessId)?.name ?? 'Local host'}

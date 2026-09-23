@@ -1597,3 +1597,211 @@ first tile, so a slow connection still gets pins at once.
   production traffic; a real deployment would host or buy both.
 - No clustering: with 14 destinations the fan-out is enough.
 - No "where am I" location on the Live trip map.
+
+## 28. Emergency and safety
+
+The first workstream of the hackathon realignment (docs/10). Problem
+statement 8 asks for emergency services in the one-stop platform; nothing
+covered it before.
+
+### 28.1 The page
+
+`/explore/emergency`, in the tourist sidebar as its own section (risk tone,
+`ShieldAlert`).
+
+- **Three primary call cards** — 112, 108, 100 — as `tel:` links, 112
+  emphasised. Then the other lines: 101, 1363, 1091, 1098, 1077.
+- **Nearest help** (`NearbyHelp`, the only client component): on a press it
+  reads the browser's location, sorts the facilities by straight-line
+  distance, and shows the closest four with directions. It also renders the
+  coordinates with **Copy location message** and, where the browser supports
+  it, **Share** — a message someone else can act on.
+- **By district**: the complete facility list, always rendered, so the page is
+  useful when location is refused or unavailable.
+
+Everything needed in an emergency is server-rendered HTML and `tel:` links:
+the page works with JavaScript off. Locating the visitor is an addition to a
+list that is already complete, never a precondition.
+
+### 28.2 Honesty about what is known
+
+Judges and visitors both get told what the data is:
+
+- **Numbers** are India's published national short codes only (112, 100, 101,
+  108, 1091, 1098, 1077, 1363). They are real, nationally routed and free.
+  `OFFICIAL`.
+- **No per-facility telephone number is listed.** None could be verified, and
+  an unanswered number in an emergency is worse than none. 112 reaches them
+  all, and the page says so.
+- **Facilities** are real public institutions (RIMS, JNIMS, district hospitals,
+  district police control rooms, the Directorate of Tourism). `PUBLIC_EXTERNAL`.
+- **Positions are district-level only** (`precision: DISTRICT_CENTRE`, the
+  centroid from `districts.json`). So "Directions" searches the map for the
+  building *by name* rather than routing to a centroid, which outside Imphal
+  would be a field. Distances are labelled straight-line, with a note that
+  hill roads are longer and can close in the monsoon.
+
+### 28.3 Privacy
+
+- The page records nothing. A visit here is not tourism intelligence and the
+  department has no reason to know who opened it — so no `ViewSignal`,
+  deliberately.
+- Location is read only on an explicit press, stays in the component, is never
+  sent to the server and is never stored. The page says so where it is shown.
+
+### 28.4 Data
+
+`data/emergency-contacts.json` and `data/safety-facilities.json`, schemas in
+`src/lib/types/safety.ts`, parsed in `seed.ts`, read through
+`getEmergencyContacts` / `getSafetyFacilities` / `getSafetyFacilitiesIn`.
+Curated reference data, so no Prisma model — the same treatment as heritage
+experiences.
+
+### 28.5 Not done
+
+- **No offline cache.** The page needs the network to load at all, because the
+  tourist layout is dynamic. Genuine offline access needs a service worker,
+  which is an app-wide decision, not a page-level one. This is the largest
+  remaining gap in the workstream.
+- Facility coordinates are district centroids; surveyed positions would let the
+  distances be honest to the kilometre.
+- Not on the `/m` mobile app: this pass is desktop-only by decision.
+- No state disaster bulletin, road-closure feed or embassy/FRRO contacts.
+
+## 29. Events and festivals
+
+Workstream D of docs/10, problem statement 7. Events existed as ten thin
+records surfaced inside destination pages; they are now a section of their own.
+
+### 29.1 The model, extended
+
+`eventSchema` gains `venue`, `organiser`, `admission`
+(`FREE` | `REGISTRATION` | `TICKETED`), `ticketPrice`, `capacity`,
+`officialUrl` and `datesProvisional`. All are optional or defaulted, so the
+existing rows stayed valid. `EVENT_CATEGORY_LABEL` and `EventCategory` are now
+exported rather than inlined at each call site.
+
+`datesProvisional` is the honest one. Most Manipuri festivals follow the
+traditional lunar calendar and are confirmed by their organisers each year, so
+the interface shows those dates as expected — a "Dates confirmed nearer the
+time" badge on the list and a sentence on the event — instead of stating them
+as fixed.
+
+### 29.2 Screens
+
+- **`/explore/events`** — everything not yet finished, soonest first, grouped
+  by month, with a sticky month heading. Filter by kind and by district; both
+  are plain links over `searchParams`, so the page stays a server component and
+  filtering works without JavaScript.
+- **`/explore/events/[id]`** — one event: the destination's artwork as a hero,
+  when (with "in 3 weeks"), where, organiser, how to get in, expected
+  attendance, and the ways on — the destination, **Plan a trip around it**,
+  directions, the organiser's own page. Other events at the same place follow.
+
+In the tourist sidebar as its own section (`CalendarCheck`, warn tone).
+
+### 29.3 What the seed says, and does not
+
+Ticket prices are attached only to the clearly synthetic, platform-run walks
+and workshops (`ev-011` Ima Keithel food trail, `ev-012` Loktak dawn
+photography). **No price is attached to a real state or community festival** —
+maTAI does not sell entry to Sangai or to Ningol Chakouba, and their entry
+terms are the organiser's to set. Each event page says so.
+
+Two events were added to exercise the admission states, and `ev-013` (INA Day
+at Moirang) to fill the April window.
+
+### 29.4 Not done
+
+- **No registration or ticketing yet.** The event page says so where the
+  button would be. `Booking` is hard-wired to an experience
+  (`Booking.experienceId` is required), so holding a place at an event needs
+  the same generalisation that bookable stays need — see docs/10 workstream A.
+  Doing A first makes this a small addition rather than a second, parallel
+  booking system.
+- No "add to my trip" from an event, and no reminders. Reminders need a
+  delivery channel; the platform has no email or push infrastructure.
+- No map view of the calendar, though the pieces (§27) exist.
+- Not on the `/m` mobile app: this pass is desktop-only.
+
+## 30. One ledger, three kinds of booking
+
+Workstream A of docs/10, problem statement 5. Pulled ahead of the rest of D
+because event ticketing needs the same generalisation: building it twice would
+have meant two reference series, two payment paths and two sets of refund
+rules.
+
+### 30.1 What changed
+
+`Booking.experienceId` was required, so only an experience could be booked. A
+booking now carries a `kind`:
+
+| Kind | Points at | Priced per | Dates |
+| --- | --- | --- | --- |
+| `EXPERIENCE` | `experienceId` | person | one day |
+| `STAY` | `businessId` (the property) | room per night | `date` → `endDate` |
+| `EVENT` | `eventId` | person | the event's day |
+
+`experienceId` is nullable, `eventId`, `endDate` and `rooms` are new. The
+migration is additive: every existing row is an experience booking, which is
+what the default gives it, so nothing was rewritten or lost.
+
+The state machine, the reference series, the payment window, the expiry pass
+and the refund rules are untouched and shared. A stay is requested, accepted by
+the host, paid for and cancelled exactly as an experience is — which is right
+for a homestay, where the host decides whether they have the room.
+
+### 30.2 Pricing
+
+`amountPaise` is the only thing that differs, and it is computed in one place
+in `createBookingRequest`:
+
+- experience, event: `unitPricePaise × partySize`
+- stay: `unitPricePaise × nights × rooms`
+
+`unitPricePaise` therefore means "per person" or "per room per night"
+depending on the kind, which `bookingSubject()` turns into words
+(`src/server/bookings/subject.ts`) so the tourist, host and mobile screens
+cannot describe the same booking differently. Nights are arrival to departure,
+exclusive of the departure day; at most 30 nights and 6 rooms per request.
+
+The room rate is read from the property inside `requestStay`, never taken from
+the form, so a page cannot quote a price the host has not set.
+
+### 30.3 Stays on the tourist side
+
+`/explore/stays` lists the six participating homestays and hotels that quote a
+room rate, filterable by kind and district. `/explore/stays/[id]` shows the
+property and the request form.
+
+A property whose host has no partner account cannot answer a request, so
+rather than take one nobody would read, the page says it is not bookable
+online yet and points to the destination instead. `isStay()` is deliberately
+narrow: a guide and a tour operator also have rates, but theirs buy a person's
+time, not a room, so only `covers: ROOM` with `unit: NIGHT` qualifies.
+
+### 30.4 Tests
+
+`tests/bookings.test.ts` covers the new pure rules (nights across a month end,
+departure before arrival, the 30-night cap, room-night pricing).
+`tests/integration/bookings.test.ts` takes a stay through MySQL: three nights
+in two rooms priced at room-nights rather than guests, the duplicate rule
+keyed on the property, and the same acceptance and checkout path as an
+experience. 26 pass there, 379 across the suite.
+
+### 30.5 Not done
+
+- **Event tickets are not wired up yet**, though the ledger now holds them.
+  That is the rest of workstream D.
+- No availability check against `AccommodationSnapshot`: a request can be made
+  for nights the host has already filled, and they decline it by hand. Holding
+  inventory needs a lock the prototype does not have.
+- Enquiries are still experience-scoped, so the non-bookable stay has no form.
+- Not on the `/m` mobile app: this pass is desktop-only.
+
+### 30.6 Unrelated failure found on the way
+
+`tests/integration/auth.test.ts` has six failures that predate this work:
+it looks for a demo account with `governmentRole: 'OFFICER'`, and
+`DEMO_ACCOUNTS` only has `ADMINISTRATOR`, so `officer` is undefined. Not
+caused by, and not fixed by, this change.

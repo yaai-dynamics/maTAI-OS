@@ -22,7 +22,7 @@ import {
   sendEnquiry,
   submitTouristFeedback,
 } from '@/server/actions/tourist';
-import { cancelMyBooking, requestBooking } from '@/server/actions/bookings';
+import { cancelMyBooking, requestBooking, requestStay } from '@/server/actions/bookings';
 import { answerBookingRequest, cancelBookingAsHost, markBookingCompleted } from '@/server/actions/partner-bookings';
 import {
   changeMyPassword,
@@ -284,6 +284,23 @@ export async function requestBookingForm(_prev: FormState, data: FormData): Prom
   });
   if (!result.ok) return { status: 'error', message: result.error };
   // The key is in the link so the booking can be reopened on another device.
+  redirect(`/explore/bookings/${result.reference}?key=${encodeURIComponent(result.accessKey)}&new=1`);
+}
+
+export async function requestStayForm(_prev: FormState, data: FormData): Promise<FormState> {
+  const result = await requestStay({
+    businessId: text(data, 'businessId'),
+    checkIn: text(data, 'checkIn'),
+    checkOut: text(data, 'checkOut'),
+    rooms: text(data, 'rooms'),
+    partySize: text(data, 'partySize'),
+    guestName: text(data, 'guestName'),
+    guestPhone: text(data, 'guestPhone'),
+    guestEmail: text(data, 'guestEmail'),
+    note: text(data, 'note') || undefined,
+    consent: data.get('consent') === 'on',
+  });
+  if (!result.ok) return { status: 'error', message: result.error };
   redirect(`/explore/bookings/${result.reference}?key=${encodeURIComponent(result.accessKey)}&new=1`);
 }
 
