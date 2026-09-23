@@ -131,8 +131,8 @@ export async function askAboutDestination(
       unanswered,
     },
     task: unanswered
-      ? 'Say plainly that the knowledge base does not cover this, and offer what it does cover. Do not answer from general knowledge. Respond in the same language that the visitor used for their question.'
-      : 'Answer the visitor question using only these facts. Respond in the same language that the visitor used for their question.',
+      ? 'Say plainly that the knowledge base does not cover this, and offer what it does cover. Do not answer from general knowledge. Respond in the same language as the visitor. If they use an Indian language like Hindi, always reply in its native script (e.g. Devanagari) even if they used English characters.'
+      : 'Answer the visitor question using only these facts. Respond in the same language as the visitor. If they use an Indian language like Hindi, always reply in its native script (e.g. Devanagari) even if they used English characters.',
     maxTokens: 420,
   });
 

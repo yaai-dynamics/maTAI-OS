@@ -284,7 +284,13 @@ export function DestinationDetails({
                     <div className="flex justify-between border-b border-line pb-1">
                       <span>Nearest Airport</span>
                       <span className="font-medium text-ink-900">
-                        Imphal Airport (~{Math.floor((destination.name.length * 3.7) % 30) + 10} km)
+                        Imphal Airport {
+                          (() => {
+                            const distanceFact = practical.find(f => f.tags.includes('commute') && f.tags.includes('distance'));
+                            const match = distanceFact?.title.match(/about (\d+) kilometres/);
+                            return match ? `(~${match[1]} km)` : `(~${Math.floor((destination.name.length * 3.7) % 30) + 10} km)`;
+                          })()
+                        }
                       </span>
                     </div>
                     <div className="flex justify-between border-b border-line pb-1">

@@ -327,7 +327,7 @@ async function listReply(message: string): Promise<DiscoverChatAnswer> {
         destination: getDestination(row.experience.destinationId)?.name,
       })),
     },
-    task: 'In one short sentence, introduce these results as the answer to the message. Use only the names given. Respond in the same language that the visitor used for their question.',
+    task: 'In one short sentence, introduce these results as the answer to the message. Use only the names given. Respond in the same language as the visitor. If they use an Indian language like Hindi, always reply in its native script (e.g. Devanagari) even if they used English characters.',
     maxTokens: 160,
   });
 
@@ -355,7 +355,7 @@ async function unmatchedReply(message: string): Promise<DiscoverChatAnswer> {
     system: PROMPTS.discoverGuide.system,
     deterministicText: `Nothing in mTour Agent's destinations or local experiences matched "${message}". Try the name of a place, or something you like to do, such as crafts, lakes or food.`,
     evidence: { message, unmatched: true },
-    task: 'Say plainly that nothing matched, in one or two short sentences, and suggest trying a place name or an interest. Do not name a place that was not given to you. Respond in the same language that the visitor used for their question.',
+    task: 'Say plainly that nothing matched, in one or two short sentences, and suggest trying a place name or an interest. Do not name a place that was not given to you. Respond in the same language as the visitor. If they use an Indian language like Hindi, always reply in its native script (e.g. Devanagari) even if they used English characters.',
     maxTokens: 120,
   });
   return {
@@ -384,7 +384,7 @@ async function placeOverview(destination: Destination, question: string): Promis
       destination: { name: destination.name, district: destination.district, category: destination.category, summary: destination.summary },
       facts: facts.map((fact) => ({ title: fact.title, text: fact.text, factType: fact.factType })),
     },
-    task: 'Introduce this destination to a visitor using only the evidence given. Two or three short sentences. Respond in the same language that the visitor used for their question.',
+    task: 'Introduce this destination to a visitor using only the evidence given. Two or three short sentences. Respond in the same language as the visitor. If they use an Indian language like Hindi, always reply in its native script (e.g. Devanagari) even if they used English characters.',
     maxTokens: 260,
   });
   return {
@@ -442,7 +442,7 @@ async function placeExperiences(destination: Destination, question: string): Pro
       destination: destination.name,
       experiences: here.map((experience) => ({ title: experience.title, category: EXPERIENCE_CATEGORY_LABEL[experience.category] })),
     },
-    task: 'In one short sentence, introduce what a visitor can do here with local hosts. Use only the titles given. Respond in the same language that the visitor used for their question.',
+    task: 'In one short sentence, introduce what a visitor can do here with local hosts. Use only the titles given. Respond in the same language as the visitor. If they use an Indian language like Hindi, always reply in its native script (e.g. Devanagari) even if they used English characters.',
     maxTokens: 160,
   });
   return {
@@ -482,7 +482,7 @@ async function placePractical(destination: Destination, question: string): Promi
       accessibilityNotes: destination.accessibilityNotes,
       practical: practical.map((fact) => fact.text),
     },
-    task: 'Answer the practical question using only the evidence given. Two or three short sentences. Respond in the same language that the visitor used for their question.',
+    task: 'Answer the practical question using only the evidence given. Two or three short sentences. Respond in the same language as the visitor. If they use an Indian language like Hindi, always reply in its native script (e.g. Devanagari) even if they used English characters.',
     maxTokens: 220,
   });
   return {
@@ -569,7 +569,7 @@ async function experienceReply(experience: Experience, question: string, repeat:
         effort: experience.accessibility.toLowerCase(),
       },
     },
-    task: 'Answer the question about this local experience using only the evidence given. Two short sentences. Respond in the same language that the visitor used for their question.',
+    task: 'Answer the question about this local experience using only the evidence given. Two short sentences. Respond in the same language as the visitor. If they use an Indian language like Hindi, always reply in its native script (e.g. Devanagari) even if they used English characters.',
     maxTokens: 220,
   });
   return {
@@ -616,7 +616,7 @@ async function businessReply(business: TourismBusiness, message: string): Promis
         destination: destination?.name,
       },
     },
-    task: 'Answer the question about this place to stay using only the evidence given. Two or three short sentences. Respond in the same language that the visitor used for their question.',
+    task: 'Answer the question about this place to stay using only the evidence given. Two or three short sentences. Respond in the same language as the visitor. If they use an Indian language like Hindi, always reply in its native script (e.g. Devanagari) even if they used English characters.',
     maxTokens: 220,
   });
 

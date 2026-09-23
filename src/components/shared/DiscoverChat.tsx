@@ -717,6 +717,8 @@ function Reply({
   onOnline,
   onOpenPlace,
   onEnquire,
+  onSpeak,
+  isPlaying,
 }: {
   turn: Turn;
   steps: DiscoverAction[];

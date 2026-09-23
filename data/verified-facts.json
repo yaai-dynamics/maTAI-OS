@@ -8,7 +8,11 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-20",
-    "tags": ["history", "heritage", "governance"]
+    "tags": [
+      "history",
+      "heritage",
+      "governance"
+    ]
   },
   {
     "id": "fact-kangla-02",
@@ -19,7 +23,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-20",
-    "tags": ["architecture", "heritage"]
+    "tags": [
+      "architecture",
+      "heritage"
+    ]
   },
   {
     "id": "fact-kangla-03",
@@ -30,7 +37,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-20",
-    "tags": ["symbol", "heritage"]
+    "tags": [
+      "symbol",
+      "heritage"
+    ]
   },
   {
     "id": "fact-kangla-04",
@@ -41,7 +51,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-20",
-    "tags": ["language", "tradition"]
+    "tags": [
+      "language",
+      "tradition"
+    ]
   },
   {
     "id": "fact-kangla-05",
@@ -52,7 +65,9 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-01",
-    "tags": ["planning"]
+    "tags": [
+      "planning"
+    ]
   },
   {
     "id": "fact-imakeithel-01",
@@ -63,7 +78,11 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-22",
-    "tags": ["culture", "commerce", "women"]
+    "tags": [
+      "culture",
+      "commerce",
+      "women"
+    ]
   },
   {
     "id": "fact-imakeithel-02",
@@ -74,7 +93,11 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-22",
-    "tags": ["history", "women", "protest"]
+    "tags": [
+      "history",
+      "women",
+      "protest"
+    ]
   },
   {
     "id": "fact-imakeithel-03",
@@ -85,7 +108,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-01",
-    "tags": ["planning", "etiquette"]
+    "tags": [
+      "planning",
+      "etiquette"
+    ]
   },
   {
     "id": "fact-loktak-01",
@@ -96,7 +122,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-18",
-    "tags": ["nature", "geography"]
+    "tags": [
+      "nature",
+      "geography"
+    ]
   },
   {
     "id": "fact-loktak-02",
@@ -107,7 +136,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-18",
-    "tags": ["ecology", "nature"]
+    "tags": [
+      "ecology",
+      "nature"
+    ]
   },
   {
     "id": "fact-loktak-03",
@@ -118,7 +150,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-18",
-    "tags": ["livelihood", "ecology"]
+    "tags": [
+      "livelihood",
+      "ecology"
+    ]
   },
   {
     "id": "fact-loktak-04",
@@ -129,7 +164,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-18",
-    "tags": ["conservation", "policy"]
+    "tags": [
+      "conservation",
+      "policy"
+    ]
   },
   {
     "id": "fact-loktak-05",
@@ -140,7 +178,25 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-18",
-    "tags": ["conservation", "debate"]
+    "tags": [
+      "conservation",
+      "debate"
+    ]
+  },
+  {
+    "id": "fact-loktak-07",
+    "destinationId": "dest-loktak",
+    "title": "Loktak Lake is about 48 kilometres from Imphal Airport",
+    "text": "The lake is located in Bishnupur district. It is approximately 48 kilometres from Imphal International Airport, and the drive usually takes around 1 to 1.5 hours depending on traffic.",
+    "factType": "PRACTICAL",
+    "sourceId": "src-curated-knowledge",
+    "verified": true,
+    "verifiedAt": "2026-09-23",
+    "tags": [
+      "planning",
+      "commute",
+      "distance"
+    ]
   },
   {
     "id": "fact-loktak-06",
@@ -151,7 +207,9 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-01",
-    "tags": ["planning"]
+    "tags": [
+      "planning"
+    ]
   },
   {
     "id": "fact-keibul-01",
@@ -162,7 +220,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-18",
-    "tags": ["wildlife", "conservation"]
+    "tags": [
+      "wildlife",
+      "conservation"
+    ]
   },
   {
     "id": "fact-keibul-02",
@@ -173,7 +234,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-18",
-    "tags": ["ecology", "wildlife"]
+    "tags": [
+      "ecology",
+      "wildlife"
+    ]
   },
   {
     "id": "fact-keibul-03",
@@ -184,7 +248,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-18",
-    "tags": ["conservation", "policy"]
+    "tags": [
+      "conservation",
+      "policy"
+    ]
   },
   {
     "id": "fact-keibul-04",
@@ -195,7 +262,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-01",
-    "tags": ["planning", "wildlife"]
+    "tags": [
+      "planning",
+      "wildlife"
+    ]
   },
   {
     "id": "fact-moirang-01",
@@ -206,7 +276,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-25",
-    "tags": ["history", "war"]
+    "tags": [
+      "history",
+      "war"
+    ]
   },
   {
     "id": "fact-moirang-02",
@@ -217,7 +290,11 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-25",
-    "tags": ["culture", "tradition", "performance"]
+    "tags": [
+      "culture",
+      "tradition",
+      "performance"
+    ]
   },
   {
     "id": "fact-moirang-03",
@@ -228,7 +305,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-01",
-    "tags": ["planning", "routing"]
+    "tags": [
+      "planning",
+      "routing"
+    ]
   },
   {
     "id": "fact-ukhrul-01",
@@ -239,7 +319,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-27",
-    "tags": ["culture", "community"]
+    "tags": [
+      "culture",
+      "community"
+    ]
   },
   {
     "id": "fact-ukhrul-02",
@@ -250,7 +333,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-27",
-    "tags": ["geography", "climate"]
+    "tags": [
+      "geography",
+      "climate"
+    ]
   },
   {
     "id": "fact-ukhrul-03",
@@ -261,7 +347,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-27",
-    "tags": ["festival", "culture"]
+    "tags": [
+      "festival",
+      "culture"
+    ]
   },
   {
     "id": "fact-ukhrul-04",
@@ -272,7 +361,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-01",
-    "tags": ["etiquette", "community"]
+    "tags": [
+      "etiquette",
+      "community"
+    ]
   },
   {
     "id": "fact-ukhrul-05",
@@ -283,7 +375,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-01",
-    "tags": ["planning", "transport"]
+    "tags": [
+      "planning",
+      "transport"
+    ]
   },
   {
     "id": "fact-shirui-01",
@@ -294,7 +389,11 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-27",
-    "tags": ["botany", "conservation", "symbol"]
+    "tags": [
+      "botany",
+      "conservation",
+      "symbol"
+    ]
   },
   {
     "id": "fact-shirui-02",
@@ -305,7 +404,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-27",
-    "tags": ["botany", "history"]
+    "tags": [
+      "botany",
+      "history"
+    ]
   },
   {
     "id": "fact-shirui-03",
@@ -316,7 +418,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-27",
-    "tags": ["conservation", "capacity"]
+    "tags": [
+      "conservation",
+      "capacity"
+    ]
   },
   {
     "id": "fact-shirui-04",
@@ -327,7 +432,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-01",
-    "tags": ["etiquette", "conservation"]
+    "tags": [
+      "etiquette",
+      "conservation"
+    ]
   },
   {
     "id": "fact-andro-01",
@@ -338,7 +446,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-29",
-    "tags": ["craft", "heritage"]
+    "tags": [
+      "craft",
+      "heritage"
+    ]
   },
   {
     "id": "fact-andro-02",
@@ -349,7 +460,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-29",
-    "tags": ["tradition", "ritual"]
+    "tags": [
+      "tradition",
+      "ritual"
+    ]
   },
   {
     "id": "fact-andro-03",
@@ -360,7 +474,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-01",
-    "tags": ["planning", "craft"]
+    "tags": [
+      "planning",
+      "craft"
+    ]
   },
   {
     "id": "fact-khongjom-01",
@@ -371,7 +488,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-30",
-    "tags": ["history", "war"]
+    "tags": [
+      "history",
+      "war"
+    ]
   },
   {
     "id": "fact-khongjom-02",
@@ -382,7 +502,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-30",
-    "tags": ["commemoration", "history"]
+    "tags": [
+      "commemoration",
+      "history"
+    ]
   },
   {
     "id": "fact-warcem-01",
@@ -393,7 +516,11 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-30",
-    "tags": ["history", "war", "memorial"]
+    "tags": [
+      "history",
+      "war",
+      "memorial"
+    ]
   },
   {
     "id": "fact-warcem-02",
@@ -404,7 +531,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-08-30",
-    "tags": ["routing", "history"]
+    "tags": [
+      "routing",
+      "history"
+    ]
   },
   {
     "id": "fact-dzukou-01",
@@ -415,7 +545,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-02",
-    "tags": ["geography", "trekking"]
+    "tags": [
+      "geography",
+      "trekking"
+    ]
   },
   {
     "id": "fact-dzukou-02",
@@ -426,7 +559,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-02",
-    "tags": ["conservation", "safety"]
+    "tags": [
+      "conservation",
+      "safety"
+    ]
   },
   {
     "id": "fact-dzukou-03",
@@ -437,7 +573,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-02",
-    "tags": ["planning", "safety"]
+    "tags": [
+      "planning",
+      "safety"
+    ]
   },
   {
     "id": "fact-tamenglong-01",
@@ -448,7 +587,11 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-02",
-    "tags": ["wildlife", "conservation", "community"]
+    "tags": [
+      "wildlife",
+      "conservation",
+      "community"
+    ]
   },
   {
     "id": "fact-tamenglong-02",
@@ -459,7 +602,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-02",
-    "tags": ["agriculture", "festival"]
+    "tags": [
+      "agriculture",
+      "festival"
+    ]
   },
   {
     "id": "fact-tamenglong-03",
@@ -470,7 +616,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-02",
-    "tags": ["capacity", "planning"]
+    "tags": [
+      "capacity",
+      "planning"
+    ]
   },
   {
     "id": "fact-bishnupur-01",
@@ -481,7 +630,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-02",
-    "tags": ["architecture", "heritage"]
+    "tags": [
+      "architecture",
+      "heritage"
+    ]
   },
   {
     "id": "fact-bishnupur-02",
@@ -492,7 +644,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-02",
-    "tags": ["routing", "planning"]
+    "tags": [
+      "routing",
+      "planning"
+    ]
   },
   {
     "id": "fact-moreh-01",
@@ -503,7 +658,10 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-02",
-    "tags": ["border", "commerce"]
+    "tags": [
+      "border",
+      "commerce"
+    ]
   },
   {
     "id": "fact-moreh-02",
@@ -514,6 +672,204 @@
     "sourceId": "src-curated-knowledge",
     "verified": true,
     "verifiedAt": "2026-09-02",
-    "tags": ["safety", "policy"]
+    "tags": [
+      "safety",
+      "policy"
+    ]
+  },
+  {
+    "id": "fact-kangla-dist-01",
+    "destinationId": "dest-kangla",
+    "title": "Kangla is about 8 kilometres from Imphal Airport",
+    "text": "Kangla Fort is located in the heart of Imphal city. It is approximately 8 kilometres from Imphal International Airport, and the drive usually takes around 20 minutes.",
+    "factType": "PRACTICAL",
+    "sourceId": "src-curated-knowledge",
+    "verified": true,
+    "verifiedAt": "2026-09-23",
+    "tags": [
+      "planning",
+      "commute",
+      "distance"
+    ]
+  },
+  {
+    "id": "fact-imakeithel-dist-01",
+    "destinationId": "dest-ima-keithel",
+    "title": "Ima Keithel is about 8 kilometres from Imphal Airport",
+    "text": "Ima Keithel is situated centrally in Imphal. It is roughly 8 kilometres from Imphal International Airport, taking about 20 to 25 minutes by taxi or auto-rickshaw.",
+    "factType": "PRACTICAL",
+    "sourceId": "src-curated-knowledge",
+    "verified": true,
+    "verifiedAt": "2026-09-23",
+    "tags": [
+      "planning",
+      "commute",
+      "distance"
+    ]
+  },
+  {
+    "id": "fact-keibul-dist-01",
+    "destinationId": "dest-keibul",
+    "title": "Keibul Lamjao is about 53 kilometres from Imphal Airport",
+    "text": "Keibul Lamjao National Park is located in Bishnupur district. It is approximately 53 kilometres from Imphal International Airport, with a driving time of around 1.5 hours.",
+    "factType": "PRACTICAL",
+    "sourceId": "src-curated-knowledge",
+    "verified": true,
+    "verifiedAt": "2026-09-23",
+    "tags": [
+      "planning",
+      "commute",
+      "distance"
+    ]
+  },
+  {
+    "id": "fact-moirang-dist-01",
+    "destinationId": "dest-moirang",
+    "title": "Moirang is about 45 kilometres from Imphal Airport",
+    "text": "Moirang is situated in Bishnupur district. It is about 45 kilometres south of Imphal International Airport, usually taking around 1 hour and 15 minutes by road.",
+    "factType": "PRACTICAL",
+    "sourceId": "src-curated-knowledge",
+    "verified": true,
+    "verifiedAt": "2026-09-23",
+    "tags": [
+      "planning",
+      "commute",
+      "distance"
+    ]
+  },
+  {
+    "id": "fact-ukhrul-dist-01",
+    "destinationId": "dest-ukhrul",
+    "title": "Ukhrul is about 83 kilometres from Imphal Airport",
+    "text": "Ukhrul town is located in the eastern hills. It is approximately 83 kilometres from Imphal International Airport, and the winding hill drive takes around 2.5 to 3 hours.",
+    "factType": "PRACTICAL",
+    "sourceId": "src-curated-knowledge",
+    "verified": true,
+    "verifiedAt": "2026-09-23",
+    "tags": [
+      "planning",
+      "commute",
+      "distance"
+    ]
+  },
+  {
+    "id": "fact-shirui-dist-01",
+    "destinationId": "dest-shirui",
+    "title": "Shirui is about 95 kilometres from Imphal Airport",
+    "text": "Shirui Peak is situated beyond Ukhrul town. It is approximately 95 kilometres from Imphal International Airport, requiring a drive of about 3 to 3.5 hours.",
+    "factType": "PRACTICAL",
+    "sourceId": "src-curated-knowledge",
+    "verified": true,
+    "verifiedAt": "2026-09-23",
+    "tags": [
+      "planning",
+      "commute",
+      "distance"
+    ]
+  },
+  {
+    "id": "fact-andro-dist-01",
+    "destinationId": "dest-andro",
+    "title": "Andro is about 25 kilometres from Imphal Airport",
+    "text": "The cultural village of Andro is located in Imphal East district. It is roughly 25 kilometres from Imphal International Airport, and the drive takes about 45 to 50 minutes.",
+    "factType": "PRACTICAL",
+    "sourceId": "src-curated-knowledge",
+    "verified": true,
+    "verifiedAt": "2026-09-23",
+    "tags": [
+      "planning",
+      "commute",
+      "distance"
+    ]
+  },
+  {
+    "id": "fact-khongjom-dist-01",
+    "destinationId": "dest-khongjom",
+    "title": "Khongjom is about 35 kilometres from Imphal Airport",
+    "text": "Khongjom War Memorial is located in Thoubal district. It is approximately 35 kilometres from Imphal International Airport, generally taking around 1 hour by road.",
+    "factType": "PRACTICAL",
+    "sourceId": "src-curated-knowledge",
+    "verified": true,
+    "verifiedAt": "2026-09-23",
+    "tags": [
+      "planning",
+      "commute",
+      "distance"
+    ]
+  },
+  {
+    "id": "fact-moreh-dist-01",
+    "destinationId": "dest-moreh",
+    "title": "Moreh is about 110 kilometres from Imphal Airport",
+    "text": "The border town of Moreh is in Tengnoupal district. It is roughly 110 kilometres from Imphal International Airport, and the hill drive takes approximately 3.5 to 4 hours.",
+    "factType": "PRACTICAL",
+    "sourceId": "src-curated-knowledge",
+    "verified": true,
+    "verifiedAt": "2026-09-23",
+    "tags": [
+      "planning",
+      "commute",
+      "distance"
+    ]
+  },
+  {
+    "id": "fact-imphalwarcemetery-dist-01",
+    "destinationId": "dest-imphal-war-cemetery",
+    "title": "Imphal War Cemetery is about 8 kilometres from Imphal Airport",
+    "text": "The Imphal War Cemetery is located in the central part of the city. It is approximately 8 kilometres from Imphal International Airport, a short drive of about 20 minutes.",
+    "factType": "PRACTICAL",
+    "sourceId": "src-curated-knowledge",
+    "verified": true,
+    "verifiedAt": "2026-09-23",
+    "tags": [
+      "planning",
+      "commute",
+      "distance"
+    ]
+  },
+  {
+    "id": "fact-dzukou-dist-01",
+    "destinationId": "dest-dzukou",
+    "title": "The Dzukou Valley trek base is about 100 kilometres from Imphal Airport",
+    "text": "The trekking base for Dzukou Valley on the Manipur side is in Senapati district, roughly 100 kilometres from Imphal International Airport. The drive takes about 3 hours before the trek begins.",
+    "factType": "PRACTICAL",
+    "sourceId": "src-curated-knowledge",
+    "verified": true,
+    "verifiedAt": "2026-09-23",
+    "tags": [
+      "planning",
+      "commute",
+      "distance"
+    ]
+  },
+  {
+    "id": "fact-tamenglong-dist-01",
+    "destinationId": "dest-tamenglong",
+    "title": "Tamenglong is about 150 kilometres from Imphal Airport",
+    "text": "Tamenglong is a western hill district. It is approximately 150 kilometres from Imphal International Airport, and the challenging hill drive takes around 5 to 6 hours.",
+    "factType": "PRACTICAL",
+    "sourceId": "src-curated-knowledge",
+    "verified": true,
+    "verifiedAt": "2026-09-23",
+    "tags": [
+      "planning",
+      "commute",
+      "distance"
+    ]
+  },
+  {
+    "id": "fact-bishnupurtemple-dist-01",
+    "destinationId": "dest-bishnupur-temple",
+    "title": "Bishnupur Temple is about 30 kilometres from Imphal Airport",
+    "text": "The historic Bishnupur Temple is on the route to Loktak Lake. It is roughly 30 kilometres from Imphal International Airport, taking about 45 minutes to reach by car.",
+    "factType": "PRACTICAL",
+    "sourceId": "src-curated-knowledge",
+    "verified": true,
+    "verifiedAt": "2026-09-23",
+    "tags": [
+      "planning",
+      "commute",
+      "distance"
+    ]
   }
 ]
