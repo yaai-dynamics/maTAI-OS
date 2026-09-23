@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import type { GroundedAnswer } from '@/server/ai/storyteller';
 import { FACT_TYPE_LABEL, FACT_TYPE_NOTE } from '@/lib/fact-types';
 import { Badge, Button, Card, CardBody, ErrorState, Skeleton, cn } from '@/components/ui/primitives';
+import { Mic, Volume2, VolumeX } from 'lucide-react';
 
 /**
  * Ask the Place.
@@ -32,8 +33,49 @@ export function AskPlacePanel({
   const [answers, setAnswers] = useState<GroundedAnswer[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [isRecording, setIsRecording] = useState(false);
+  const [isPlayingId, setIsPlayingId] = useState<string | null>(null);
 
   const dark = tone === 'dark';
+
+  const startRecording = () => {
+    // @ts-ignore
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Your browser does not support Speech Recognition.');
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = navigator.language || 'en-US';
+    recognition.interimResults = false;
+    
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+    recognition.onerror = (e: any) => {
+      console.error('Speech recognition error', e.error);
+      setIsRecording(false);
+    };
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setQuestion(transcript);
+      run(transcript);
+    };
+    recognition.start();
+  };
+
+  const speakAnswer = (text: string, id: string) => {
+    if (isPlayingId === id) {
+      window.speechSynthesis.cancel();
+      setIsPlayingId(null);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onend = () => setIsPlayingId(null);
+    utterance.onerror = () => setIsPlayingId(null);
+    setIsPlayingId(id);
+    window.speechSynthesis.speak(utterance);
+  };
 
   const run = (value: string) => {
     const trimmed = value.trim();
@@ -62,18 +104,32 @@ export function AskPlacePanel({
         <label htmlFor={`ask-${destinationId}`} className="sr-only">
           Ask about {destinationName}
         </label>
-        <input
-          id={`ask-${destinationId}`}
-          value={question}
-          onChange={(event) => setQuestion(event.target.value)}
-          placeholder={`Ask about ${destinationName}`}
-          className={cn(
-            'w-full rounded-md border px-3 py-2.5 text-[14px]',
-            dark
-              ? 'border-white/25 bg-white/10 text-white placeholder:text-white/50 focus:border-white/50'
-              : 'border-line-strong bg-surface text-ink-900 placeholder:text-ink-400 focus:border-brand-500',
-          )}
-        />
+        <div className="relative w-full">
+          <input
+            id={`ask-${destinationId}`}
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+            placeholder={`Ask about ${destinationName}`}
+            className={cn(
+              'w-full rounded-md border px-3 py-2.5 pr-10 text-[14px]',
+              dark
+                ? 'border-white/25 bg-white/10 text-white placeholder:text-white/50 focus:border-white/50'
+                : 'border-line-strong bg-surface text-ink-900 placeholder:text-ink-400 focus:border-brand-500',
+            )}
+          />
+          <button
+            type="button"
+            onClick={startRecording}
+            disabled={pending || isRecording}
+            className={cn(
+              "absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full transition-colors",
+              isRecording ? "text-red-500 animate-pulse bg-red-100" : (dark ? "text-white/70 hover:bg-white/10" : "text-ink-500 hover:bg-surface-2")
+            )}
+            title="Ask with voice"
+          >
+            <Mic className="h-4 w-4" />
+          </button>
+        </div>
         <Button
           type="submit"
           disabled={pending}
@@ -117,7 +173,21 @@ export function AskPlacePanel({
       {answers.map((answer, index) => (
         <Card key={`${answer.generatedAt}-${index}`} className={index === 0 ? 'rise' : undefined}>
           <CardBody className="space-y-3 pt-4">
-            <p className="text-[12px] font-medium text-ink-500">{answer.question}</p>
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[12px] font-medium text-ink-500">{answer.question}</p>
+              <button
+                onClick={() => speakAnswer(answer.answer, answer.generatedAt)}
+                className={cn(
+                  "shrink-0 rounded-full p-1.5 transition-colors",
+                  isPlayingId === answer.generatedAt 
+                    ? "bg-brand-100 text-brand-700" 
+                    : "text-ink-400 hover:bg-surface-2 hover:text-ink-700"
+                )}
+                title="Read aloud"
+              >
+                {isPlayingId === answer.generatedAt ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              </button>
+            </div>
             <p className="text-[14px] leading-relaxed text-ink-900">{answer.answer}</p>
 
             {answer.facts.length > 0 ? (

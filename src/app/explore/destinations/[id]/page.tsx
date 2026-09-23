@@ -41,7 +41,7 @@ export default async function DestinationPage(props: { params: Promise<{ id: str
         submitEnquiry={sendChatEnquiry}
         initialFocus={{ destinationId: id }}
       >
-        <DestinationDetails data={buildDestinationPreview(destination)} ask={askPlace} hideAskPanel />
+        <DestinationDetails data={buildDestinationPreview(destination)} ask={askPlace} />
       </DiscoverWorkspace>
     </div>
   );

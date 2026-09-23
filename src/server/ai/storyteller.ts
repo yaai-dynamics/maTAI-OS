@@ -131,8 +131,8 @@ export async function askAboutDestination(
       unanswered,
     },
     task: unanswered
-      ? 'Say plainly that the knowledge base does not cover this, and offer what it does cover. Do not answer from general knowledge.'
-      : 'Answer the visitor question using only these facts.',
+      ? 'Say plainly that the knowledge base does not cover this, and offer what it does cover. Do not answer from general knowledge. Respond in the same language that the visitor used for their question.'
+      : 'Answer the visitor question using only these facts. Respond in the same language that the visitor used for their question.',
     maxTokens: 420,
   });
 

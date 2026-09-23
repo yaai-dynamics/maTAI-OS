@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, ArrowUp, ExternalLink, Globe, MessageSquareText, Play, X } from 'lucide-react';
+import { ArrowRight, ArrowUp, ExternalLink, Globe, MessageSquareText, Play, X, Mic, Volume2, VolumeX } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useRef, useState, useSyncExternalStore, useTransition } from 'react';
 import type { Destination, Experience, TourismBusiness } from '@/lib/types';
@@ -200,6 +200,8 @@ export function DiscoverChat({
   const [preview, setPreview] = useState<PreviewState>({ status: 'closed' });
   const [enquiry, setEnquiry] = useState<EnquiryFlowState | null>(null);
   const [, startTransition] = useTransition();
+  const [isRecording, setIsRecording] = useState(false);
+  const [isPlayingId, setIsPlayingId] = useState<string | null>(null);
   const end = useRef<HTMLDivElement>(null);
   const focusedDestination = initialFocus?.destinationId ? destinationById.get(initialFocus.destinationId) : undefined;
   const focusedExperience = initialFocus?.experienceId ? experienceById.get(initialFocus.experienceId) : undefined;
@@ -208,6 +210,45 @@ export function DiscoverChat({
   const toScroll = useCallback(() => {
     requestAnimationFrame(() => end.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
   }, []);
+
+  const startRecording = () => {
+    // @ts-ignore
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Your browser does not support Speech Recognition.');
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = navigator.language || 'en-US';
+    recognition.interimResults = false;
+    
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+    recognition.onerror = (e: any) => {
+      console.error('Speech recognition error', e.error);
+      setIsRecording(false);
+    };
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setQuestion(transcript);
+      submit(transcript);
+    };
+    recognition.start();
+  };
+
+  const speakAnswer = (text: string, id: string) => {
+    if (isPlayingId === id) {
+      window.speechSynthesis.cancel();
+      setIsPlayingId(null);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onend = () => setIsPlayingId(null);
+    utterance.onerror = () => setIsPlayingId(null);
+    setIsPlayingId(id);
+    window.speechSynthesis.speak(utterance);
+  };
 
   const openPreview = (destinationId: string) => {
     setPreview({ status: 'loading' });
@@ -428,6 +469,8 @@ export function DiscoverChat({
                 onOnline={(destinationId) => runOnline(turn.id, destinationId)}
                 onOpenPlace={openPreview}
                 onEnquire={startEnquiry}
+                onSpeak={() => speakAnswer(turn.answer.text, turn.id)}
+                isPlaying={isPlayingId === turn.id}
               />
             </Assistant>
           </div>
@@ -499,22 +542,36 @@ export function DiscoverChat({
                   ? 'Your message'
                   : 'Ask about a destination or experience'}
           </label>
-          <input
-            id="discover-chat-input"
-            value={question}
-            onChange={(event) => setQuestion(event.target.value)}
-            placeholder={
-              enquiry?.step === 'name'
-                ? 'Your name…'
-                : enquiry?.step === 'phone'
-                  ? 'Your phone number…'
-                  : enquiry?.step === 'message'
-                    ? 'What would you like to say…'
-                    : 'Ask about a place or a local experience…'
-            }
-            disabled={enquiry?.step === 'sending'}
-            className="min-w-0 flex-1 rounded-md border border-line-strong bg-surface px-3 py-2 text-[14px] text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none disabled:opacity-60"
-          />
+          <div className="relative flex-1 min-w-0">
+            <input
+              id="discover-chat-input"
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
+              placeholder={
+                enquiry?.step === 'name'
+                  ? 'Your name…'
+                  : enquiry?.step === 'phone'
+                    ? 'Your phone number…'
+                    : enquiry?.step === 'message'
+                      ? 'What would you like to say…'
+                      : 'Ask about a place or a local experience…'
+              }
+              disabled={enquiry?.step === 'sending'}
+              className="w-full rounded-md border border-line-strong bg-surface px-3 py-2 pr-10 text-[14px] text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none disabled:opacity-60"
+            />
+            <button
+              type="button"
+              onClick={startRecording}
+              disabled={asking !== null || enquiry?.step === 'sending' || isRecording}
+              className={cn(
+                "absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full transition-colors",
+                isRecording ? "text-red-500 animate-pulse bg-red-100" : "text-ink-500 hover:bg-surface-2 hover:text-ink-900"
+              )}
+              title="Ask with voice"
+            >
+              <Mic className="h-4 w-4" />
+            </button>
+          </div>
           <Button type="submit" size="sm" disabled={asking !== null || enquiry?.step === 'sending' || enquiry?.step === 'done'}>
             {asking ? 'Asking…' : 'Ask'}
             <ArrowUp aria-hidden size={15} />
@@ -662,6 +719,8 @@ function Reply({
   onOnline: (destinationId: string) => void;
   onOpenPlace: (destinationId: string) => void;
   onEnquire: (action: DiscoverAction) => void;
+  onSpeak?: () => void;
+  isPlaying?: boolean;
 }) {
   const { answer, online } = turn;
   const destinations = answer.destinationIds.map((id) => destinationById.get(id)).filter((d): d is Destination => Boolean(d));
@@ -686,7 +745,23 @@ function Reply({
         </button>
       ) : null}
 
-      <p>{answer.text}</p>
+      <div className="flex items-start justify-between gap-2">
+        <p>{answer.text}</p>
+        {onSpeak && (
+          <button
+            onClick={onSpeak}
+            className={cn(
+              "shrink-0 rounded-full p-1.5 transition-colors",
+              isPlaying 
+                ? "bg-brand-100 text-brand-700" 
+                : "text-ink-400 hover:bg-surface-2 hover:text-ink-700"
+            )}
+            title="Read aloud"
+          >
+            {isPlaying ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          </button>
+        )}
+      </div>
 
       {destinations.length > 0 ? (
         <div>
