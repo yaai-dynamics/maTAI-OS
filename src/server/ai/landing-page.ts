@@ -64,7 +64,7 @@ export async function generateBusinessLandingContent(businessId: string): Promis
 
   const highlightLines = [
     business.description ?? `A ${typeLabel.toLowerCase()} in ${business.district}`,
-    business.verified ? 'Verified partner on OneStop Manipur' : undefined,
+    business.verified ? 'Verified partner on mTour Agent' : undefined,
     destination ? `Close to ${destination.name}` : undefined,
     ...(destination?.category.slice(0, 2).map((category) => `Good for ${category} travel`) ?? []),
   ].filter((line): line is string => Boolean(line));
@@ -74,7 +74,7 @@ export async function generateBusinessLandingContent(businessId: string): Promis
       ? `₹${business.rate.amount.toLocaleString('en-IN')} per ${business.rate.covers.toLowerCase()} per ${business.rate.unit.toLowerCase()}${business.rate.note ? `, ${business.rate.note}` : ''}`
       : undefined,
     `${business.district} district, Manipur`,
-    'Enquire on OneStop Manipur to check availability',
+    'Enquire on mTour Agent to check availability',
   ].filter((line): line is string => Boolean(line));
 
   const narration = await narrate({

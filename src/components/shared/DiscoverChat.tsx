@@ -759,7 +759,7 @@ function OnlineView({ online }: { online: OnlineState }) {
     <div className="space-y-3 border-t border-line pt-2.5">
       <div className="flex flex-wrap items-center gap-1.5">
         <ProvenanceBadge provenance="PUBLIC_EXTERNAL" />
-        <span className="text-[11px] text-ink-500">From the web, not verified by OneStop Manipur</span>
+        <span className="text-[11px] text-ink-500">From the web, not verified by mTour Agent</span>
       </div>
 
       {empty ? <p className="text-[13px] text-ink-600">Nothing about {media.name} turned up on the web just now.</p> : null}

@@ -66,7 +66,7 @@ export function ShellFrame({
             <Menu aria-hidden size={20} />
           </button>
 
-          <Link href="/" className="flex items-center gap-2.5" aria-label="OneStop Manipur home">
+          <Link href="/" className="flex items-center gap-2.5" aria-label="mTour Agent home">
             <Wordmark />
             {portal ? (
               <span className="text-[12px] font-medium text-ink-600 lg:hidden">{portal.title}</span>
@@ -142,7 +142,7 @@ function Wordmark() {
       aria-hidden
       className="inline-flex h-8 items-center rounded-lg bg-[linear-gradient(135deg,var(--color-lake-500),var(--color-lake-800))] px-2.5 text-[17px] font-bold leading-none tracking-tight text-white shadow-sm"
     >
-      One<span className="text-warn-100">Stop</span>
+      mTour <span className="text-warn-100">Agent</span>
     </span>
   );
 }

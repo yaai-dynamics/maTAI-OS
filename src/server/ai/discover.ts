@@ -191,7 +191,7 @@ function enquireStep(name: string, target: { experienceId?: string; businessId?:
 }
 
 /**
- * OneStop Manipur never publishes a host's phone number or website: an
+ * mTour Agent never publishes a host's phone number or website: an
  * enquiry is how a visitor reaches them (docs/09 §10). Asked for contact
  * details directly, the chat says so and offers the enquiry rather than
  * inventing a number.
@@ -203,7 +203,7 @@ function contactAnswer(
   const { destinationId, ...enquireTarget } = target;
   return {
     kind: 'contact',
-    text: `OneStop Manipur doesn't publish ${name}'s phone number or website directly. Send an enquiry with your name and number, and they'll get in touch with you.`,
+    text: `mTour Agent doesn't publish ${name}'s phone number or website directly. Send an enquiry with your name and number, and they'll get in touch with you.`,
     provider: 'deterministic',
     destinationIds: [],
     experienceIds: [],
@@ -353,7 +353,7 @@ async function unmatchedReply(message: string): Promise<DiscoverChatAnswer> {
   const narration = await narrate({
     promptId: PROMPTS.discoverGuide.id,
     system: PROMPTS.discoverGuide.system,
-    deterministicText: `Nothing in OneStop Manipur's destinations or local experiences matched "${message}". Try the name of a place, or something you like to do, such as crafts, lakes or food.`,
+    deterministicText: `Nothing in mTour Agent's destinations or local experiences matched "${message}". Try the name of a place, or something you like to do, such as crafts, lakes or food.`,
     evidence: { message, unmatched: true },
     task: 'Say plainly that nothing matched, in one or two short sentences, and suggest trying a place name or an interest. Do not name a place that was not given to you.',
     maxTokens: 120,
@@ -424,7 +424,7 @@ async function placeExperiences(destination: Destination, question: string): Pro
   if (here.length === 0) {
     return {
       kind: 'experiences',
-      text: `No local host at ${destination.name} has joined OneStop Manipur yet, so there is nothing to book here for now. The trip planner can still take you there.`,
+      text: `No local host at ${destination.name} has joined mTour Agent yet, so there is nothing to book here for now. The trip planner can still take you there.`,
       provider: 'deterministic',
       destinationIds: [],
       experienceIds: [],
@@ -500,7 +500,7 @@ async function placePractical(destination: Destination, question: string): Promi
 function placeOnline(destination: Destination): DiscoverChatAnswer {
   return {
     kind: 'online',
-    text: `Here is what the web has on ${destination.name}. It comes from Wikipedia, YouTube and other public sites, not from OneStop Manipur's verified records.`,
+    text: `Here is what the web has on ${destination.name}. It comes from Wikipedia, YouTube and other public sites, not from mTour Agent's verified records.`,
     provider: 'deterministic',
     destinationIds: [],
     experienceIds: [],
@@ -519,7 +519,7 @@ function placeContact(destination: Destination): DiscoverChatAnswer {
     text:
       here.length > 0
         ? `${destination.name} itself has no single contact number — each local host here has their own. Ask about one of its experiences and I can send an enquiry to them directly.`
-        : `No local host at ${destination.name} has joined OneStop Manipur yet, so there is nobody here to send an enquiry to.`,
+        : `No local host at ${destination.name} has joined mTour Agent yet, so there is nobody here to send an enquiry to.`,
     provider: 'deterministic',
     destinationIds: [],
     experienceIds: here.slice(0, 3).map((experience) => experience.id),

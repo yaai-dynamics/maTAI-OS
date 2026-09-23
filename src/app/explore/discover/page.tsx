@@ -97,7 +97,7 @@ export default async function DiscoverPage(props: {
   // What the visitor is already looking at, so opening the chat doesn't ask them to repeat it.
   const spotlightPages = getPublishedLandingPages()
     .sort((a, b) => (a.ownerType === b.ownerType ? 0 : a.ownerType === 'CAMPAIGN' ? -1 : 1))
-    .slice(0, 4);
+    .slice(0, 2);
 
   const selectedExperienceId = experienceParam ?? bookParam;
   const initialFocus: DiscoverFocus | undefined = selectedExperienceId

@@ -21,7 +21,7 @@ export function AskOneStopButton({ onClick, className }: { onClick: () => void; 
       )}
     >
       <MessageCircle aria-hidden size={18} />
-      Ask OneStop
+      Ask mTour Agent
     </button>
   );
 }
