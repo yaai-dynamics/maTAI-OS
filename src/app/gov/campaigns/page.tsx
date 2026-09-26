@@ -35,8 +35,12 @@ import {
   createCampaignLandingPageForm,
   launchCampaignForm,
   publishCampaignLandingPageForm,
+  deleteCampaignLandingPageForm,
 } from '@/server/actions/forms';
+import { addGalleryMedia, removeGalleryMedia, enhanceGalleryImage, enhanceHeroImage, uploadHeroImage } from '@/server/actions/landing-pages';
 import { requireGovernment } from '@/server/auth/session';
+import { MediaGalleryUploader } from '@/components/shared/MediaGalleryUploader';
+import { HeroImageUploader } from '@/components/shared/HeroImageUploader';
 
 export const metadata: Metadata = { title: 'Campaign and Creator Command' };
 export const dynamic = 'force-dynamic';
@@ -62,6 +66,8 @@ export default async function CampaignCommandPage(props: {
   const applications = selected ? getApplications({ campaignId: selected.id }) : [];
   const funnel = selected ? computeCampaignFunnel(selected.id) : undefined;
   const destination = selected ? getDestination(selected.destinationId) : undefined;
+  
+  const campaignLandingPage = selected ? landingPages.find((p) => p.ownerId === selected.id) : undefined;
 
   const showComposer = view === 'new';
 
@@ -456,6 +462,87 @@ export default async function CampaignCommandPage(props: {
               ) : null}
 
               <Card>
+                <CardHeader
+                  title="Landing page"
+                  subtitle="An AI-generated one-page microsite for this campaign, surfaced on Discover."
+                />
+                <CardBody>
+                  {campaignLandingPage ? (
+                    <div className="space-y-4">
+                      <LandingPagePromoCard
+                        page={campaignLandingPage}
+                        href={campaignLandingPage.status === 'PUBLISHED' ? `/p/${campaignLandingPage.slug}` : undefined}
+                      />
+                      
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
+                        <ActionForm
+                          action={publishCampaignLandingPageForm}
+                          submitLabel={campaignLandingPage.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}
+                          pendingLabel="Saving…"
+                          variant={campaignLandingPage.status === 'PUBLISHED' ? 'secondary' : 'primary'}
+                          size="sm"
+                          hiddenFields={{
+                            landingPageId: campaignLandingPage.id,
+                            published: campaignLandingPage.status === 'PUBLISHED' ? 'false' : 'true',
+                          }}
+                        />
+                        <HeroImageUploader 
+                          pageId={campaignLandingPage.id} 
+                          hasHeroImage={!!campaignLandingPage.heroImageUrl} 
+                          onEnhance={enhanceHeroImage} 
+                          onUpload={uploadHeroImage}
+                        />
+                        <ActionForm
+                          action={deleteCampaignLandingPageForm}
+                          submitLabel="Delete"
+                          pendingLabel="Deleting…"
+                          variant="secondary"
+                          size="sm"
+                          hiddenFields={{ landingPageId: campaignLandingPage.id }}
+                        />
+                      </div>
+
+                      <div className="mt-4 border-t border-line pt-4">
+                        <MediaGalleryUploader
+                          pageId={campaignLandingPage.id}
+                          media={campaignLandingPage.galleryMedia}
+                          onAdd={addGalleryMedia}
+                          onRemove={removeGalleryMedia}
+                          onEnhance={enhanceGalleryImage}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-md border border-line bg-surface-2/50 p-4">
+                      <h3 className="text-[13px] font-semibold text-ink-900">Create a landing page</h3>
+                      <ActionForm
+                        action={createCampaignLandingPageForm}
+                        submitLabel="Generate with AI"
+                        pendingLabel="Generating…"
+                        className="mt-3"
+                        hiddenFields={{ linkTo: `campaign:${selected.id}` }}
+                      >
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <Field label="Title (optional)" name="title" hint="Defaults to the campaign name.">
+                            <TextInput id="landingPageTitle" name="title" maxLength={120} placeholder="Manipur Sangai Festival 2026" />
+                          </Field>
+                          <div className="sm:col-span-2">
+                            <Field
+                              label="Booking link (optional)"
+                              name="bookingUrl"
+                              hint="Leave blank to send visitors to plan their visit on OneStop Manipur."
+                            >
+                              <TextInput id="landingPageBookingUrl" name="bookingUrl" placeholder="https://…" />
+                            </Field>
+                          </div>
+                        </div>
+                      </ActionForm>
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+
+              <Card>
                 <CardBody className="pt-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <ProvenanceBadge provenance={selected.provenance} />
@@ -479,86 +566,6 @@ export default async function CampaignCommandPage(props: {
           )}
         </div>
       </div>
-
-      <Card>
-        <CardHeader
-          title="Campaign and festival landing pages"
-          subtitle="AI-generated one-page microsites for a campaign or a festival — Sangai Festival 2026, for example — with social sharing and a booking link, surfaced on Discover."
-          eyebrow={`${landingPages.length} total`}
-        />
-        <CardBody className="space-y-4">
-          {landingPages.length === 0 ? (
-            <EmptyState title="No pages yet" description="Create one below." />
-          ) : (
-            <ul className="grid gap-4 sm:grid-cols-2">
-              {landingPages.map((page) => (
-                <li key={page.id} className="space-y-2">
-                  <LandingPagePromoCard page={page} href={page.status === 'PUBLISHED' ? `/p/${page.slug}` : undefined} />
-                  <ActionForm
-                    action={publishCampaignLandingPageForm}
-                    submitLabel={page.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}
-                    pendingLabel="Saving…"
-                    variant={page.status === 'PUBLISHED' ? 'secondary' : 'primary'}
-                    size="sm"
-                    hiddenFields={{
-                      landingPageId: page.id,
-                      published: page.status === 'PUBLISHED' ? 'false' : 'true',
-                    }}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {can(governmentRole, 'landingpage:publish') ? (
-            <div className="rounded-md border border-line bg-surface-2/50 p-4">
-              <h3 className="text-[13px] font-semibold text-ink-900">Create a landing page</h3>
-              <ActionForm
-                action={createCampaignLandingPageForm}
-                submitLabel="Generate with AI"
-                pendingLabel="Generating…"
-                className="mt-3"
-              >
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Link to" name="linkTo" required>
-                    <Select id="linkTo" name="linkTo" required defaultValue={selected ? `campaign:${selected.id}` : ''}>
-                      <option value="" disabled>
-                        Choose a campaign or a festival
-                      </option>
-                      <optgroup label="Campaigns">
-                        {campaigns.map((entry) => (
-                          <option key={entry.id} value={`campaign:${entry.id}`}>
-                            {entry.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                      <optgroup label="Festivals and events">
-                        {upcomingEvents.map((event) => (
-                          <option key={event.id} value={`event:${event.id}`}>
-                            {event.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    </Select>
-                  </Field>
-                  <Field label="Title (optional)" name="title" hint="Defaults to the campaign or event name.">
-                    <TextInput id="landingPageTitle" name="title" maxLength={120} placeholder="Manipur Sangai Festival 2026" />
-                  </Field>
-                  <div className="sm:col-span-2">
-                    <Field
-                      label="Booking link (optional)"
-                      name="bookingUrl"
-                      hint="Leave blank to send visitors to plan their visit on OneStop Manipur."
-                    >
-                      <TextInput id="landingPageBookingUrl" name="bookingUrl" placeholder="https://…" />
-                    </Field>
-                  </div>
-                </div>
-              </ActionForm>
-            </div>
-          ) : null}
-        </CardBody>
-      </Card>
     </div>
   );
 }

@@ -19,9 +19,9 @@ import {
 import {
   createLandingPage,
   nextId,
-  recordLandingPageShare as recordShare,
   recordLandingPageView as recordView,
   updateLandingPage,
+  deleteLandingPage as removeLandingPage,
 } from '@/server/data/store';
 
 /**
@@ -110,6 +110,7 @@ export async function generateBusinessLandingPage(): Promise<{
     generatedAt: timestamp,
     createdBy: business.name,
     provenance: 'PARTNER_REPORTED',
+    galleryMedia: [],
   };
   const created = await createLandingPage(page);
   revalidatePath('/partner', 'layout');
@@ -241,6 +242,7 @@ export async function createCampaignLandingPage(
     // A page created in the prototype is prototype data, and says so — the
     // same rule src/server/actions/government.ts applies to a new campaign.
     provenance: 'DEMO_SYNTHETIC',
+    galleryMedia: [],
   };
   const created = await createLandingPage(page);
   revalidatePath('/gov/campaigns', 'layout');
@@ -262,6 +264,177 @@ export async function publishCampaignLandingPage(
   const updated = await setPublished(existing, published);
   revalidatePath('/gov/campaigns', 'layout');
   revalidatePath('/explore/discover');
+  revalidatePath(`/p/${existing.slug}`);
+  return { ok: true, page: updated };
+}
+
+export async function deleteCampaignLandingPage(
+  id: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const role = await getGovernmentRole();
+  if (!can(role, 'landingpage:publish')) {
+    return { ok: false, error: refusalMessage(role, 'landingpage:publish') };
+  }
+
+  const existing = getLandingPage(id);
+  if (!existing || existing.ownerType !== 'CAMPAIGN') return { ok: false, error: 'That page does not exist.' };
+
+  const success = await removeLandingPage(id);
+  if (!success) return { ok: false, error: 'Failed to delete landing page.' };
+  
+  revalidatePath('/gov/campaigns', 'layout');
+  return { ok: true };
+}
+
+/* --------------------------------- Gallery -------------------------------- */
+
+export async function addGalleryMedia(
+  pageId: string,
+  mediaType: 'IMAGE' | 'VIDEO',
+  url: string,
+  thumbnailUrl?: string,
+): Promise<{ ok: boolean; error?: string; page?: LandingPage }> {
+  const existing = getLandingPage(pageId);
+  if (!existing) return { ok: false, error: 'That page does not exist.' };
+  
+  // Basic mock auth check
+  if (existing.ownerType === 'BUSINESS') {
+    const businessId = await getActingBusinessId();
+    if (!businessId || existing.businessId !== businessId) return { ok: false, error: NOT_SIGNED_IN };
+  } else {
+    const role = await getGovernmentRole();
+    if (!can(role, 'landingpage:publish')) return { ok: false, error: refusalMessage(role, 'landingpage:publish') };
+  }
+
+  const updatedGallery = [
+    ...existing.galleryMedia,
+    {
+      id: nextId('media'),
+      type: mediaType,
+      url,
+      thumbnailUrl,
+    }
+  ];
+
+  const updated = await updateLandingPage(existing.id, { galleryMedia: updatedGallery });
+  revalidatePath('/partner', 'layout');
+  revalidatePath('/gov/campaigns', 'layout');
+  revalidatePath(`/p/${existing.slug}`);
+  return { ok: true, page: updated };
+}
+
+export async function removeGalleryMedia(
+  pageId: string,
+  mediaId: string,
+): Promise<{ ok: boolean; error?: string; page?: LandingPage }> {
+  const existing = getLandingPage(pageId);
+  if (!existing) return { ok: false, error: 'That page does not exist.' };
+
+  if (existing.ownerType === 'BUSINESS') {
+    const businessId = await getActingBusinessId();
+    if (!businessId || existing.businessId !== businessId) return { ok: false, error: NOT_SIGNED_IN };
+  } else {
+    const role = await getGovernmentRole();
+    if (!can(role, 'landingpage:publish')) return { ok: false, error: refusalMessage(role, 'landingpage:publish') };
+  }
+
+  const updatedGallery = existing.galleryMedia.filter(m => m.id !== mediaId);
+  const updated = await updateLandingPage(existing.id, { galleryMedia: updatedGallery });
+  revalidatePath('/partner', 'layout');
+  revalidatePath('/gov/campaigns', 'layout');
+  revalidatePath(`/p/${existing.slug}`);
+  return { ok: true, page: updated };
+}
+
+export async function enhanceGalleryImage(
+  pageId: string,
+  mediaId: string,
+): Promise<{ ok: boolean; error?: string; page?: LandingPage }> {
+  const existing = getLandingPage(pageId);
+  if (!existing) return { ok: false, error: 'That page does not exist.' };
+
+  if (existing.ownerType === 'BUSINESS') {
+    const businessId = await getActingBusinessId();
+    if (!businessId || existing.businessId !== businessId) return { ok: false, error: NOT_SIGNED_IN };
+  } else {
+    const role = await getGovernmentRole();
+    if (!can(role, 'landingpage:publish')) return { ok: false, error: refusalMessage(role, 'landingpage:publish') };
+  }
+
+  const mediaIndex = existing.galleryMedia.findIndex(m => m.id === mediaId);
+  if (mediaIndex === -1) return { ok: false, error: 'Media not found.' };
+
+  // Mock AI editing by simulating a delay and changing the URL slightly
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  const updatedGallery = [...existing.galleryMedia];
+  const item = updatedGallery[mediaIndex];
+  if (!item) return { ok: false, error: 'Media not found.' };
+  if (item.type !== 'IMAGE') return { ok: false, error: 'Cannot enhance a video.' };
+  
+  // Append a dummy query param to show it was edited
+  item.url = item.url.includes('?') ? `${item.url}&enhanced=true` : `${item.url}?enhanced=true`;
+
+  const updated = await updateLandingPage(existing.id, { galleryMedia: updatedGallery });
+  revalidatePath('/partner', 'layout');
+  revalidatePath('/gov/campaigns', 'layout');
+  revalidatePath(`/p/${existing.slug}`);
+  return { ok: true, page: updated };
+}
+
+export async function enhanceHeroImage(
+  pageId: string,
+): Promise<{ ok: boolean; error?: string; page?: LandingPage }> {
+  const existing = getLandingPage(pageId);
+  if (!existing) return { ok: false, error: 'That page does not exist.' };
+
+  if (existing.ownerType === 'BUSINESS') {
+    const businessId = await getActingBusinessId();
+    if (!businessId || existing.businessId !== businessId) return { ok: false, error: NOT_SIGNED_IN };
+  } else {
+    const role = await getGovernmentRole();
+    if (!can(role, 'landingpage:publish')) return { ok: false, error: refusalMessage(role, 'landingpage:publish') };
+  }
+
+  if (!existing.heroImageUrl) return { ok: false, error: 'No hero image to enhance.' };
+
+  // Mock AI editing
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  let newUrl = existing.heroImageUrl;
+  newUrl = newUrl.includes('?') ? `${newUrl}&enhanced=true` : `${newUrl}?enhanced=true`;
+
+  const updated = await updateLandingPage(existing.id, { heroImageUrl: newUrl });
+  revalidatePath('/partner', 'layout');
+  revalidatePath('/gov/campaigns', 'layout');
+  revalidatePath(`/p/${existing.slug}`);
+  return { ok: true, page: updated };
+}
+
+export async function uploadHeroImage(
+  pageId: string,
+): Promise<{ ok: boolean; error?: string; page?: LandingPage }> {
+  const existing = getLandingPage(pageId);
+  if (!existing) return { ok: false, error: 'That page does not exist.' };
+
+  if (existing.ownerType === 'BUSINESS') {
+    const businessId = await getActingBusinessId();
+    if (!businessId || existing.businessId !== businessId) return { ok: false, error: NOT_SIGNED_IN };
+  } else {
+    const role = await getGovernmentRole();
+    if (!can(role, 'landingpage:publish')) return { ok: false, error: refusalMessage(role, 'landingpage:publish') };
+  }
+
+  // Mock file upload delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // Mock image URL from picsum
+  const randomId = Math.floor(Math.random() * 1000);
+  const newUrl = `https://picsum.photos/seed/${randomId}/1200/600`;
+
+  const updated = await updateLandingPage(existing.id, { heroImageUrl: newUrl });
+  revalidatePath('/partner', 'layout');
+  revalidatePath('/gov/campaigns', 'layout');
   revalidatePath(`/p/${existing.slug}`);
   return { ok: true, page: updated };
 }

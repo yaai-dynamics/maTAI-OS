@@ -25,6 +25,14 @@ export const landingPageSectionSchema = z.object({
 });
 export type LandingPageSection = z.infer<typeof landingPageSectionSchema>;
 
+export const galleryMediaSchema = z.object({
+  id: z.string(),
+  type: z.enum(['IMAGE', 'VIDEO']),
+  url: z.string(),
+  thumbnailUrl: z.string().optional(),
+});
+export type GalleryMedia = z.infer<typeof galleryMediaSchema>;
+
 export const landingPageSchema = z.object({
   id: z.string(),
   ownerType: landingPageOwnerTypeSchema,
@@ -40,6 +48,7 @@ export const landingPageSchema = z.object({
   /** Data URL of an AI-generated image, when generation succeeded. */
   heroImageUrl: z.string().optional(),
   sections: z.array(landingPageSectionSchema).default([]),
+  galleryMedia: z.array(galleryMediaSchema).default([]),
   hashtags: z.array(z.string()).default([]),
   /** External or internal link for the "Book now" / "Plan your visit" CTA. */
   bookingUrl: z.string().optional(),

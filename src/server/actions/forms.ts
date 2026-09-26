@@ -37,6 +37,7 @@ import {
   generateBusinessLandingPage,
   publishBusinessLandingPage,
   publishCampaignLandingPage,
+  deleteCampaignLandingPage,
   updateBusinessLandingPage,
 } from '@/server/actions/landing-pages';
 import { formatIndiaDateTime } from '@/lib/date';
@@ -470,6 +471,11 @@ export async function publishCampaignLandingPageForm(_prev: FormState, data: For
           : 'Unpublished. The link no longer shows this page.',
       }
     : { status: 'error', message: result.error ?? 'Could not update the page.' };
+}
+
+export async function deleteCampaignLandingPageForm(_prev: FormState, data: FormData): Promise<FormState> {
+  const result = await deleteCampaignLandingPage(text(data, 'landingPageId'));
+  return result.ok ? { status: 'ok' } : { status: 'error', message: result.error ?? 'Could not delete.' };
 }
 
 /* -------------------------------- Accounts -------------------------------- */

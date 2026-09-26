@@ -14,6 +14,7 @@ import {
   getLandingPageBySlug,
 } from '@/server/data/repository';
 import { recordLandingPageShare, recordLandingPageView } from '@/server/actions/landing-pages';
+import { MediaGalleryLightbox } from '@/components/shared/MediaGalleryLightbox';
 
 export const dynamic = 'force-dynamic';
 
@@ -111,6 +112,8 @@ export default async function LandingPagePublic(props: { params: Promise<{ slug:
               );
             })}
         </div>
+        
+        <MediaGalleryLightbox media={page.galleryMedia} />
 
         {page.hashtags.length > 0 ? (
           <p className="mt-5 text-[12px] text-ink-500">{page.hashtags.join(' ')}</p>

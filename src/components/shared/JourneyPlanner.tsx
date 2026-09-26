@@ -197,7 +197,7 @@ export function JourneyPlanner({
       alert('Speech recognition is not supported in this browser.');
       return;
     }
-    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = navigator.language || 'en-US';
     recognition.interimResults = false;
@@ -405,7 +405,7 @@ export function JourneyPlanner({
           <Fragment key={exchange.groupId}>
             <Visitor>{exchange.request}</Visitor>
             <Assistant
-              onSpeak={exchange.introduction ? () => speakAnswer(exchange.introduction, exchange.groupId) : undefined}
+              onSpeak={exchange.introduction ? () => speakAnswer(exchange.introduction!, exchange.groupId) : undefined}
               isPlaying={isPlayingId === exchange.groupId}
             >
               <Reply

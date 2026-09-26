@@ -425,6 +425,14 @@ export async function updateLandingPage(
   return updated;
 }
 
+export async function deleteLandingPage(id: string): Promise<boolean> {
+  const state = getState();
+  const index = state.landingPages.findIndex((p) => p.id === id);
+  if (index < 0) return false;
+  state.landingPages.splice(index, 1);
+  return true;
+}
+
 /** Counts are a display figure, not a tourism signal, so they skip TourismInteraction. */
 export async function recordLandingPageView(id: string): Promise<void> {
   const state = getState();

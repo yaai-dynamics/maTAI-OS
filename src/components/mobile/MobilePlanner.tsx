@@ -93,7 +93,7 @@ export function MobilePlanner({
       alert('Speech recognition is not supported in this browser.');
       return;
     }
-    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = navigator.language || 'en-US';
     recognition.interimResults = false;

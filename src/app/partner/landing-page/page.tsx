@@ -12,7 +12,10 @@ import {
   publishBusinessLandingPageForm,
   updateBusinessLandingPageForm,
 } from '@/server/actions/forms';
+import { addGalleryMedia, removeGalleryMedia, enhanceGalleryImage, enhanceHeroImage, uploadHeroImage } from '@/server/actions/landing-pages';
+import { MediaGalleryUploader } from '@/components/shared/MediaGalleryUploader';
 import { requirePartner } from '@/server/auth/session';
+import { HeroImageUploader } from '@/components/shared/HeroImageUploader';
 
 export const metadata: Metadata = { title: 'Your landing page' };
 export const dynamic = 'force-dynamic';
@@ -60,6 +63,12 @@ export default async function PartnerLandingPagePage() {
                 imageUrl={page.heroImageUrl}
                 height="md"
                 className="rounded-md"
+              />
+              <HeroImageUploader 
+                pageId={page.id} 
+                hasHeroImage={!!page.heroImageUrl} 
+                onEnhance={enhanceHeroImage} 
+                onUpload={uploadHeroImage}
               />
               <div className="flex flex-wrap items-center gap-2">
                 <ProvenanceBadge provenance={page.provenance} />
@@ -157,6 +166,18 @@ export default async function PartnerLandingPagePage() {
                   </div>
                 </div>
               </ActionForm>
+            </CardBody>
+          </Card>
+          
+          <Card>
+            <CardBody className="pt-4">
+              <MediaGalleryUploader
+                pageId={page.id}
+                media={page.galleryMedia}
+                onAdd={addGalleryMedia}
+                onRemove={removeGalleryMedia}
+                onEnhance={enhanceGalleryImage}
+              />
             </CardBody>
           </Card>
         </>
