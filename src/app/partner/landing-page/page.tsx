@@ -154,7 +154,7 @@ export default async function PartnerLandingPagePage() {
                     <Field
                       label="Booking link (optional)"
                       name="bookingUrl"
-                      hint="Leave blank to send visitors to enquire on OneStop Manipur."
+                      hint="Leave blank to send visitors to enquire on mTour Agent."
                     >
                       <TextInput
                         id="bookingUrl"

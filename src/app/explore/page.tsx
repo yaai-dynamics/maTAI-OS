@@ -11,8 +11,8 @@ import { JourneyPlanner } from '@/components/shared/JourneyPlanner';
 import { TripPlannerDiscovery } from '@/components/shared/TripPlannerDiscovery';
 import { chooseJourney, findPlacesOnline, planTrip } from '@/server/actions/tourist';
 
-// The home page of the product, so the tab reads as OneStop Manipur rather than as a section.
-export const metadata: Metadata = { title: { absolute: 'OneStop Manipur — Plan your Manipur journey' } };
+// The home page of the product, so the tab reads as mTour Agent rather than as a section.
+export const metadata: Metadata = { title: { absolute: 'mTour Agent — Plan your Manipur journey' } };
 export const dynamic = 'force-dynamic';
 
 /**

@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { cn } from '@/components/ui/primitives';
 import { DemoToggle } from './DemoToggle';
 import { InterfaceNav, SectionList, TouristTabBar, type NavItem, type TabItem } from './RoleNav';
+import { GlobalInterpreter } from '@/components/shared/GlobalInterpreter';
 
 export type Portal = {
   href: string;
@@ -74,6 +75,7 @@ export function ShellFrame({
           </Link>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <GlobalInterpreter />
             <InterfaceNav />
             {actions}
             {demo ? <DemoToggle /> : null}

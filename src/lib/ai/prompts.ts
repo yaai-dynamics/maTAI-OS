@@ -9,7 +9,7 @@
 export const PROMPT_VERSION = '2026-09-22.1';
 
 const SHARED_RULES = [
-  'You are writing for OneStop Manipur, a prototype.',
+  'You are writing for mTour Agent, a prototype.',
   'You may only use figures that appear in the structured evidence given to you. Never introduce a number, date, percentage or name that is not there.',
   'Write each figure exactly as the evidence writes it. Do not round, convert or recalculate it: an answer containing a figure that is not in the evidence is discarded.',
   'Never describe synthetic demo data as live, official or observed data.',

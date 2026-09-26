@@ -9,7 +9,7 @@ import { TabBar } from '@/components/mobile/TabBar';
 import { TalkBubble } from '@/components/mobile/TalkBubble';
 
 export const metadata: Metadata = {
-  title: { default: 'Explore Manipur', template: '%s — OneStop Manipur' },
+  title: { default: 'Explore Manipur', template: '%s — mTour Agent' },
   robots: { index: false },
 };
 

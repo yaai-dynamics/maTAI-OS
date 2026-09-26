@@ -224,7 +224,7 @@ export default async function StayPage(props: { params: Promise<{ id: string }> 
             <Card tone="outline">
               <CardHeader
                 title="Not bookable online yet"
-                subtitle={`${stay.name} is on the platform, but its host has not opened an account to answer booking requests. Ask OneStop (bottom right) to send them an enquiry with your name and number instead — they'll get in touch directly.`}
+                subtitle={`${stay.name} is on the platform, but its host has not opened an account to answer booking requests. Ask mTour Agent (bottom right) to send them an enquiry with your name and number instead — they'll get in touch directly.`}
               />
               {destination ? (
                 <CardBody>

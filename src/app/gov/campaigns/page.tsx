@@ -530,7 +530,7 @@ export default async function CampaignCommandPage(props: {
                             <Field
                               label="Booking link (optional)"
                               name="bookingUrl"
-                              hint="Leave blank to send visitors to plan their visit on OneStop Manipur."
+                              hint="Leave blank to send visitors to plan their visit on mTour Agent."
                             >
                               <TextInput id="landingPageBookingUrl" name="bookingUrl" placeholder="https://…" />
                             </Field>

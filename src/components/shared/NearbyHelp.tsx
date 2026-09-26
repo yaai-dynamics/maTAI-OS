@@ -120,7 +120,7 @@ export function NearbyHelp({ facilities }: { facilities: NearbyFacility[] }) {
             </p>
             <p className="mt-1 font-mono text-[15px] font-medium text-ink-900">{coordinates}</p>
             <p className="mt-1 text-[12px] text-ink-600">
-              Read on this device only. It is not sent to maTAI and not recorded.
+              Read on this device only. It is not sent to mTour Agent and not recorded.
             </p>
             <div className="mt-2.5 flex flex-wrap gap-2">
               <Button type="button" onClick={copy} variant="secondary" size="sm">

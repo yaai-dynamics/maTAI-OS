@@ -39,7 +39,7 @@ export async function roadRoute(points: LatLng[]): Promise<RoadRoute> {
   try {
     const response = await fetch(`${ROUTER}/route/v1/driving/${path}?overview=full&geometries=geojson`, {
       signal: controller.signal,
-      headers: { 'user-agent': 'OneStopManipur/0.1 (Manipur tourism prototype)' },
+      headers: { 'user-agent': 'mTourAgent/0.1 (Manipur tourism prototype)' },
     });
     if (!response.ok) return straight(points);
     const body = (await response.json()) as {

@@ -120,7 +120,7 @@ export default async function LandingPagePublic(props: { params: Promise<{ slug:
         ) : null}
 
         <p className="mt-6 text-[11px] text-ink-400">
-          Generated with AI assistance ({page.generatedBy}) from verified platform data. Built on OneStop
+          Generated with AI assistance ({page.generatedBy}) from verified platform data. Built on mTour Agent
           Manipur.
         </p>
       </div>

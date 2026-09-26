@@ -10,7 +10,7 @@ import { Card, CardBody, CardHeader } from '@/components/ui/primitives';
 /**
  * What a plan includes beyond its places, with where each part comes from.
  *
- * A OneStop partner is a verified business registered on the platform; its
+ * A mTour Agent partner is a verified business registered on the platform; its
  * price is its own rate. A place found online is not a partner, is not
  * priced, and carries the search results it was found in.
  */
@@ -19,7 +19,7 @@ export function PartnerTag() {
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-lake-200 bg-lake-50 px-2 py-0.5 text-[11px] font-medium text-lake-700">
       <BadgeCheck aria-hidden size={12} />
-      OneStop partner
+      mTour Agent partner
     </span>
   );
 }
@@ -99,7 +99,7 @@ export function TripIncludes({ trip, searchAction }: { trip: Trip; searchAction?
     <Card>
       <CardHeader
         title="What this plan includes"
-        subtitle="Partners are verified businesses on OneStop Manipur. Places found online are not partners, and have no price here."
+        subtitle="Partners are verified businesses on mTour Agent. Places found online are not partners, and have no price here."
       />
       <CardBody className="space-y-5">
         {/* Stays */}
@@ -134,7 +134,7 @@ export function TripIncludes({ trip, searchAction }: { trip: Trip; searchAction?
                     </>
                   ) : (
                     <p className="mt-0.5 text-[13px] text-ink-700">
-                      No OneStop partner stay near {placeName(stay.destinationId)} yet.
+                      No mTour Agent partner stay near {placeName(stay.destinationId)} yet.
                     </p>
                   )}
                   {firstNightHere ? <OnlineList places={onlineFor('STAY', stay.destinationId)} /> : null}
@@ -163,7 +163,7 @@ export function TripIncludes({ trip, searchAction }: { trip: Trip; searchAction?
                 </p>
               </>
             ) : (
-              <p className="text-[13px] text-ink-700">No OneStop partner with vehicles yet: hire locally.</p>
+              <p className="text-[13px] text-ink-700">No mTour Agent partner with vehicles yet: hire locally.</p>
             )}
             <OnlineList places={onlineFor('TRANSPORT')} />
           </Row>

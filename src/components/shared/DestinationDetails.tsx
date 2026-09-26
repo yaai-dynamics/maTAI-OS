@@ -50,7 +50,7 @@ export function DestinationDetails({
   /** Where "Open the experience" and nearby links lead. Defaults to the real pages. */
   heritageHref?: (id: string) => string;
   destinationHref?: (id: string) => string;
-  /** Hide the inline "Ask the place" card, when the page around it offers the floating Ask OneStop chat instead. */
+  /** Hide the inline "Ask the place" card, when the page around it offers the floating Ask mTour Agent chat instead. */
   hideAskPanel?: boolean;
 }) {
   const { destination, narrative, practical, source, heritage, experiences, events, shopping, transport, nearby, prompts } =

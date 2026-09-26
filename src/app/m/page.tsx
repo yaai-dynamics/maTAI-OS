@@ -34,7 +34,7 @@ import {
   Section,
 } from '@/components/mobile/ui';
 
-export const metadata: Metadata = { title: { absolute: 'OneStop Manipur — Explore Manipur' } };
+export const metadata: Metadata = { title: { absolute: 'mTour Agent — Explore Manipur' } };
 export const dynamic = 'force-dynamic';
 
 /** The cover photograph on Home. */

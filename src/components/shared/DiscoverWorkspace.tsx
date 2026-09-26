@@ -59,7 +59,11 @@ export function DiscoverWorkspace({
   return (
     <DiscoverChatContext.Provider value={context}>
       <div className={cn(open && 'lg:flex lg:items-start lg:gap-5')}>
-        {!open ? <AskOneStopButton onClick={() => setOpen(true)} /> : null}
+        {!open ? (
+          <div className="fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] lg:bottom-6 z-40 flex flex-col items-end gap-3">
+            <AskOneStopButton onClick={() => setOpen(true)} />
+          </div>
+        ) : null}
 
         {open ? (
           <div className="fixed inset-0 z-40 bg-paper p-3 lg:static lg:z-auto lg:w-1/3 lg:shrink-0 lg:bg-transparent lg:p-0">

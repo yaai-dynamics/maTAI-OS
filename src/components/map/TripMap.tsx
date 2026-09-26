@@ -104,7 +104,7 @@ export function TripMap({
           <PinTooltip
             eyebrow={`Night ${night.night}`}
             title={night.partnerName ?? `Near ${night.placeName}`}
-            lines={[night.partnerName ? `OneStop partner stay, ${night.placeName}` : 'No partner stay here yet']}
+            lines={[night.partnerName ? `mTour Agent partner stay, ${night.placeName}` : 'No partner stay here yet']}
             color="#0e6e62"
           />
         ),

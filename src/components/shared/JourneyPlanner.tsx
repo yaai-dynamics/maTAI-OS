@@ -724,7 +724,7 @@ function Assistant({ children, onSpeak, isPlaying }: { children: React.ReactNode
         AI
       </span>
       <div className="min-w-0 max-w-[94%] flex-1 rounded-2xl rounded-tl-sm border border-white/10 bg-white/[0.07] px-4 py-3 text-[14px] leading-relaxed text-white/85">
-        <span className="sr-only">OneStop Manipur: </span>
+        <span className="sr-only">mTour Agent: </span>
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1 space-y-4">{children}</div>
           {onSpeak && (
@@ -943,7 +943,7 @@ function OnlineLine({ online, onSearch }: { online: Exchange['online']; onSearch
       <span>
         {status === undefined || status === 'NOT_RUN' ? (
           <>
-            Places that are not OneStop partners have not been looked for yet.
+            Places that are not mTour Agent partners have not been looked for yet.
             <button type="button" onClick={onSearch} className="ml-1 underline decoration-white/40 hover:text-white">
               Search online
             </button>

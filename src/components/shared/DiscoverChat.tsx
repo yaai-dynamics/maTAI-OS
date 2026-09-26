@@ -25,7 +25,7 @@ import { ProvenanceBadge } from '@/components/shared/badges';
  *
  * "Photos and videos" looks the place up on the web (Wikipedia, YouTube,
  * grounded search) and says so: it is labelled as public external content,
- * not OneStop Manipur's verified records.
+ * not mTour Agent's verified records.
  */
 
 type OnlineState =
