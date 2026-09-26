@@ -8,11 +8,12 @@ import { currentWindow } from '@/server/analytics/windows';
 import { computeDemand } from '@/server/analytics/demand';
 import { getBusiness, getDestination, getDestinations, getExperiences } from '@/server/data/repository';
 import { businessesAcceptingBookings } from '@/server/bookings/ledger';
-import { askPlace, getDestinationPreview } from '@/server/actions/tourist';
+import { askPlace, discoverChat, discoverPlaceOnline, getDestinationPreview, sendChatEnquiry } from '@/server/actions/tourist';
 import { mobilePlaceSnapshot } from '@/server/actions/mobile';
 import type { MapExperience } from '@/components/map/DiscoverMap';
 import { MobileDiscoverMap } from '@/components/mobile/MobileDiscoverMap';
 import { CategoryGlyph } from '@/components/mobile/CategoryIcon';
+import { DiscoverChatLauncher } from '@/components/mobile/DiscoverChatLauncher';
 import { TourismMap } from '@/components/shared/TourismMap';
 import { ExperienceRow, MobileEmpty, MobileHeader, PillBar, PlaceRow, PlaceTile, Rail, Segmented } from '@/components/mobile/ui';
 
@@ -230,6 +231,17 @@ export default async function MobileDiscoverPage(props: {
           ? 'The interest index is relative attention on this platform over 30 days. It is not a visitor count; a low number often means a quieter place.'
           : 'Verified means the platform checked the provider before listing them. Online payment happens only after the host accepts.'}
       </p>
+
+      <DiscoverChatLauncher
+        destinations={getDestinations()}
+        experiences={getExperiences()}
+        ask={discoverChat}
+        lookUpOnline={discoverPlaceOnline}
+        getPreview={getDestinationPreview}
+        askPlace={askPlace}
+        submitEnquiry={sendChatEnquiry}
+        initialFocus={focus ? { destinationId: focus.id } : undefined}
+      />
     </div>
   );
 }

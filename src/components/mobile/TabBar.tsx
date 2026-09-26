@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Compass, Home, Navigation, Sparkles, Ticket, type LucideIcon } from 'lucide-react';
+import { Compass, Home, Sparkles, Ticket, type LucideIcon } from 'lucide-react';
 
 import { cn } from '@/components/ui/primitives';
 
@@ -17,8 +17,7 @@ interface Tab {
 const TABS: Tab[] = [
   { href: '/m', label: 'Home', icon: Home },
   { href: '/m/discover', label: 'Discover', icon: Compass, also: ['/m/place', '/m/experience'] },
-  { href: '/m/plan', label: 'Plan', icon: Sparkles, also: ['/m/journey'] },
-  { href: '/m/trip', label: 'Trip', icon: Navigation },
+  { href: '/m/plan', label: 'Trip Planner', icon: Sparkles, also: ['/m/journey', '/m/trip'] },
   { href: '/m/bookings', label: 'Booked', icon: Ticket },
 ];
 
@@ -57,7 +56,7 @@ export function TabBar() {
           />
         ) : null}
 
-        <ul className="relative grid grid-cols-5">
+        <ul className="relative grid grid-cols-4">
           {TABS.map((tab, index) => {
             const on = index === active;
             const Icon = tab.icon;
@@ -76,7 +75,7 @@ export function TabBar() {
                   />
                   <span
                     className={cn(
-                      'text-[10.5px] leading-none tracking-tight transition-colors',
+                      'whitespace-nowrap text-[10.5px] leading-none tracking-tight transition-colors',
                       on ? 'font-semibold text-ink-900' : 'font-medium text-ink-600',
                     )}
                   >
