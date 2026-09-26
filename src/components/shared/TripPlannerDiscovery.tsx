@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Clock, IndianRupee, MapPin, Sparkles, Star, Tent, TreePine, Users, Zap } from 'lucide-react';
-import type { Campaign, Experience, Destination } from '@/lib/types';
+import type { Campaign, Experience, Destination, TourismBusiness } from '@/lib/types';
 
 /* ------------------------------------------------------------------
    Photo helper — destination id is "dest-{slug}", photos live in
@@ -54,11 +54,11 @@ function formatRupees(n: number) {
 /* ── Section heading ──────────────────────────────────────────── */
 
 /* ── Campaign card ────────────────────────────────────────────── */
-function CampaignCard({ campaign, destinationName }: { campaign: Campaign; destinationName: string }) {
+function CampaignCard({ campaign, destinationName, href }: { campaign: Campaign; destinationName: string; href: string }) {
   const s = STATUS[campaign.status] ?? STATUS.COMPLETED!;
   const photo = destPhoto(campaign.destinationId);
   return (
-    <Link href="/creator/campaigns"
+    <Link href={href}
       className="group flex flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-raised)]">
       <div className="relative h-32 overflow-hidden bg-surface-2">
         {photo
@@ -96,7 +96,7 @@ function DestinationCard({ destination }: { destination: Destination }) {
   const planQuery = encodeURIComponent(`I want to visit ${destination.name} in Manipur`);
   return (
     <div className="group relative flex w-52 shrink-0 flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-raised)]">
-      <div className="relative h-36 overflow-hidden bg-surface-2">
+      <Link href={`/explore/destinations/${destination.id}`} className="relative block h-36 overflow-hidden bg-surface-2">
         {photo
           ? <Image src={photo} alt={destination.name} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="208px" />
           : <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg,var(--color-lake-100),var(--color-brand-100))' }} />
@@ -109,10 +109,12 @@ function DestinationCard({ destination }: { destination: Destination }) {
             {destination.status === 'HEALTHY' ? '✓' : destination.status === 'WATCH' ? '!' : '—'}
           </span>
         </div>
-      </div>
+      </Link>
       <div className="flex flex-1 flex-col gap-2 p-3">
         <div>
-          <p className="text-[13px] font-semibold text-ink-900 leading-snug">{destination.name}</p>
+          <Link href={`/explore/destinations/${destination.id}`} className="hover:text-brand-700">
+            <p className="text-[13px] font-semibold text-ink-900 leading-snug">{destination.name}</p>
+          </Link>
           <p className="flex items-center gap-1 mt-0.5 text-[11px] text-ink-500"><MapPin size={10} aria-hidden />{destination.district}</p>
         </div>
         <p className="text-[11px] text-ink-600 line-clamp-2 flex-1">{destination.summary}</p>
@@ -131,8 +133,9 @@ function DestinationCard({ destination }: { destination: Destination }) {
 
 /* ── Experience card ──────────────────────────────────────────── */
 function ExperienceCard({ experience, destinationName }: { experience: Experience; destinationName: string }) {
+  const href = `/explore/discover?mode=experiences&experience=${experience.id}`;
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-4 shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-raised)]">
+    <Link href={href} className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-4 shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-raised)]">
       <div className="flex items-center gap-2">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-lake-50 text-lake-700">{catIcon(experience.category)}</span>
         <span className="rounded-full bg-lake-50 px-2 py-0.5 text-[10px] font-medium text-lake-700">{experience.category}</span>
@@ -151,15 +154,16 @@ function ExperienceCard({ experience, destinationName }: { experience: Experienc
           {formatRupees(experience.price)}<span className="ml-1 text-[11px] font-normal text-ink-500">/ person</span>
         </span>
       </div>
-    </div>
+    </Link>
   );
 }
 
 /* ── Stay card ────────────────────────────────────────────────── */
-function StayCard({ experience, destinationName }: { experience: Experience; destinationName: string }) {
-  const photo = destPhoto(experience.destinationId);
+function StayCard({ stay, destinationName }: { stay: TourismBusiness; destinationName: string }) {
+  const photo = destPhoto(stay.destinationId);
   return (
-    <div className="group relative flex w-64 shrink-0 flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-raised)]">
+    <Link href={`/explore/stays/${stay.id}`}
+      className="group relative flex w-64 shrink-0 flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-raised)]">
       <div className="relative h-40 overflow-hidden bg-surface-2">
         {photo
           ? <Image src={photo} alt={destinationName} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="256px" />
@@ -169,18 +173,18 @@ function StayCard({ experience, destinationName }: { experience: Experience; des
         <p className="absolute bottom-2.5 left-3 text-[13px] font-semibold text-white">{destinationName}</p>
       </div>
       <div className="flex flex-1 flex-col gap-2 p-3.5">
-        <p className="text-[13px] font-semibold leading-snug text-ink-900 line-clamp-2">{experience.title}</p>
-        <p className="text-[11px] text-ink-600 line-clamp-2 flex-1">{experience.description}</p>
+        <p className="text-[13px] font-semibold leading-snug text-ink-900 line-clamp-2">{stay.name}</p>
+        <p className="text-[11px] text-ink-600 line-clamp-2 flex-1">{stay.description}</p>
         <div className="flex items-center justify-between border-t border-line pt-2.5">
           <span className="flex items-center gap-1 text-[11px] text-ink-500">
-            <Users size={11} aria-hidden />{experience.accessibility === 'EASY' ? 'All abilities' : 'Moderate access'}
+            <Users size={11} aria-hidden />{stay.businessType === 'HOMESTAY' ? 'Homestay' : 'Hotel'}
           </span>
           <span className="text-[13px] font-semibold text-ink-900">
-            {formatRupees(experience.price)}<span className="ml-1 text-[10px] font-normal text-ink-500">/ night</span>
+            {stay.rate ? <>{formatRupees(stay.rate.amount)}<span className="ml-1 text-[10px] font-normal text-ink-500">/ night</span></> : 'Rate on enquiry'}
           </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -189,15 +193,17 @@ function StayCard({ experience, destinationName }: { experience: Experience; des
    ================================================================ */
 export function TripPlannerDiscovery({
   activeCampaigns,
+  campaignLandingSlugs,
   destinations,
   featuredExperiences,
   stays,
   destinationMap,
 }: {
   activeCampaigns: Campaign[];
+  campaignLandingSlugs: Map<string, string>;
   destinations: Destination[];
   featuredExperiences: Experience[];
-  stays: Experience[];
+  stays: TourismBusiness[];
   destinationMap: Map<string, string>;
 }) {
   return (
@@ -206,11 +212,15 @@ export function TripPlannerDiscovery({
       {/* Active Campaigns */}
       {activeCampaigns.length > 0 && (
         <section aria-labelledby="disc-campaigns">
-          <SectionHeading id="disc-campaigns" title="Active Campaigns" subtitle="Official tourism campaigns you can follow or contribute to" href="/creator/campaigns" linkLabel="View all" />
+          <SectionHeading id="disc-campaigns" title="Active Campaigns" subtitle="Official tourism campaigns you can follow or contribute to" />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {activeCampaigns.map(c => (
-              <CampaignCard key={c.id} campaign={c} destinationName={destinationMap.get(c.destinationId) ?? c.destinationId} />
-            ))}
+            {activeCampaigns.map(c => {
+              const slug = campaignLandingSlugs.get(c.id);
+              const href = slug ? `/p/${slug}` : `/explore/destinations/${c.destinationId}`;
+              return (
+                <CampaignCard key={c.id} campaign={c} href={href} destinationName={destinationMap.get(c.destinationId) ?? c.destinationId} />
+              );
+            })}
           </div>
         </section>
       )}
@@ -245,8 +255,8 @@ export function TripPlannerDiscovery({
           <SectionHeading id="disc-stays" title="Places to Stay" subtitle="Verified homestays and partner accommodations across Manipur" href="/explore/stays" linkLabel="Browse stays" />
           <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
             <div className="flex gap-3.5 overflow-x-auto pb-3">
-              {stays.map(e => (
-                <StayCard key={e.id} experience={e} destinationName={destinationMap.get(e.destinationId) ?? e.destinationId} />
+              {stays.map(s => (
+                <StayCard key={s.id} stay={s} destinationName={destinationMap.get(s.destinationId) ?? s.destinationId} />
               ))}
             </div>
           </div>

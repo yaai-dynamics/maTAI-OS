@@ -4,7 +4,7 @@ import { now } from '@/lib/config';
 import { istDate } from '@/lib/journey';
 import { listTrips, MAX_SAVED_TRIPS } from '@/server/data/trips';
 import { readVisitor } from '@/server/telemetry/visitor';
-import { getCampaigns, getDestinations } from '@/server/data/repository';
+import { getCampaigns, getDestinations, getLandingPages, getStays } from '@/server/data/repository';
 import { seed } from '@/server/data/seed';
 import { JourneyList } from '@/components/shared/JourneyList';
 import { JourneyPlanner } from '@/components/shared/JourneyPlanner';
@@ -29,6 +29,11 @@ export default async function ExplorePage(props: { searchParams: Promise<{ plan?
   const activeCampaigns = allCampaigns
     .filter((c) => c.status === 'IN_PROGRESS' || c.status === 'OPEN' || c.status === 'DRAFT')
     .slice(0, 4);
+  const campaignLandingSlugs = new Map(
+    getLandingPages()
+      .filter((p) => p.status === 'PUBLISHED' && p.ownerType === 'CAMPAIGN' && p.campaignId)
+      .map((p) => [p.campaignId!, p.slug]),
+  );
 
   const allDestinations = getDestinations();
   const PRIORITY_IDS = [
@@ -46,8 +51,8 @@ export default async function ExplorePage(props: { searchParams: Promise<{ plan?
     .filter((e) => e.verified && e.availabilityStatus !== 'UNAVAILABLE' && e.category !== 'homestay')
     .slice(0, 6);
 
-  const stays = allExperiences
-    .filter((e) => e.category === 'homestay' && e.verified)
+  const stays = getStays()
+    .filter((b) => b.verified)
     .slice(0, 5);
 
   const destinationMap = new Map(allDestinations.map((d) => [d.id, d.name]));
@@ -71,6 +76,7 @@ export default async function ExplorePage(props: { searchParams: Promise<{ plan?
       {/* Discovery — campaigns, destinations, experiences, stays */}
       <TripPlannerDiscovery
         activeCampaigns={activeCampaigns}
+        campaignLandingSlugs={campaignLandingSlugs}
         destinations={destinations}
         featuredExperiences={featuredExperiences}
         stays={stays}

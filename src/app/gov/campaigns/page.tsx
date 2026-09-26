@@ -67,7 +67,7 @@ export default async function CampaignCommandPage(props: {
   const funnel = selected ? computeCampaignFunnel(selected.id) : undefined;
   const destination = selected ? getDestination(selected.destinationId) : undefined;
   
-  const campaignLandingPage = selected ? landingPages.find((p) => p.ownerId === selected.id) : undefined;
+  const campaignLandingPage = selected ? landingPages.find((p) => p.campaignId === selected.id) : undefined;
 
   const showComposer = view === 'new';
 
