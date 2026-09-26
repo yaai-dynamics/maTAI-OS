@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 
-import { requestBooking } from '@/server/actions/bookings';
+import { requestBooking, requestEventPlace, requestStay } from '@/server/actions/bookings';
 import { getDestination } from '@/server/data/repository';
 import { creditLine, photoFor } from '@/lib/mobile/photos';
 import type { PlaceSnapshot } from '@/lib/ai/web-media';
@@ -21,6 +21,37 @@ export async function requestBookingMobileForm(_prev: FormState, data: FormData)
     experienceId: text(data, 'experienceId'),
     partySize: text(data, 'partySize'),
     date: text(data, 'date'),
+    guestName: text(data, 'guestName'),
+    guestPhone: text(data, 'guestPhone'),
+    guestEmail: text(data, 'guestEmail'),
+    note: text(data, 'note') || undefined,
+    consent: data.get('consent') === 'on',
+  });
+  if (!result.ok) return { status: 'error', message: result.error };
+  redirect(`/m/bookings/${result.reference}?key=${encodeURIComponent(result.accessKey)}&new=1`);
+}
+
+export async function requestStayMobileForm(_prev: FormState, data: FormData): Promise<FormState> {
+  const result = await requestStay({
+    businessId: text(data, 'businessId'),
+    checkIn: text(data, 'checkIn'),
+    checkOut: text(data, 'checkOut'),
+    rooms: text(data, 'rooms'),
+    partySize: text(data, 'partySize'),
+    guestName: text(data, 'guestName'),
+    guestPhone: text(data, 'guestPhone'),
+    guestEmail: text(data, 'guestEmail'),
+    note: text(data, 'note') || undefined,
+    consent: data.get('consent') === 'on',
+  });
+  if (!result.ok) return { status: 'error', message: result.error };
+  redirect(`/m/bookings/${result.reference}?key=${encodeURIComponent(result.accessKey)}&new=1`);
+}
+
+export async function requestEventPlaceMobileForm(_prev: FormState, data: FormData): Promise<FormState> {
+  const result = await requestEventPlace({
+    eventId: text(data, 'eventId'),
+    partySize: text(data, 'partySize'),
     guestName: text(data, 'guestName'),
     guestPhone: text(data, 'guestPhone'),
     guestEmail: text(data, 'guestEmail'),

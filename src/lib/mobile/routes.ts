@@ -55,6 +55,17 @@ export function mobileHref(href: string): string | undefined {
       return id ? keep(`/m/bookings/${id}`) : '/m/bookings';
     case 'privacy':
       return '/m/privacy';
+    case 'emergency':
+      return '/m/emergency';
+    case 'stays':
+      return id ? `/m/stays/${id}` : keep('/m/stays');
+    case 'food':
+      if (!id) return keep('/m/food');
+      return id === 'trails' && sub ? `/m/food/trails/${sub}` : `/m/food/${id}`;
+    case 'events':
+      return id ? `/m/events/${id}` : keep('/m/events');
+    case 'checkin':
+      return id ? `/m/checkin/${id}` : undefined;
     default:
       return undefined;
   }

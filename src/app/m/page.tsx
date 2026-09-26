@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { ArrowRight, CalendarDays, Layers, Navigation, Route, Sparkles, Store } from 'lucide-react';
+import { ArrowRight, BedDouble, CalendarDays, Layers, Navigation, Route, ShieldAlert, Sparkles, Store, UtensilsCrossed } from 'lucide-react';
 
 import { DEMO_MODE, now } from '@/lib/config';
 import { formatShortDate } from '@/lib/date';
@@ -57,6 +57,14 @@ const PROMPTS = [
   '3 days of nature and local food, less crowded',
   'Heritage around Imphal with my parents',
   'Sunrise on Loktak and photography',
+];
+
+/** Quick links to the sections that don't fit the tab bar. */
+const QUICK_LINKS = [
+  { href: '/m/stays', label: 'Stays', icon: BedDouble, tone: 'blue' as const },
+  { href: '/m/food', label: 'Food', icon: UtensilsCrossed, tone: 'orange' as const },
+  { href: '/m/events', label: 'Events', icon: CalendarDays, tone: 'purple' as const },
+  { href: '/m/emergency', label: 'Emergency', icon: ShieldAlert, tone: 'red' as const },
 ];
 
 /** Mobile home: the planner up front, then places, heritage and experiences. */
@@ -224,6 +232,22 @@ export default async function MobileHome() {
           </ul>
         </section>
 
+        <section className="mt-6">
+          <ul className="grid grid-cols-4 gap-2">
+            {QUICK_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="flex flex-col items-center gap-1.5 rounded-2xl bg-surface py-3 shadow-card active:scale-[0.97]"
+                >
+                  <IconTile icon={link.icon} tone={link.tone} size="sm" />
+                  <span className="text-[11px] font-medium text-ink-700">{link.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         {current ? (
           <Link
             href="/m/trip"
@@ -342,11 +366,11 @@ export default async function MobileHome() {
         ) : null}
 
         {events.length > 0 ? (
-          <Panel icon={<CalendarDays aria-hidden size={13} />} title="Coming up">
+          <Panel icon={<CalendarDays aria-hidden size={13} />} title="Coming up" action={<SeeAll href="/m/events" />}>
             <PanelRows label="Upcoming events">
               {events.map((event) => (
                 <li key={event.id}>
-                  <Link href={`/m/place/${event.destinationId}`} className="flex items-center gap-3.5 px-4 py-3 active:bg-surface-2">
+                  <Link href={`/m/events/${event.id}`} className="flex items-center gap-3.5 px-4 py-3 active:bg-surface-2">
                     <span className="w-11 shrink-0 text-center">
                       <span className="block text-[10.5px] font-semibold uppercase tracking-[0.06em] text-red-500">
                         {formatShortDate(event.startAt).replace(/^\d+ /, '')}
